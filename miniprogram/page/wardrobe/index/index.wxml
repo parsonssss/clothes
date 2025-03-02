@@ -1,0 +1,64 @@
+<!--page/wardrobe/index/index.wxml-->
+<view class="container">
+  <!-- 天气组件 -->
+  <view class="weather-widget" bindtap="viewWeatherDetail">
+    <view class="weather-info">
+      <view class="weather-location">{{weather.city}}，{{weather.day}}</view>
+      <view class="weather-temp">{{weather.temperature}}</view>
+      <view class="weather-condition">{{weather.condition}}</view>
+    </view>
+    <view class="weather-icon">
+      <view class="icon-sun" wx:if="{{weather.icon == 'sun'}}"></view>
+      <view class="icon-cloud" wx:elif="{{weather.icon == 'cloud'}}"></view>
+      <view class="icon-rain" wx:elif="{{weather.icon == 'rain'}}"></view>
+    </view>
+  </view>
+  
+  <!-- 今日穿搭推荐 -->
+  <view class="section-title">今日穿搭推荐</view>
+  <view class="outfit-suggestion" bindtap="viewOutfitDetail">
+    <view class="outfit-img">
+      <view class="icon-outfit"></view>
+    </view>
+    <view class="outfit-body">
+      <view class="card-title">{{outfitRecommendation.title}}</view>
+      <view class="card-text">{{outfitRecommendation.description}}</view>
+      <view class="tag-container">
+        <view class="tag" wx:for="{{outfitRecommendation.tags}}" wx:key="*this">{{item}}</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 最近添加的衣物 -->
+  <view class="section-title">最近添加的衣物</view>
+  <view class="grid">
+    <view class="clothes-item" wx:for="{{recentlyAdded}}" wx:key="id">
+      <view class="icon-{{item.type}}"></view>
+    </view>
+  </view>
+  
+  <view class="divider"></view>
+  
+  <!-- 衣柜状态 -->
+  <view class="section-title">衣柜状态</view>
+  <view class="card">
+    <view class="card-body">
+      <view class="flex-between closet-stat-item">
+        <view class="closet-stat-label">总衣物</view>
+        <view class="closet-stat-value">{{closetStats.total}} 件</view>
+      </view>
+      <view class="flex-between closet-stat-item">
+        <view class="closet-stat-label">上衣</view>
+        <view class="closet-stat-value">{{closetStats.tops}} 件</view>
+      </view>
+      <view class="flex-between closet-stat-item">
+        <view class="closet-stat-label">裤子</view>
+        <view class="closet-stat-value">{{closetStats.bottoms}} 件</view>
+      </view>
+      <view class="flex-between closet-stat-item">
+        <view class="closet-stat-label">最多颜色</view>
+        <view class="closet-stat-value">{{closetStats.mostColor}} ({{closetStats.mostColorCount}} 件)</view>
+      </view>
+    </view>
+  </view>
+</view>

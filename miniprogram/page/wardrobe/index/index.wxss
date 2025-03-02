@@ -1,0 +1,147 @@
+/* page/wardrobe/index/index.wxss */
+
+/* 天气组件 */
+.weather-widget {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  background-color: #efebe9;
+  color: #5d4037;
+  border-radius: 16rpx;
+  margin-bottom: 40rpx;
+}
+
+.weather-location {
+  font-size: 24rpx;
+  margin-bottom: 10rpx;
+  color: #8d6e63;
+}
+
+.weather-temp {
+  font-size: 44rpx;
+  font-weight: 400;
+  color: #5d4037;
+}
+
+.weather-condition {
+  font-size: 24rpx;
+  color: #8d6e63;
+  margin-top: 10rpx;
+}
+
+.weather-icon {
+  font-size: 72rpx;
+  color: #8d6e63;
+}
+
+/* 图标样式 */
+.icon-sun, .icon-cloud, .icon-rain, .icon-outfit, .icon-tshirt, .icon-socks, .icon-hat, .icon-shoes {
+  width: 60rpx;
+  height: 60rpx;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.icon-sun {
+  width: 72rpx;
+  height: 72rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,2L14.39,5.42C13.65,5.15 12.84,5 12,5C11.16,5 10.35,5.15 9.61,5.42L12,2M3.34,7L7.5,6.65C6.9,7.16 6.36,7.78 5.94,8.5C5.5,9.24 5.25,10 5.11,10.79L3.34,7M3.36,17L5.12,13.23C5.26,14 5.53,14.78 5.95,15.5C6.37,16.24 6.91,16.86 7.5,17.37L3.36,17M20.65,7L18.88,10.79C18.74,10 18.47,9.23 18.05,8.5C17.63,7.78 17.1,7.15 16.5,6.64L20.65,7M20.64,17L16.5,17.36C17.09,16.85 17.62,16.22 18.04,15.5C18.46,14.77 18.73,14 18.87,13.21L20.64,17M12,22L9.59,18.56C10.33,18.83 11.14,19 12,19C12.82,19 13.63,18.83 14.37,18.56L12,22Z' /%3E%3C/svg%3E");
+}
+
+.icon-cloud {
+  width: 72rpx;
+  height: 72rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M6,19A5,5 0 0,1 1,14A5,5 0 0,1 6,9C7,6.65 9.3,5 12,5C15.43,5 18.24,7.66 18.5,11.03L19,11A4,4 0 0,1 23,15A4,4 0 0,1 19,19H6M19,13H17V12A5,5 0 0,0 12,7C9.5,7 7.45,8.82 7.06,11.19C6.73,11.07 6.37,11 6,11A3,3 0 0,0 3,14A3,3 0 0,0 6,17H19A2,2 0 0,0 21,15A2,2 0 0,0 19,13Z' /%3E%3C/svg%3E");
+}
+
+.icon-rain {
+  width: 72rpx;
+  height: 72rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M6,14.03A1,1 0 0,1 7,15.03C7,15.58 6.55,16.03 6,16.03C3.24,16.03 1,13.79 1,11.03C1,8.27 3.24,6.03 6,6.03C7,3.68 9.3,2.03 12,2.03C15.43,2.03 18.24,4.69 18.5,8.06L19,8.03A4,4 0 0,1 23,12.03C23,14.23 21.21,16.03 19,16.03H18C17.45,16.03 17,15.58 17,15.03C17,14.47 17.45,14.03 18,14.03H19A2,2 0 0,0 21,12.03A2,2 0 0,0 19,10.03H17V9.03C17,6.27 14.76,4.03 12,4.03C9.5,4.03 7.45,5.84 7.06,8.21C6.73,8.09 6.37,8.03 6,8.03A3,3 0 0,0 3,11.03A3,3 0 0,0 6,14.03M12,14.15C12.18,14.39 12.37,14.66 12.56,14.94C13,15.56 14,17.03 14,18C14,19.11 13.1,20 12,20A2,2 0 0,1 10,18C10,17.03 11,15.56 11.44,14.94C11.63,14.66 11.82,14.4 12,14.15M12,11.03L11.5,11.59C11.5,11.59 10.65,12.55 9.79,13.81C8.93,15.06 8,16.56 8,18A4,4 0 0,0 12,22A4,4 0 0,0 16,18C16,16.56 15.07,15.06 14.21,13.81C13.35,12.55 12.5,11.59 12.5,11.59' /%3E%3C/svg%3E");
+}
+
+.icon-outfit {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
+}
+
+.icon-tshirt {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
+}
+
+.icon-socks {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M19,15.8C17.3,15.8 15.8,17.3 15.8,19C15.8,20.7 17.3,22.2 19,22.2C20.7,22.2 22.2,20.7 22.2,19C22.2,17.3 20.7,15.8 19,15.8M19,20.8C18,20.8 17.2,20 17.2,19C17.2,18 18,17.2 19,17.2C20,17.2 20.8,18 20.8,19C20.8,20 20,20.8 19,20.8M11,14L5,14C4.45,14 4,13.55 4,13V2.97H2.06V2.03H5C5.55,2.03 6,2.48 6,3.03V12H11C11.55,12 12,12.45 12,13C12,13.55 11.55,14 11,14Z' /%3E%3C/svg%3E");
+}
+
+.icon-hat {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M3,4H21V7H20L17,13H12L9,7H8V4M10,5C9.45,5 9,5.45 9,6C9,6.55 9.45,7 10,7C10.55,7 11,6.55 11,6C11,5.45 10.55,5 10,5M14,5C13.45,5 13,5.45 13,6C13,6.55 13.45,7 14,7C14.55,7 15,6.55 15,6C15,5.45 14.55,5 14,5M17,6C16.45,6 16,6.45 16,7C16,7.55 16.45,8 17,8C17.55,8 18,7.55 18,7C18,6.45 17.55,6 17,6M7,6C6.45,6 6,6.45 6,7C6,7.55 6.45,8 7,8C7.55,8 8,7.55 8,7C8,6.45 7.55,6 7,6M16,16C16,18.8 13.8,21 11,21C8.2,21 6,18.8 6,16V15H16V16Z' /%3E%3C/svg%3E");
+}
+
+.icon-shoes {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M5,15.1L6.5,16.6L3.9,19.2L2.4,17.7L5,15.1M15.9,10.1L22,4L20.6,2.6L14.5,8.7L15.9,10.1M22,19.3V14.75C22,14.75 20.6,17.7 15.5,17.7C10.4,17.7 2,19.3 2,19.3H22M7.3,20.7H3.7V22H7.3V20.7M10.9,20.7H8.3V22H10.9V20.7M14.5,20.7H11.9V22H14.5V20.7M18.2,20.7H15.5V22H18.2V20.7M22,20.7H19.2V22H22V20.7Z' /%3E%3C/svg%3E");
+}
+
+/* 穿搭推荐 */
+.outfit-suggestion {
+  display: flex;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(105, 87, 76, 0.05);
+}
+
+.outfit-img {
+  width: 160rpx;
+  height: 200rpx;
+  background-color: #efebe9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #a1887f;
+}
+
+.outfit-body {
+  padding: 30rpx;
+  flex: 1;
+}
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20rpx;
+}
+
+/* 衣柜状态卡片 */
+.closet-stat-item {
+  padding: 16rpx 0;
+  border-bottom: 1px solid #efebe9;
+}
+
+.closet-stat-item:last-child {
+  border-bottom: none;
+}
+
+.closet-stat-label {
+  color: #8d6e63;
+  font-size: 28rpx;
+}
+
+.closet-stat-value {
+  color: #5d4037;
+  font-size: 28rpx;
+  font-weight: 400;
+}
+
+/* 衣物项目 */
+.clothes-item {
+  aspect-ratio: 1;
+  background-color: #efebe9;
+  border-radius: 8rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  color: #a1887f;
+}

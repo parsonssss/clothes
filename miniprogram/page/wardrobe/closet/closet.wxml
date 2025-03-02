@@ -1,0 +1,68 @@
+<!--page/wardrobe/closet/closet.wxml-->
+<view class="container">
+  <!-- 分类选择 -->
+  <scroll-view scroll-x="true" enable-flex="true" class="categories">
+    <view 
+      class="category {{currentCategory === item ? 'active' : ''}}" 
+      wx:for="{{categories}}" 
+      wx:key="*this"
+      bindtap="changeCategory"
+      data-category="{{item}}">
+      {{item}}
+    </view>
+  </scroll-view>
+  
+  <!-- 衣物列表 -->
+  <view class="clothes-grid" wx:if="{{filteredClothes.length > 0}}">
+    <view 
+      class="clothes-item"
+      wx:for="{{filteredClothes}}" 
+      wx:key="_id"
+      bindtap="viewClothesDetail"
+      data-id="{{item._id}}">
+      <image class="clothes-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
+      <view class="clothes-info">
+        <view class="clothes-category">{{item.category}}</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{filteredClothes.length === 0}}">
+    <view class="empty-icon"></view>
+    <view class="empty-text">还没有衣物，点击下方按钮添加</view>
+  </view>
+  
+  <!-- 上传中状态 -->
+  <view class="upload-overlay" wx:if="{{isUploading}}">
+    <view class="upload-content">
+      <view class="upload-spinner"></view>
+      <view class="upload-text">正在上传并识别衣物...</view>
+    </view>
+  </view>
+  
+  <!-- 添加按钮 -->
+  <view class="add-btn" bindtap="showAddOptions">
+    <view class="add-icon"></view>
+  </view>
+  
+  <!-- 添加选项弹窗 -->
+  <view class="add-options-overlay {{showAddOptions ? 'show' : ''}}" bindtap="hideAddOptions">
+    <view class="add-options-container" catchtap>
+      <view class="add-option-title">添加衣物</view>
+      <view class="add-option" bindtap="addByCamera">
+        <view class="add-option-icon camera-icon"></view>
+        <view class="add-option-text">拍照添加（AI自动识别）</view>
+      </view>
+      <view class="add-option" bindtap="addByAlbum">
+        <view class="add-option-icon album-icon"></view>
+        <view class="add-option-text">从相册选择（AI自动识别）</view>
+      </view>
+      <view class="add-option" bindtap="addByUrl">
+        <view class="add-option-icon url-icon"></view>
+        <view class="add-option-text">手动添加（填写详细信息）</view>
+      </view>
+      <view class="cancel-btn" bindtap="hideAddOptions">取消</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,149 @@
+<!--page/wardrobe/add/add.wxml-->
+<view class="container">
+  <view class="page-title">添加衣物</view>
+  
+  <!-- URL输入弹窗 -->
+  <view class="url-input-overlay" wx:if="{{showUrlInput}}">
+    <view class="url-input-container">
+      <view class="url-input-title">输入图片URL</view>
+      <input class="form-input url-input" placeholder="请输入http://或https://开头的URL" bindinput="inputUrl" value="{{urlInput}}" />
+      <view class="btn-group">
+        <view class="btn btn-secondary" bindtap="cancelAdd">取消</view>
+        <view class="btn" bindtap="fetchImageByUrl">确认</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 图片上传区域 -->
+  <view class="image-upload-section">
+    <view class="image-container" wx:if="{{imageUrl}}">
+      <image class="clothes-image" src="{{imageUrl}}" mode="aspectFill"></image>
+      <view class="image-actions">
+        <view class="rechoose-btn" bindtap="reChooseImage">重新选择</view>
+      </view>
+    </view>
+    <view class="upload-placeholder" wx:else bindtap="reChooseImage">
+      <view class="upload-icon"></view>
+      <view class="upload-text">点击添加图片</view>
+    </view>
+  </view>
+  
+  <!-- 基本信息表单 -->
+  <view class="form-section">
+    <view class="section-title">基本信息</view>
+    
+    <!-- 名称 -->
+    <view class="form-group">
+      <view class="form-label">名称<text class="required">*</text></view>
+      <input class="form-input" placeholder="请输入衣物名称" bindinput="inputName" value="{{clothesInfo.name}}" />
+    </view>
+    
+    <!-- 品牌 -->
+    <view class="form-group">
+      <view class="form-label">品牌</view>
+      <input class="form-input" placeholder="请输入品牌" bindinput="inputBrand" value="{{clothesInfo.brand}}" />
+    </view>
+    
+    <!-- 分类 -->
+    <view class="form-group">
+      <view class="form-label">分类<text class="required">*</text></view>
+      <picker 
+        bindchange="selectCategory" 
+        value="{{categories.indexOf(clothesInfo.category)}}" 
+        range="{{categories}}">
+        <view class="picker-view">
+          <view class="picker-text">{{clothesInfo.category}}</view>
+          <view class="picker-arrow"></view>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 子分类 -->
+    <view class="form-group">
+      <view class="form-label">子分类</view>
+      <picker 
+        bindchange="selectSubCategory" 
+        value="{{currentSubCategories.indexOf(clothesInfo.subCategory)}}" 
+        range="{{currentSubCategories}}">
+        <view class="picker-view">
+          <view class="picker-text">{{clothesInfo.subCategory || '请选择子分类'}}</view>
+          <view class="picker-arrow"></view>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 颜色 -->
+    <view class="form-group">
+      <view class="form-label">颜色</view>
+      <picker 
+        bindchange="selectColor" 
+        value="{{colors.indexOf(clothesInfo.color)}}" 
+        range="{{colors}}">
+        <view class="picker-view">
+          <view class="picker-text">{{clothesInfo.color || '请选择颜色'}}</view>
+          <view class="picker-arrow"></view>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 季节 -->
+    <view class="form-group">
+      <view class="form-label">适合季节</view>
+      <picker 
+        bindchange="selectSeason" 
+        value="{{seasons.indexOf(clothesInfo.season)}}" 
+        range="{{seasons}}">
+        <view class="picker-view">
+          <view class="picker-text">{{clothesInfo.season || '请选择季节'}}</view>
+          <view class="picker-arrow"></view>
+        </view>
+      </picker>
+    </view>
+  </view>
+  
+  <!-- 详细信息表单 -->
+  <view class="form-section">
+    <view class="section-title">详细信息</view>
+    
+    <!-- 购买日期 -->
+    <view class="form-group">
+      <view class="form-label">购买日期</view>
+      <picker 
+        mode="date" 
+        value="{{clothesInfo.purchaseDate}}" 
+        bindchange="bindDateChange">
+        <view class="picker-view">
+          <view class="picker-text">{{clothesInfo.purchaseDate || '请选择日期'}}</view>
+          <view class="picker-arrow"></view>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 价格 -->
+    <view class="form-group">
+      <view class="form-label">价格</view>
+      <input class="form-input" type="digit" placeholder="请输入价格" bindinput="inputPrice" value="{{clothesInfo.price}}" />
+    </view>
+    
+    <!-- 标签 -->
+    <view class="form-group">
+      <view class="form-label">标签</view>
+      <view class="tag-input-container">
+        <input class="form-input tag-input" placeholder="输入标签后点击添加" bindinput="inputTag" value="{{tagInput}}" />
+        <view class="add-tag-btn" bindtap="addTag">添加</view>
+      </view>
+      <view class="tags-container" wx:if="{{clothesInfo.tags.length > 0}}">
+        <view class="tag" wx:for="{{clothesInfo.tags}}" wx:key="*this">
+          {{item}}
+          <view class="tag-remove" bindtap="removeTag" data-index="{{index}}">×</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 底部按钮 -->
+  <view class="bottom-buttons">
+    <button class="btn btn-secondary" bindtap="cancelAdd">取消</button>
+    <button class="btn" bindtap="saveClothes">保存</button>
+  </view>
+</view>

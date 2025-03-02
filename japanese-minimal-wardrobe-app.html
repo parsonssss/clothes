@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日式极简风格衣柜橱窗App</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* 全局样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+    }
+    
+    body {
+      background-color: #f5f2ed;
+      color: #4a3c31;
+      padding: 20px;
+    }
+    
+    h1, h2, h3 {
+      color: #5d4037;
+      font-weight: 400;
+      letter-spacing: 1px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+    }
+    
+    .title {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 40px;
+      color: #5d4037;
+      font-weight: 300;
+      letter-spacing: 2px;
+    }
+    
+    .subtitle {
+      width: 100%;
+      text-align: center;
+      margin: 30px 0;
+      padding-top: 30px;
+      border-top: 1px solid #d7ccc8;
+      color: #8d6e63;
+      font-weight: 300;
+    }
+    
+    /* 设备框架 */
+    .phone-frame {
+      width: 320px;
+      height: 650px;
+      background-color: #f8f5f2;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(138, 117, 102, 0.1);
+      position: relative;
+      border: 8px solid #3e2723;
+    }
+    
+    .notch {
+      width: 150px;
+      height: 20px;
+      background-color: #3e2723;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    
+    .screen {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+      background-color: #f8f5f2;
+    }
+    
+    /* 导航栏 */
+    .navbar {
+      height: 60px;
+      background-color: #f8f5f2;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      color: #5d4037;
+      border-bottom: 1px solid #efebe9;
+    }
+    
+    .navbar .title {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 1px;
+    }
+    
+    /* 底部导航 */
+    .bottom-nav {
+      height: 60px;
+      background-color: #f8f5f2;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: absolute;
+      bottom: 0;
+      border-top: 1px solid #efebe9;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      color: #a1887f;
+    }
+    
+    .nav-item i {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    
+    .nav-item.active {
+      color: #5d4037;
+    }
+    
+    /* 内容区 */
+    .content {
+      padding: 20px;
+      height: calc(100% - 120px);
+      overflow-y: auto;
+    }
+    
+    /* 按钮 */
+    .btn {
+      padding: 12px 20px;
+      background-color: #8d6e63;
+      color: #f8f5f2;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-block;
+      font-size: 14px;
+      text-align: center;
+      letter-spacing: 1px;
+      font-weight: 300;
+    }
+    
+    .btn-secondary {
+      background-color: transparent;
+      color: #8d6e63;
+      border: 1px solid #8d6e63;
+    }
+    
+    .btn-success {
+      background-color: #6d4c41;
+    }
+    
+    .btn-round {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      right: 20px;
+      bottom: 80px;
+      box-shadow: 0 3px 10px rgba(105, 87, 76, 0.2);
+      background-color: #8d6e63;
+      color: #f8f5f2;
+    }
+    
+    /* 卡片样式 */
+    .card {
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(105, 87, 76, 0.05);
+    }
+    
+    .card-img {
+      width: 100%;
+      height: 120px;
+      background-color: #efebe9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #a1887f;
+    }
+    
+    .card-body {
+      padding: 16px;
+    }
+    
+    .card-title {
+      font-weight: 400;
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #5d4037;
+    }
+    
+    .card-text {
+      font-size: 14px;
+      color: #8d6e63;
+      font-weight: 300;
+    }
+    
+    /* 网格布局 */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+    
+    /* 表单样式 */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #5d4037;
+      letter-spacing: 0.5px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d7ccc8;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: #ffffff;
+      color: #5d4037;
+    }
+    
+    .form-select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d7ccc8;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: #ffffff;
+      color: #5d4037;
+    }
+    
+    /* 标签 */
+    .tag {
+      display: inline-block;
+      padding: 6px 12px;
+      background-color: #efebe9;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      color: #8d6e63;
+    }
+    
+    .tag.active {
+      background-color: #d7ccc8;
+      color: #5d4037;
+    }
+    
+    /* 登录页 */
+    .login-logo {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 60px 0 40px;
+    }
+    
+    .logo-img {
+      width: 80px;
+      height: 80px;
+      background-color: #8d6e63;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #f8f5f2;
+      font-size: 32px;
+    }
+    
+    .login-form {
+      padding: 0 20px;
+    }
+    
+    /* 主页仪表盘 */
+    .weather-widget {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      background-color: #efebe9;
+      color: #5d4037;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+    
+    .outfit-suggestion {
+      display: flex;
+      background-color: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 10px rgba(105, 87, 76, 0.05);
+    }
+    
+    .outfit-img {
+      width: 80px;
+      height: 100px;
+      background-color: #efebe9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #a1887f;
+    }
+    
+    .outfit-body {
+      padding: 16px;
+      flex: 1;
+    }
+    
+    /* 衣柜页 */
+    .categories {
+      display: flex;
+      overflow-x: auto;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .category {
+      padding: 8px 16px;
+      background-color: #efebe9;
+      border-radius: 4px;
+      margin-right: 12px;
+      font-size: 14px;
+      white-space: nowrap;
+      color: #8d6e63;
+    }
+    
+    .category.active {
+      background-color: #d7ccc8;
+      color: #5d4037;
+    }
+    
+    .clothes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    
+    .clothes-item {
+      position: relative;
+      aspect-ratio: 1;
+      background-color: #efebe9;
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      color: #a1887f;
+    }
+    
+    .clothes-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    /* 衣物详情页 */
+    .item-image {
+      width: 100%;
+      height: 200px;
+      background-color: #efebe9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #a1887f;
+      margin-bottom: 25px;
+    }
+    
+    .item-details {
+      margin-bottom: 25px;
+    }
+    
+    .item-property {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #efebe9;
+    }
+    
+    .item-property-label {
+      color: #8d6e63;
+    }
+    
+    /* 穿搭页面 */
+    .outfit-canvas {
+      width: 100%;
+      height: 300px;
+      background-color: #f4f1ed;
+      border: 1px dashed #d7ccc8;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .outfit-item-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 15px;
+    }
+    
+    .outfit-item {
+      width: 60px;
+      height: 60px;
+      background-color: #efebe9;
+      border-radius: 4px;
+      margin: 0 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #a1887f;
+    }
+    
+    /* 日历页面 */
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    
+    .calendar-day {
+      aspect-ratio: 1;
+      background-color: #ffffff;
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      color: #8d6e63;
+    }
+    
+    .calendar-day.has-outfit {
+      background-color: #efebe9;
+    }
+    
+    .calendar-day.today {
+      background-color: #8d6e63;
+      color: #ffffff;
+    }
+    
+    /* 社区页面 */
+    .post {
+      margin-bottom: 25px;
+    }
+    
+    .post-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .post-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #efebe9;
+      margin-right: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #a1887f;
+    }
+    
+    .post-content {
+      margin-bottom: 15px;
+      color: #5d4037;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .post-image {
+      width: 100%;
+      height: 200px;
+      background-color: #efebe9;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 15px;
+      color: #a1887f;
+    }
+    
+    .post-actions {
+      display: flex;
+      justify-content: space-between;
+      color: #8d6e63;
+      font-size: 14px;
+    }
+    
+    /* 主页上的部分 */
+    .section-title {
+      color: #5d4037;
+      font-size: 16px;
+      font-weight: 400;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .section-title:after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 30px;
+      height: 1px;
+      background-color: #8d6e63;
+    }
+    
+    /* 分隔线 */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background-color: #efebe9;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="title">衣柜橱窗App · 日式极简风格</h1>
+    
+    <!-- 启动页/登录页 -->
+    <div class="subtitle">
+      <h2>1. 启动页/登录页</h2>
+    </div>
+    
+    <div class="phone-frame">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="content">
+          <div class="login-logo">
+            <div class="logo-img">
+              <i class="fas fa-tshirt"></i>
+            </div>
+          </div>
+          <h2 style="text-align: center; margin-bottom: 40px; font-weight: 300; letter-spacing: 2px; color: #5d4037;">衣柜橱窗</h2>
+          <div class="login-form">
+            <div class="form-group">
+              <input type="text" class="form-input" placeholder="用户名/手机号">
+            </div>
+            <div class="form-group">
+              <input type="password" class="form-input" placeholder="密码">
+            </div>
+            <div class="form-group">
+              <button class="btn" style="width: 100%;">登录</button>
+            </div>
+            <div style="text-align: center; margin: 30px 0; color: #8d6e63; font-size: 13px; letter-spacing: 1px;">
+              其他登录方式
+            </div>
+            <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 30px;">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #8d6e63; color: white; display: flex; justify-content: center; align-items: center;">
+                <i class="fab fa-weixin"></i>
+              </div>
+              <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #a1887f; color: white; display: flex; justify-content: center; align-items: center;">
+                <i class="fab fa-qq"></i>
+              </div>
+              <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #bcaaa4; color: white; display: flex; justify-content: center; align-items: center;">
+                <i class="fab fa-weibo"></i>
+              </div>
+            </div>
+            <div style="text-align: center; color: #8d6e63; font-size: 13px; letter-spacing: 0.5px;">
+              还没有账号？<span style="color: #6d4c41; text-decoration: underline;">立即注册</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主页/仪表盘 -->
+    <div class="subtitle">
+      <h2>2. 主页/仪表盘</h2>
+    </div>
+    
+    <div class="phone-frame">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="navbar">
+          <div>
+            <i class="fas fa-bars"></i>
+          </div>
+          <div class="title">今日</div>
+          <div>
+            <i class="fas fa-bell"></i>
+          </div>
+        </div>
+        <div class="content">
+          <div class="weather-widget">
+            <div>
+              <div style="font-size: 12px; margin-bottom: 5px; color: #8d6e63;">上海，周日</div>
+              <div style="font-size: 22px; font-weight: 400; color: #5d4037;">23°C</div>
+              <div style="font-size: 12px; color: #8d6e63; margin-top: 5px;">晴朗</div>
+            </div>
+            <div style="font-size: 36px; color: #8d6e63;">
+              <i class="fas fa-sun"></i>
+            </div>
+          </div>
+          
+          <h3 class="section-title">今日穿搭推荐</h3>
+          <div class="outfit-suggestion">
+            <div class="outfit-img">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="outfit-body">
+              <div class="card-title">春季自然风</div>
+              <div class="card-text">适合今日天气与活动</div>
+              <div style="margin-top: 10px;">
+                <span class="tag">休闲</span>
+                <span class="tag">办公室</span>
+              </div>
+            </div>
+          </div>
+          
+          <h3 class="section-title">最近添加的衣物</h3>
+          <div class="grid">
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-socks"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-hat-cowboy"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-shoe-prints"></i>
+            </div>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <h3 class="section-title">衣柜状态</h3>
+          <div class="card">
+            <div class="card-body">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div>总衣物</div>
+                <div>128 件</div>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div>上衣</div>
+                <div>45 件</div>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <div>裤子</div>
+                <div>32 件</div>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <div>最多颜色</div>
+                <div>米色 (23 件)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <i class="fas fa-home"></i>
+            <div>主页</div>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-tshirt"></i>
+            <div>衣柜</div>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-user-friends"></i>
+            <div>搭配</div>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <div>日历</div>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-user"></i>
+            <div>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 我的衣柜 -->
+    <div class="subtitle">
+      <h2>3. 我的衣柜</h2>
+    </div>
+    
+    <div class="phone-frame">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="navbar">
+          <div>
+            <i class="fas fa-search"></i>
+          </div>
+          <div class="title">我的衣柜</div>
+          <div>
+            <i class="fas fa-sliders-h"></i>
+          </div>
+        </div>
+        <div class="content">
+          <div class="categories">
+            <div class="category active">全部</div>
+            <div class="category">上衣</div>
+            <div class="category">裤子</div>
+            <div class="category">裙子</div>
+            <div class="category">外套</div>
+            <div class="category">鞋子</div>
+            <div class="category">配饰</div>
+          </div>
+          
+          <div class="clothes-grid">
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-tshirt"></i>
+            </div>
+          </div>
+          
+          <div class="btn-round btn-success">
+            <i class="fas fa-plus"></i>
+          </div>
+        </div>
+        <div class="bottom-nav">
+          <div class="nav-item">
+            <i class="fas fa-home"></i>
+            <div>主页</div>
+          </div>
+          <div class="nav-item active">
+            <i class="fas fa-tshirt"></i>
+            <div>衣柜</div>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-user-friends"></i>
+            <div>搭配</div>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-calendar-alt"></i>
+            <div>日历</div>
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-user"></i>
+            <div>我的</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 衣物详情页 -->
+    <div class="subtitle">
+      <h2>4. 衣物详情页</h2>
+    </div>
+    
+    <div class="phone-frame">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="navbar">
+          <div>
+            <i class="fas fa-arrow-left"></i>
+          </div>
+          <div class="title">衣物详情</div>
+          <div>
+            <i class="fas fa-ellipsis-h"></i>
+          </div>
+        </div>
+        <div class="content">
+          <div class="item-image">
+            <i class="fas fa-tshirt" style="font-size: 48px;"></i>
+          </div>
+          
+          <div class="item-details">
+            <div class="item-property">
+              <div class="item-property-label">名称</div>
+              <div>米色亚麻衬衫</div>
+            </div>
+            <div class="item-property">
+              <div class="item-property-label">品牌</div>
+              <div>MUJI</div>
+            </div>
+            <div class="item-property">
+              <div class="item-property-label">类别</div>
+              <div>上衣 / 衬衫</div>
+            </div>
+            <div class="item-property">
+              <div class="item-property-label">颜色</div>
+              <div>米色</div>
+            </div>
+            <div class="item-property">
+              <div class="item-property-label">购买日期</div>
+              <div>2023-05-15</div>
+            </div>
+            <div class="item-property">
+              <div class="item-property-label">价格</div>
+              <div>¥199</div>
+            </div>
+            <div class="item-property">
+              <div class="item-property-label">穿着次数</div>
+              <div>12</div>
+            </div>
+          </div>
+          
+          <h3 class="section-title">标签</h3>
+          <div style="margin-bottom: 25px;">
+            <span class="tag">休闲</span>
+            <span class="tag">春秋</span>
+            <span class="tag">棉麻</span>
+            <span class="tag">工作</span>
+          </div>
+          
+          <h3 class="section-title">常用搭配</h3>
+          <div class="grid">
+            <div class="clothes-item">
+              <i class="fas fa-socks"></i>
+            </div>
+            <div class="clothes-item">
+              <i class="fas fa-shoe-prints"></i>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 15px; margin-top: 25px;">
+            <button class="btn" style="flex: 1;">编辑信息</button>
+            <button class="btn btn-secondary" style="flex: 1;">加入搭配</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 添加新衣物 -->
+    <div class="subtitle">
+      <h2>5. 添加新衣物</h2>
+    </div>
+    
+    

@@ -1,0 +1,127 @@
+/* page/wardrobe/login/login.wxss */
+
+.container {
+  padding: 0 60rpx;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-logo {
+  margin-top: 80rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.logo-img {
+  width: 160rpx;
+  height: 160rpx;
+  background-color: #8d6e63;
+  border-radius: 20rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-icon {
+  width: 100rpx;
+  height: 100rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M21,18H13V16H15V8C15,7.45 14.55,7 14,7H10C9.45,7 9,7.45 9,8V16H11V18H3V20H11V22H13V20H21V18M5,4H19A2,2 0 0,1 21,6V8H19V6H5V8H3V6A2,2 0 0,1 5,4Z' /%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.app-title {
+  font-size: 48rpx;
+  font-weight: 300;
+  color: #5d4037;
+  margin-bottom: 80rpx;
+  letter-spacing: 4rpx;
+  text-align: center;
+}
+
+.login-form {
+  width: 100%;
+}
+
+.login-btn {
+  width: 100% !important;
+  margin-top: 20rpx;
+}
+
+.third-party-title {
+  text-align: center;
+  margin: 60rpx 0 40rpx;
+  color: #8d6e63;
+  font-size: 26rpx;
+  letter-spacing: 2rpx;
+  position: relative;
+}
+
+.third-party-title::before,
+.third-party-title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 100rpx;
+  height: 1px;
+  background-color: #d7ccc8;
+}
+
+.third-party-title::before {
+  left: 60rpx;
+}
+
+.third-party-title::after {
+  right: 60rpx;
+}
+
+.third-party-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 60rpx;
+}
+
+.third-party-item {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin: 0 30rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.third-party-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-size: 60%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.wechat-icon {
+  background-color: #8d6e63;
+}
+
+.qq-icon {
+  background-color: #a1887f;
+}
+
+.weibo-icon {
+  background-color: #bcaaa4;
+}
+
+.register-link {
+  text-align: center;
+  color: #8d6e63;
+  font-size: 26rpx;
+  letter-spacing: 1rpx;
+}
+
+.register-text {
+  color: #6d4c41;
+  text-decoration: underline;
+}

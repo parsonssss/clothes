@@ -1,0 +1,199 @@
+/* page/wardrobe/detail/detail.wxss */
+
+.container {
+  padding-bottom: 160rpx;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 500rpx;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 5rpx solid #efebe9;
+  border-top: 5rpx solid #8d6e63;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #8d6e63;
+}
+
+/* 衣物图片 */
+.clothes-image-container {
+  width: 100%;
+  height: 500rpx;
+  background-color: #efebe9;
+  position: relative;
+  margin-bottom: 30rpx;
+}
+
+.clothes-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 信息区域 */
+.info-section {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 16rpx rgba(105, 87, 76, 0.05);
+}
+
+.clothes-name {
+  font-size: 36rpx;
+  color: #5d4037;
+  margin-bottom: 10rpx;
+  font-weight: 500;
+}
+
+.clothes-category {
+  font-size: 28rpx;
+  color: #8d6e63;
+  margin-bottom: 20rpx;
+}
+
+.divider {
+  height: 1px;
+  background-color: #efebe9;
+  margin: 20rpx 0;
+}
+
+/* 详细信息列表 */
+.detail-list {
+  margin-top: 20rpx;
+}
+
+.detail-item {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1px solid #efebe9;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  width: 160rpx;
+  color: #8d6e63;
+  font-size: 28rpx;
+}
+
+.detail-value {
+  flex: 1;
+  color: #5d4037;
+  font-size: 28rpx;
+}
+
+/* 保暖度评级 */
+.warmth-rating {
+  display: flex;
+}
+
+.warmth-star {
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 10rpx;
+  background-color: #efebe9;
+  border-radius: 50%;
+}
+
+.warmth-star.active {
+  background-color: #8d6e63;
+}
+
+/* 场景标签 */
+.occasions-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8rpx;
+}
+
+.tag {
+  display: inline-block;
+  padding: 8rpx 20rpx;
+  background-color: #efebe9;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
+  color: #8d6e63;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 30rpx;
+  background-color: #f8f5f2;
+  box-shadow: 0 -4rpx 10rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-buttons .btn {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+}
+
+.btn-danger {
+  background-color: #A1887F;
+  color: white;
+  padding: 24rpx 0;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+}
+
+/* 错误状态 */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 500rpx;
+}
+
+.error-icon {
+  width: 100rpx;
+  height: 100rpx;
+  margin-bottom: 20rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d7ccc8'%3E%3Cpath d='M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z' /%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.error-text {
+  font-size: 28rpx;
+  color: #8d6e63;
+  margin-bottom: 20rpx;
+}
+
+.error-btn {
+  font-size: 28rpx;
+  color: #5d4037;
+  padding: 16rpx 40rpx;
+  background-color: #efebe9;
+  border-radius: 8rpx;
+}

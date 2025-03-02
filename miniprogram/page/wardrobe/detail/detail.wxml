@@ -1,0 +1,82 @@
+<!--page/wardrobe/detail/detail.wxml-->
+<view class="container">
+  <view wx:if="{{isLoading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">加载中...</view>
+  </view>
+  
+  <block wx:elif="{{clothesInfo}}">
+    <!-- 图片部分 -->
+    <view class="clothes-image-container" bindtap="previewImage">
+      <image class="clothes-image" src="{{clothesInfo.imageUrl}}" mode="aspectFill"></image>
+    </view>
+    
+    <!-- 基本信息 -->
+    <view class="info-section">
+      <view class="clothes-name">{{clothesInfo.name || '未命名衣物'}}</view>
+      <view class="clothes-category">{{clothesInfo.category || '未分类'}}</view>
+      
+      <view class="divider"></view>
+      
+      <!-- 详细信息 -->
+      <view class="detail-list">
+        <view class="detail-item" wx:if="{{clothesInfo.color}}">
+          <view class="detail-label">颜色</view>
+          <view class="detail-value">{{clothesInfo.color}}</view>
+        </view>
+        
+        <view class="detail-item" wx:if="{{clothesInfo.style}}">
+          <view class="detail-label">风格</view>
+          <view class="detail-value">{{clothesInfo.style}}</view>
+        </view>
+        
+        <view class="detail-item" wx:if="{{clothesInfo.clothingType}}">
+          <view class="detail-label">类型</view>
+          <view class="detail-value">{{clothesInfo.clothingType}}</view>
+        </view>
+        
+        <view class="detail-item" wx:if="{{clothesInfo.warmthLevel !== undefined || clothesInfo.warmth_level !== undefined}}">
+          <view class="detail-label">保暖度</view>
+          <view class="detail-value">
+            <view class="warmth-rating">
+              <view 
+                class="warmth-star {{index < (clothesInfo.warmthLevel || clothesInfo.warmth_level || 0) ? 'active' : ''}}" 
+                wx:for="{{[0, 1, 2, 3, 4]}}" 
+                wx:key="*this">
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <view class="detail-item" wx:if="{{(clothesInfo.sceneApplicability && clothesInfo.sceneApplicability.length) || (clothesInfo.scene_applicability && clothesInfo.scene_applicability.length)}}">
+          <view class="detail-label">适用场景</view>
+          <view class="detail-value occasions-container">
+            <block wx:if="{{clothesInfo.sceneApplicability && clothesInfo.sceneApplicability.length}}">
+              <view class="tag" wx:for="{{clothesInfo.sceneApplicability}}" wx:key="*this">{{item}}</view>
+            </block>
+            <block wx:elif="{{clothesInfo.scene_applicability && clothesInfo.scene_applicability.length}}">
+              <view class="tag" wx:for="{{clothesInfo.scene_applicability}}" wx:key="*this">{{item}}</view>
+            </block>
+          </view>
+        </view>
+        
+        <view class="detail-item">
+          <view class="detail-label">添加时间</view>
+          <view class="detail-value">{{clothesInfo.createTime ? clothesInfo.createTime.toLocaleString() : '未知'}}</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <view class="btn btn-secondary" bindtap="editClothes">编辑</view>
+      <view class="btn btn-danger" bindtap="deleteClothes">删除</view>
+    </view>
+  </block>
+  
+  <view wx:else class="error-container">
+    <view class="error-icon"></view>
+    <view class="error-text">数据加载失败</view>
+    <view class="error-btn" bindtap="getClothesDetail" data-id="{{clothesId}}">重试</view>
+  </view>
+</view>
