@@ -8,7 +8,11 @@
   <block wx:elif="{{clothesInfo}}">
     <!-- 图片部分 -->
     <view class="clothes-image-container" bindtap="previewImage">
-      <image class="clothes-image" src="{{clothesInfo.imageUrl}}" mode="aspectFill"></image>
+      <image 
+        class="clothes-image" 
+        src="{{tempImageUrl || clothesInfo.imageUrl}}" 
+        mode="aspectFill">
+      </image>
     </view>
     
     <!-- 基本信息 -->

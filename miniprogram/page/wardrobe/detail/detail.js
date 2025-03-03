@@ -3,10 +3,20 @@ Page({
   data: {
     clothesId: '',
     clothesInfo: null,
+    tempImageUrl: '',
     isLoading: true
   },
   
   onLoad: function(options) {
+    // 初始化云环境
+    if (!wx.cloud) {
+      console.error('请使用 2.2.3 或以上的基础库以使用云能力');
+    } else {
+      wx.cloud.init({
+        env: 'cloud1-3gi97kso9ab01185',
+        traceUser: true,
+      });
+    }
     if (options.id) {
       this.setData({
         clothesId: options.id
@@ -37,12 +47,35 @@ Page({
     db.collection('clothes').doc(id).get().then(res => {
       console.log('获取衣物详情成功', res);
       
-      this.setData({
-        clothesInfo: res.data,
-        isLoading: false
-      });
-      
-      wx.hideLoading();
+      // 下载图片
+      if (res.data.fileID) {
+        wx.cloud.downloadFile({
+          fileID: res.data.fileID,
+          success: result => {
+            this.setData({
+              clothesInfo: res.data,
+              tempImageUrl: result.tempFilePath,
+              isLoading: false
+            });
+          },
+          fail: err => {
+            console.error('下载图片失败', err);
+            this.setData({
+              clothesInfo: res.data,
+              isLoading: false
+            });
+          },
+          complete: () => {
+            wx.hideLoading();
+          }
+        });
+      } else {
+        this.setData({
+          clothesInfo: res.data,
+          isLoading: false
+        });
+        wx.hideLoading();
+      }
     }).catch(err => {
       console.error('获取衣物详情失败', err);
       
@@ -141,7 +174,55 @@ Page({
   
   // 预览图片
   previewImage: function() {
-    if (this.data.clothesInfo && this.data.clothesInfo.imageUrl) {
+    // 每次查看都先重新获取临时URL
+    if (this.data.clothesInfo && this.data.clothesInfo.fileID) {
+      wx.showLoading({
+        title: '加载图片...',
+      });
+      
+      wx.cloud.downloadFile({
+        fileID: this.data.clothesInfo.fileID,
+        success: result => {
+          const refreshedUrl = result.tempFilePath;
+          this.setData({
+            tempImageUrl: refreshedUrl
+          });
+          
+          wx.previewImage({
+            urls: [refreshedUrl],
+            current: refreshedUrl
+          });
+        },
+        fail: err => {
+          console.error('刷新图片失败', err);
+          // 失败时尝试使用已有的URL
+          if (this.data.tempImageUrl) {
+            wx.previewImage({
+              urls: [this.data.tempImageUrl],
+              current: this.data.tempImageUrl
+            });
+          } else if (this.data.clothesInfo.imageUrl) {
+            wx.previewImage({
+              urls: [this.data.clothesInfo.imageUrl],
+              current: this.data.clothesInfo.imageUrl
+            });
+          } else {
+            wx.showToast({
+              title: '无法加载图片',
+              icon: 'none'
+            });
+          }
+        },
+        complete: () => {
+          wx.hideLoading();
+        }
+      });
+    } else if (this.data.tempImageUrl) {
+      wx.previewImage({
+        urls: [this.data.tempImageUrl],
+        current: this.data.tempImageUrl
+      });
+    } else if (this.data.clothesInfo && this.data.clothesInfo.imageUrl) {
       wx.previewImage({
         urls: [this.data.clothesInfo.imageUrl],
         current: this.data.clothesInfo.imageUrl

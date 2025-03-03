@@ -1,7 +1,7 @@
 <!--page/wardrobe/closet/closet.wxml-->
 <view class="container">
   <!-- 分类选择 -->
-  <scroll-view scroll-x="true" enable-flex="true" class="categories">
+  <scroll-view scroll-x="true" enable-flex="true" class="categories" show-scrollbar="{{false}}">
     <view 
       class="category {{currentCategory === item ? 'active' : ''}}" 
       wx:for="{{categories}}" 
@@ -12,25 +12,52 @@
     </view>
   </scroll-view>
   
-  <!-- 衣物列表 -->
-  <view class="clothes-grid" wx:if="{{filteredClothes.length > 0}}">
-    <view 
-      class="clothes-item"
-      wx:for="{{filteredClothes}}" 
-      wx:key="_id"
-      bindtap="viewClothesDetail"
-      data-id="{{item._id}}">
-      <image class="clothes-image" src="{{item.imageUrl}}" mode="aspectFill"></image>
-      <view class="clothes-info">
-        <view class="clothes-category">{{item.category}}</view>
-      </view>
-    </view>
+  <!-- 加载中状态 -->
+  <view 
+    class="loading-container" 
+    style="height: calc(100% - {{categoriesHeight}}px); max-height: calc(100% - {{categoriesHeight}}px);"
+    wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">加载中...</view>
   </view>
   
+  <!-- 衣物列表 -->
+  <scroll-view 
+    scroll-y="true" 
+    enhanced="true"
+    show-scrollbar="false"
+    class="clothes-container"
+    style="height: calc(100% - {{categoriesHeight}}px); max-height: calc(100% - {{categoriesHeight}}px);"
+    wx:if="{{!isLoading && filteredClothes.length > 0}}">
+    <view class="clothes-grid">
+      <view 
+        class="clothes-item"
+        wx:for="{{filteredClothes}}" 
+        wx:key="_id"
+        bindtap="viewClothesDetail"
+        data-id="{{item._id}}">
+        <image 
+          wx:if="{{item.tempImageUrl}}" 
+          src="{{item.tempImageUrl}}" 
+          mode="aspectFill" 
+          lazy-load="true"
+          class="clothes-image"></image>
+        <view class="icon-{{item.category === '上衣' ? 'tshirt' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'jacket' : 'outfit'))}}" wx:else></view>
+        <view class="clothes-info">
+          <view class="clothes-name">{{item.name || ((item.color || '') + ' ' + (item.style || ''))}}</view>
+          <view class="clothes-category">{{item.category || '未分类'}}</view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+  
   <!-- 空状态 -->
-  <view class="empty-state" wx:if="{{filteredClothes.length === 0}}">
+  <view 
+    class="empty-state" 
+    style="height: calc(100% - {{categoriesHeight}}px); max-height: calc(100% - {{categoriesHeight}}px);"
+    wx:if="{{!isLoading && filteredClothes.length === 0}}">
     <view class="empty-icon"></view>
-    <view class="empty-text">还没有衣物，点击下方按钮添加</view>
+    <view class="empty-text">还没有{{currentCategory !== '全部' ? currentCategory : ''}}衣物，点击下方按钮添加</view>
   </view>
   
   <!-- 上传中状态 -->

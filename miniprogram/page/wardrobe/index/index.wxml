@@ -1,5 +1,11 @@
 <!--page/wardrobe/index/index.wxml-->
 <view class="container">
+  <!-- 加载中状态 -->
+  <view class="loading-overlay" wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">加载中...</view>
+  </view>
+  
   <!-- 天气组件 -->
   <view class="weather-widget" bindtap="viewWeatherDetail">
     <view class="weather-info">
@@ -15,10 +21,19 @@
   </view>
   
   <!-- 今日穿搭推荐 -->
-  <view class="section-title">今日穿搭推荐</view>
+  <view class="section-header">
+    <view class="section-title">今日穿搭推荐</view>
+  </view>
+  
   <view class="outfit-suggestion" bindtap="viewOutfitDetail">
     <view class="outfit-img">
-      <view class="icon-outfit"></view>
+      <image 
+        wx:if="{{outfitRecommendation.imageUrl}}"
+        src="{{outfitRecommendation.imageUrl}}"
+        mode="aspectFill"
+        class="outfit-image"
+      ></image>
+      <view class="icon-outfit" wx:else></view>
     </view>
     <view class="outfit-body">
       <view class="card-title">{{outfitRecommendation.title}}</view>
@@ -30,17 +45,40 @@
   </view>
   
   <!-- 最近添加的衣物 -->
-  <view class="section-title">最近添加的衣物</view>
-  <view class="grid">
-    <view class="clothes-item" wx:for="{{recentlyAdded}}" wx:key="id">
-      <view class="icon-{{item.type}}"></view>
+  <view class="section-header">
+    <view class="section-title">最近添加的衣物</view>
+    <view class="section-action" bindtap="viewAllClothes">查看全部</view>
+  </view>
+  
+  <view class="grid" wx:if="{{recentlyAdded.length > 0}}">
+    <view 
+      class="clothes-item" 
+      wx:for="{{recentlyAdded}}" 
+      wx:key="_id"
+      bindtap="viewClothesDetail"
+      data-id="{{item._id}}"
+    >
+      <image 
+        wx:if="{{item.tempImageUrl}}"
+        src="{{item.tempImageUrl}}"
+        mode="aspectFill"
+        class="clothes-thumbnail"
+      ></image>
+      <view class="icon-{{item.category === '上衣' ? 'tshirt' : (item.category === '裤子' ? 'pants' : 'jacket')}}" wx:else></view>
+      <view class="clothes-name-overlay">{{item.name || (item.color + item.style)}}</view>
     </view>
+  </view>
+  <view class="empty-state" wx:else>
+    <view class="empty-text">暂无衣物，快去添加吧</view>
   </view>
   
   <view class="divider"></view>
   
   <!-- 衣柜状态 -->
-  <view class="section-title">衣柜状态</view>
+  <view class="section-header">
+    <view class="section-title">衣柜状态</view>
+  </view>
+  
   <view class="card">
     <view class="card-body">
       <view class="flex-between closet-stat-item">
@@ -52,10 +90,14 @@
         <view class="closet-stat-value">{{closetStats.tops}} 件</view>
       </view>
       <view class="flex-between closet-stat-item">
-        <view class="closet-stat-label">裤子</view>
+        <view class="closet-stat-label">裤裙</view>
         <view class="closet-stat-value">{{closetStats.bottoms}} 件</view>
       </view>
       <view class="flex-between closet-stat-item">
+        <view class="closet-stat-label">外套</view>
+        <view class="closet-stat-value">{{closetStats.coats}} 件</view>
+      </view>
+      <view class="flex-between closet-stat-item" wx:if="{{closetStats.mostColor}}">
         <view class="closet-stat-label">最多颜色</view>
         <view class="closet-stat-value">{{closetStats.mostColor}} ({{closetStats.mostColorCount}} 件)</view>
       </view>

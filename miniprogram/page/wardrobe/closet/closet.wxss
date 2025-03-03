@@ -1,23 +1,40 @@
 /* page/wardrobe/closet/closet.wxss */
 
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20rpx 20rpx 0;
+  box-sizing: border-box;
+  position: relative;
+}
+
 /* 分类横向滚动 */
 .categories {
   display: flex;
   white-space: nowrap;
-  margin-bottom: 30rpx;
-  padding-bottom: 16rpx;
+  margin-bottom: 20rpx;
+  padding-bottom: 10rpx;
+  flex-shrink: 0;
+  height: auto;
+  max-height: 80rpx;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .category {
   display: inline-block;
-  padding: 16rpx 30rpx;
+  padding: 12rpx 24rpx;
   background-color: #efebe9;
   border-radius: 8rpx;
-  margin-right: 20rpx;
-  font-size: 28rpx;
+  margin-right: 16rpx;
+  font-size: 26rpx;
   white-space: nowrap;
   color: #8d6e63;
   transition: all 0.3s ease;
+  line-height: 1.2;
+  box-sizing: border-box;
 }
 
 .category.active {
@@ -26,25 +43,43 @@
   font-weight: 500;
 }
 
+/* 衣物容器 */
+.clothes-container {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding-right: 10rpx;
+  padding-left: 10rpx;
+  margin-top: 0;
+  -webkit-overflow-scrolling: touch; /* 添加iOS流畅滚动 */
+  flex-grow: 1;
+}
+
 /* 衣物网格 */
 .clothes-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24rpx;
+  grid-template-columns: repeat(auto-fill, minmax(160rpx, 1fr));
+  gap: 16rpx;
   width: 100%;
+  padding-bottom: 150rpx; /* 增加底部空间，确保内容不被添加按钮遮挡 */
+  box-sizing: border-box;
 }
 
 .clothes-item {
-  aspect-ratio: 1;
+  position: relative;
   background-color: #efebe9;
-  border-radius: 8rpx;
+  border-radius: 12rpx;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #a1887f;
-  position: relative;
+  overflow: hidden;
   box-shadow: 0 2rpx 8rpx rgba(105, 87, 76, 0.1);
   transition: all 0.3s ease;
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%; /* 使用padding-bottom来强制维持正方形比例 */
 }
 
 .clothes-item:active {
@@ -52,8 +87,51 @@
   box-shadow: 0 1rpx 3rpx rgba(105, 87, 76, 0.1);
 }
 
+.clothes-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.clothes-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12rpx;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.1));
+  color: white;
+  min-height: 60rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  z-index: 2;
+}
+
+.clothes-name {
+  font-size: 24rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4rpx;
+}
+
+.clothes-category {
+  font-size: 20rpx;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 图标样式 */
-.icon-tshirt, .icon-shirt, .icon-pants, .icon-skirt, .icon-jacket, .icon-shoes, .icon-socks, .icon-hat {
+.icon-tshirt, .icon-pants, .icon-jacket, .icon-outfit {
   width: 60rpx;
   height: 60rpx;
   background-size: contain;
@@ -65,32 +143,72 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21Z' /%3E%3C/svg%3E");
 }
 
-.icon-shirt {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
-}
-
 .icon-pants {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M10,3L8,18.5L13,21.5L18,18.5L16,3H10Z' /%3E%3C/svg%3E");
-}
-
-.icon-skirt {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M12.5,1.5C10.73,1.5 9.17,2.67 8.67,4.37C8.14,4.25 7.59,4.18 7,4.17C7,4.17 5,13.5 5,16.5C5,20.19 8.31,23.5 12,23.5C15.69,23.5 19,20.19 19,16.5C19,13.5 17,4.17 17,4.17C16.41,4.18 15.86,4.25 15.33,4.37C14.83,2.67 13.27,1.5 11.5,1.5V3.5C12.33,3.5 13,4.17 13,5C13,5.83 12.33,6.5 11.5,6.5C10.67,6.5 10,5.83 10,5C10,4.17 10.67,3.5 11.5,3.5V1.5H12.5Z' /%3E%3C/svg%3E");
 }
 
 .icon-jacket {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M12,2A2,2 0 0,1 14,4V6H15C16.11,6 17,6.89 17,8V20A2,2 0 0,1 15,22H9A2,2 0 0,1 7,20V8C7,6.89 7.9,6 9,6H10V4C10,2.89 10.9,2 12,2M12,4V6H10V8H8V20H16V8H14V6H12V4Z' /%3E%3C/svg%3E");
 }
 
-.icon-shoes {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M5,15.1L6.5,16.6L3.9,19.2L2.4,17.7L5,15.1M15.9,10.1L22,4L20.6,2.6L14.5,8.7L15.9,10.1M22,19.3V14.75C22,14.75 20.6,17.7 15.5,17.7C10.4,17.7 2,19.3 2,19.3H22M7.3,20.7H3.7V22H7.3V20.7M10.9,20.7H8.3V22H10.9V20.7M14.5,20.7H11.9V22H14.5V20.7M18.2,20.7H15.5V22H18.2V20.7M22,20.7H19.2V22H22V20.7Z' /%3E%3C/svg%3E");
+.icon-outfit {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
 }
 
-.icon-socks {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M19,15.8C17.3,15.8 15.8,17.3 15.8,19C15.8,20.7 17.3,22.2 19,22.2C20.7,22.2 22.2,20.7 22.2,19C22.2,17.3 20.7,15.8 19,15.8M19,20.8C18,20.8 17.2,20 17.2,19C17.2,18 18,17.2 19,17.2C20,17.2 20.8,18 20.8,19C20.8,20 20,20.8 19,20.8M11,14L5,14C4.45,14 4,13.55 4,13V2.97H2.06V2.03H5C5.55,2.03 6,2.48 6,3.03V12H11C11.55,12 12,12.45 12,13C12,13.55 11.55,14 11,14Z' /%3E%3C/svg%3E");
+/* 加载中状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  flex: 1;
 }
 
-.icon-hat {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M3,4H21V7H20L17,13H12L9,7H8V4M10,5C9.45,5 9,5.45 9,6C9,6.55 9.45,7 10,7C10.55,7 11,6.55 11,6C11,5.45 10.55,5 10,5M14,5C13.45,5 13,5.45 13,6C13,6.55 13.45,7 14,7C14.55,7 15,6.55 15,6C15,5.45 14.55,5 14,5M17,6C16.45,6 16,6.45 16,7C16,7.55 16.45,8 17,8C17.55,8 18,7.55 18,7C18,6.45 17.55,6 17,6M7,6C6.45,6 6,6.45 6,7C6,7.55 6.45,8 7,8C7.55,8 8,7.55 8,7C8,6.45 7.55,6 7,6M16,16C16,18.8 13.8,21 11,21C8.2,21 6,18.8 6,16V15H16V16Z' /%3E%3C/svg%3E");
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 5rpx solid #efebe9;
+  border-top: 5rpx solid #8d6e63;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #8d6e63;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  flex: 1;
+}
+
+.empty-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 30rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d7ccc8'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #a1887f;
+  text-align: center;
 }
 
 /* 添加按钮 */
@@ -194,7 +312,7 @@
 }
 
 .url-icon {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M10.59,13.41C11,13.8 11,14.44 10.59,14.83C10.2,15.22 9.56,15.22 9.17,14.83C7.22,12.88 7.22,9.71 9.17,7.76V7.76L12.71,4.22C14.66,2.27 17.83,2.27 19.78,4.22C21.73,6.17 21.73,9.34 19.78,11.29L18.29,12.78C18.3,11.96 18.17,11.14 17.89,10.36L18.36,9.88C19.54,8.71 19.54,6.81 18.36,5.64C17.19,4.46 15.29,4.46 14.12,5.64L10.59,9.17C9.41,10.34 9.41,12.24 10.59,13.41M13.41,9.17C13.8,8.78 14.44,8.78 14.83,9.17C16.78,11.12 16.78,14.29 14.83,16.24V16.24L11.29,19.78C9.34,21.73 6.17,21.73 4.22,19.78C2.27,17.83 2.27,14.66 4.22,12.71L5.71,11.22C5.7,12.04 5.83,12.86 6.11,13.65L5.64,14.12C4.46,15.29 4.46,17.19 5.64,18.36C6.81,19.54 8.71,19.54 9.88,18.36L13.41,14.83C14.59,13.66 14.59,11.76 13.41,10.59C13,10.2 13,9.56 13.41,9.17Z' /%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M16,15H9V13H16V15M19,11H9V9H19V11M19,7H9V5H19V7M3,5V21H19V23H3A2,2 0 0,1 1,21V5H3M21,1A2,2 0 0,1 23,3V17C23,18.11 22.11,19 21,19H7A2,2 0 0,1 5,17V3C5,1.89 5.89,1 7,1H21M7,3V17H21V3H7Z' /%3E%3C/svg%3E");
 }
 
 .add-option-text {
@@ -210,4 +328,43 @@
   color: #8d6e63;
   border-radius: 8rpx;
   background-color: #efebe9;
+}
+
+/* 上传中状态 */
+.upload-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-content {
+  background-color: #f8f5f2;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+}
+
+.upload-spinner {
+  width: 80rpx;
+  height: 80rpx;
+  border: 6rpx solid #efebe9;
+  border-top: 6rpx solid #8d6e63;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+.upload-text {
+  font-size: 30rpx;
+  color: #5d4037;
 }

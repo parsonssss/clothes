@@ -1,5 +1,40 @@
 /* page/wardrobe/index/index.wxss */
 
+/* 加载状态 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(248, 245, 242, 0.9);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 5rpx solid #efebe9;
+  border-top: 5rpx solid #8d6e63;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #8d6e63;
+}
+
 /* 天气组件 */
 .weather-widget {
   display: flex;
@@ -36,7 +71,7 @@
 }
 
 /* 图标样式 */
-.icon-sun, .icon-cloud, .icon-rain, .icon-outfit, .icon-tshirt, .icon-socks, .icon-hat, .icon-shoes {
+.icon-sun, .icon-cloud, .icon-rain, .icon-outfit, .icon-tshirt, .icon-socks, .icon-hat, .icon-shoes, .icon-pants, .icon-jacket {
   width: 60rpx;
   height: 60rpx;
   background-size: contain;
@@ -67,19 +102,47 @@
 }
 
 .icon-tshirt {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21Z' /%3E%3C/svg%3E");
 }
 
-.icon-socks {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M19,15.8C17.3,15.8 15.8,17.3 15.8,19C15.8,20.7 17.3,22.2 19,22.2C20.7,22.2 22.2,20.7 22.2,19C22.2,17.3 20.7,15.8 19,15.8M19,20.8C18,20.8 17.2,20 17.2,19C17.2,18 18,17.2 19,17.2C20,17.2 20.8,18 20.8,19C20.8,20 20,20.8 19,20.8M11,14L5,14C4.45,14 4,13.55 4,13V2.97H2.06V2.03H5C5.55,2.03 6,2.48 6,3.03V12H11C11.55,12 12,12.45 12,13C12,13.55 11.55,14 11,14Z' /%3E%3C/svg%3E");
+.icon-pants {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M10,3L8,18.5L13,21.5L18,18.5L16,3H10Z' /%3E%3C/svg%3E");
 }
 
-.icon-hat {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M3,4H21V7H20L17,13H12L9,7H8V4M10,5C9.45,5 9,5.45 9,6C9,6.55 9.45,7 10,7C10.55,7 11,6.55 11,6C11,5.45 10.55,5 10,5M14,5C13.45,5 13,5.45 13,6C13,6.55 13.45,7 14,7C14.55,7 15,6.55 15,6C15,5.45 14.55,5 14,5M17,6C16.45,6 16,6.45 16,7C16,7.55 16.45,8 17,8C17.55,8 18,7.55 18,7C18,6.45 17.55,6 17,6M7,6C6.45,6 6,6.45 6,7C6,7.55 6.45,8 7,8C7.55,8 8,7.55 8,7C8,6.45 7.55,6 7,6M16,16C16,18.8 13.8,21 11,21C8.2,21 6,18.8 6,16V15H16V16Z' /%3E%3C/svg%3E");
+.icon-jacket {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M12,2A2,2 0 0,1 14,4V6H15C16.11,6 17,6.89 17,8V20A2,2 0 0,1 15,22H9A2,2 0 0,1 7,20V8C7,6.89 7.9,6 9,6H10V4C10,2.89 10.9,2 12,2M12,4V6H10V8H8V20H16V8H14V6H12V4Z' /%3E%3C/svg%3E");
 }
 
-.icon-shoes {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M5,15.1L6.5,16.6L3.9,19.2L2.4,17.7L5,15.1M15.9,10.1L22,4L20.6,2.6L14.5,8.7L15.9,10.1M22,19.3V14.75C22,14.75 20.6,17.7 15.5,17.7C10.4,17.7 2,19.3 2,19.3H22M7.3,20.7H3.7V22H7.3V20.7M10.9,20.7H8.3V22H10.9V20.7M14.5,20.7H11.9V22H14.5V20.7M18.2,20.7H15.5V22H18.2V20.7M22,20.7H19.2V22H22V20.7Z' /%3E%3C/svg%3E");
+/* 标题样式 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
+  color: #5d4037;
+  font-size: 32rpx;
+  font-weight: 400;
+  letter-spacing: 2rpx;
+  position: relative;
+  display: inline-block;
+}
+
+.section-title:after {
+  content: '';
+  position: absolute;
+  bottom: -8rpx;
+  left: 0;
+  width: 40rpx;
+  height: 2rpx;
+  background-color: #8d6e63;
+}
+
+.section-action {
+  font-size: 24rpx;
+  color: #8d6e63;
 }
 
 /* 穿搭推荐 */
@@ -100,6 +163,13 @@
   justify-content: center;
   align-items: center;
   color: #a1887f;
+  position: relative;
+}
+
+.outfit-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .outfit-body {
@@ -111,6 +181,70 @@
   display: flex;
   flex-wrap: wrap;
   margin-top: 20rpx;
+}
+
+.tag {
+  display: inline-block;
+  padding: 6rpx 16rpx;
+  background-color: #efebe9;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
+  color: #8d6e63;
+}
+
+/* 最近添加的衣物 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-bottom: 40rpx;
+}
+
+.clothes-item {
+  position: relative;
+  aspect-ratio: 1;
+  background-color: #efebe9;
+  border-radius: 8rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(105, 87, 76, 0.1);
+}
+
+.clothes-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.clothes-name-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: white;
+  font-size: 24rpx;
+  padding: 20rpx 10rpx 10rpx;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 空状态 */
+.empty-state {
+  padding: 40rpx 0;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.empty-text {
+  color: #a1887f;
+  font-size: 28rpx;
 }
 
 /* 衣柜状态卡片 */
@@ -132,16 +266,4 @@
   color: #5d4037;
   font-size: 28rpx;
   font-weight: 400;
-}
-
-/* 衣物项目 */
-.clothes-item {
-  aspect-ratio: 1;
-  background-color: #efebe9;
-  border-radius: 8rpx;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  color: #a1887f;
 }
