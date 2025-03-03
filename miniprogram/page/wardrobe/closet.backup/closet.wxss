@@ -1,0 +1,370 @@
+/* page/wardrobe/closet/closet.wxss */
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20rpx 20rpx 0;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* 分类横向滚动 */
+.categories {
+  display: flex;
+  white-space: nowrap;
+  margin-bottom: 20rpx;
+  padding-bottom: 10rpx;
+  flex-shrink: 0;
+  height: auto;
+  max-height: 80rpx;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.category {
+  display: inline-block;
+  padding: 12rpx 24rpx;
+  background-color: #efebe9;
+  border-radius: 8rpx;
+  margin-right: 16rpx;
+  font-size: 26rpx;
+  white-space: nowrap;
+  color: #8d6e63;
+  transition: all 0.3s ease;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+.category.active {
+  background-color: #d7ccc8;
+  color: #5d4037;
+  font-weight: 500;
+}
+
+/* 衣物容器 */
+.clothes-container {
+  flex: 1;
+  width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding-right: 10rpx;
+  padding-left: 10rpx;
+  margin-top: 0;
+  -webkit-overflow-scrolling: touch; /* 添加iOS流畅滚动 */
+  flex-grow: 1;
+}
+
+/* 衣物网格 */
+.clothes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160rpx, 1fr));
+  gap: 16rpx;
+  width: 100%;
+  padding-bottom: 150rpx; /* 增加底部空间，确保内容不被添加按钮遮挡 */
+  box-sizing: border-box;
+}
+
+.clothes-item {
+  position: relative;
+  background-color: #efebe9;
+  border-radius: 12rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #a1887f;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(105, 87, 76, 0.1);
+  transition: all 0.3s ease;
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%; /* 使用padding-bottom来强制维持正方形比例 */
+}
+
+.clothes-item:active {
+  transform: scale(0.97);
+  box-shadow: 0 1rpx 3rpx rgba(105, 87, 76, 0.1);
+}
+
+.clothes-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.clothes-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12rpx;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.1));
+  color: white;
+  min-height: 60rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  z-index: 2;
+}
+
+.clothes-name {
+  font-size: 24rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4rpx;
+}
+
+.clothes-category {
+  font-size: 20rpx;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 图标样式 */
+.icon-tshirt, .icon-pants, .icon-jacket, .icon-outfit {
+  width: 60rpx;
+  height: 60rpx;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.icon-tshirt {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21Z' /%3E%3C/svg%3E");
+}
+
+.icon-pants {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M10,3L8,18.5L13,21.5L18,18.5L16,3H10Z' /%3E%3C/svg%3E");
+}
+
+.icon-jacket {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M12,2A2,2 0 0,1 14,4V6H15C16.11,6 17,6.89 17,8V20A2,2 0 0,1 15,22H9A2,2 0 0,1 7,20V8C7,6.89 7.9,6 9,6H10V4C10,2.89 10.9,2 12,2M12,4V6H10V8H8V20H16V8H14V6H12V4Z' /%3E%3C/svg%3E");
+}
+
+.icon-outfit {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a1887f'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
+}
+
+/* 加载中状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  flex: 1;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 5rpx solid #efebe9;
+  border-top: 5rpx solid #8d6e63;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #8d6e63;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  flex: 1;
+}
+
+.empty-icon {
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 30rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23d7ccc8'%3E%3Cpath d='M16,21H8A1,1 0 0,1 7,20V12.07L5.7,13.12C5.31,13.5 4.68,13.5 4.29,13.12L1.46,10.29C1.07,9.9 1.07,9.27 1.46,8.88L7.34,3H9C9,4.1 10.34,5 12,5C13.66,5 15,4.1 15,3H16.66L22.54,8.88C22.93,9.27 22.93,9.9 22.54,10.29L19.71,13.12C19.32,13.5 18.69,13.5 18.3,13.12L17,12.07V20A1,1 0 0,1 16,21M20.42,9.58L16.11,5.28C15.8,5.63 15.43,5.94 15,6.2C14.16,6.7 13.13,7 12,7C10.3,7 8.79,6.32 7.89,5.28L3.58,9.58L5,11L8,9H9V19H15V9H16L19,11L20.42,9.58Z' /%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #a1887f;
+  text-align: center;
+}
+
+/* 添加按钮 */
+.add-btn {
+  position: fixed;
+  right: 40rpx;
+  bottom: 120rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background-color: #8d6e63;
+  box-shadow: 0 4rpx 10rpx rgba(105, 87, 76, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.add-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2rpx 5rpx rgba(105, 87, 76, 0.3);
+}
+
+.add-icon {
+  width: 40rpx;
+  height: 40rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z' /%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* 添加选项弹窗 */
+.add-options-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.add-options-overlay.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+.add-options-container {
+  width: 100%;
+  background-color: #f8f5f2;
+  border-top-left-radius: 24rpx;
+  border-top-right-radius: 24rpx;
+  padding: 40rpx 30rpx;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.add-options-overlay.show .add-options-container {
+  transform: translateY(0);
+}
+
+.add-option-title {
+  text-align: center;
+  font-size: 32rpx;
+  color: #5d4037;
+  margin-bottom: 40rpx;
+  font-weight: 400;
+  letter-spacing: 2rpx;
+}
+
+.add-option {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #efebe9;
+}
+
+.add-option-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-right: 20rpx;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.camera-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z' /%3E%3C/svg%3E");
+}
+
+.album-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M5,3A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H14.09C14.03,20.67 14,20.34 14,20C14,19.32 14.12,18.64 14.35,18H5L8.5,13.5L11,16.5L14.5,12L16.73,14.97C17.7,14.34 18.84,14 20,14C20.34,14 20.67,14.03 21,14.09V5C21,3.89 20.1,3 19,3H5M19,16V19H16V21H19V24H21V21H24V19H21V16H19Z' /%3E%3C/svg%3E");
+}
+
+.url-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d6e63'%3E%3Cpath d='M16,15H9V13H16V15M19,11H9V9H19V11M19,7H9V5H19V7M3,5V21H19V23H3A2,2 0 0,1 1,21V5H3M21,1A2,2 0 0,1 23,3V17C23,18.11 22.11,19 21,19H7A2,2 0 0,1 5,17V3C5,1.89 5.89,1 7,1H21M7,3V17H21V3H7Z' /%3E%3C/svg%3E");
+}
+
+.add-option-text {
+  font-size: 30rpx;
+  color: #5d4037;
+}
+
+.cancel-btn {
+  margin-top: 40rpx;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 30rpx;
+  color: #8d6e63;
+  border-radius: 8rpx;
+  background-color: #efebe9;
+}
+
+/* 上传中状态 */
+.upload-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-content {
+  background-color: #f8f5f2;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+}
+
+.upload-spinner {
+  width: 80rpx;
+  height: 80rpx;
+  border: 6rpx solid #efebe9;
+  border-top: 6rpx solid #8d6e63;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+.upload-text {
+  font-size: 30rpx;
+  color: #5d4037;
+}

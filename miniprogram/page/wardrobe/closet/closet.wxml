@@ -1,95 +1,128 @@
-<!--page/wardrobe/closet/closet.wxml-->
-<view class="container">
+<view class="container" style="background-color: {{colors.lightTaupe}};">
   <!-- Loading state -->
   <view class="loading-container" wx:if="{{isLoading}}">
-    <view class="loading-spinner"></view>
-    <view class="loading-text">Loading...</view>
+    <view class="loading-spinner" style="border-top-color: {{colors.darkOlive}}; border-color: {{colors.lightTaupe}};"></view>
+    <view class="loading-text" style="color: {{colors.darkOlive}};">加载中...</view>
   </view>
   
-  <!-- Category cards display -->
-  <swiper class="category-swiper" 
-    bindchange="onSwiperChange" 
-    current="{{currentCategoryIndex}}"
-    previous-margin="50rpx"
-    next-margin="50rpx"
-    circular="true"
-    wx:if="{{!isLoading}}">
-    <swiper-item wx:for="{{categories}}" wx:key="*this" class="category-swiper-item">
-      <view class="category-card {{currentCategoryIndex === index ? 'active' : ''}}" bindtap="showCategoryClothes" data-category="{{item}}">
-        <view class="category-icon {{item === '上衣' ? 'tops' : item === '裤子' ? 'pants' : (item === '外套' ? 'coat' : (item === '裙子' ? 'skirt' : (item === '鞋子' ? 'shoes' : (item === '配饰' ? 'accessories' : 'all'))))}}"></view>
-        <view class="category-name">{{item}}</view>
-        <view class="category-count">{{getCategoryCount(item)}} items</view>
-      </view>
-    </swiper-item>
-  </swiper>
-  
-  <!-- Clothes list dialog -->
-  <view class="clothes-dialog {{showClothesDialog ? 'show' : ''}}">
-    <view class="clothes-dialog-header">
-      <view class="clothes-dialog-title">{{dialogCategory}} Items</view>
-      <view class="clothes-dialog-close" bindtap="hideClothesDialog">×</view>
-    </view>
-    
-    <scroll-view scroll-y="true" class="clothes-dialog-content">
-      <view class="clothes-grid">
+  <!-- 主要内容区域 -->
+  <view class="main-content" wx:if="{{!isLoading}}">
+    <!-- 卡片区域 -->
+    <view class="card-container">
+      <!-- 滑动按钮 -->
+      <view class="nav-button prev" catchtap="slidePrev" style="color: {{colors.darkOlive}};">◀</view>
+      
+      <!-- 类别卡片 -->
+      <view class="card-wrapper">
         <view 
-          class="clothes-item"
-          wx:for="{{filteredClothes}}" 
-          wx:key="_id"
-          bindtap="viewClothesDetail"
-          data-id="{{item._id}}">
-          <image 
-            wx:if="{{item.tempImageUrl}}" 
-            src="{{item.tempImageUrl}}" 
-            mode="aspectFill" 
-            lazy-load="true"
-            class="clothes-image"></image>
-          <view class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" wx:else></view>
-          <view class="clothes-info">
-            <view class="clothes-name">{{item.name || ((item.color || '') + ' ' + (item.style || ''))}}</view>
-            <view class="clothes-category">{{item.category || 'Uncategorized'}}</view>
+          wx:for="{{categories}}" 
+          wx:key="id"
+          class="category-card {{currentIndex === index ? 'active' : ''}}" 
+          style="background-color: {{currentIndex === index ? colors.mediumBrown : colors.lightTaupe}}; z-index: {{cards[index].zIndex}}; transform: translateX({{cards[index].translateX}}rpx);"
+          catchtap="onCardTap"
+          data-index="{{index}}"
+          hidden="{{!cards[index].visible}}"
+        >
+          <view class="category-icon" style="background-color: {{colors.darkOlive}}; color: {{colors.lightTaupe}};">
+            {{item.icon}}
           </view>
+          <text class="category-name" style="color: {{colors.darkOlive}};">{{item.name}}</text>
+          <text class="category-en-name" style="color: {{colors.darkCoffee}};">{{item.enName}}</text>
+          <text class="category-count" style="color: {{colors.darkCoffee}};">{{item.count}} 件</text>
         </view>
       </view>
       
-      <!-- Empty state -->
-      <view class="empty-state" wx:if="{{filteredClothes.length === 0}}">
-        <view class="empty-icon"></view>
-        <view class="empty-text">No {{dialogCategory !== '全部' ? dialogCategory : ''}} items yet. Click the button below to add.</view>
-      </view>
-    </scroll-view>
-  </view>
-  
-  <!-- Uploading state -->
-  <view class="upload-overlay" wx:if="{{isUploading}}">
-    <view class="upload-content">
-      <view class="upload-spinner"></view>
-      <view class="upload-text">Uploading and analyzing item...</view>
+      <!-- 滑动按钮 -->
+      <view class="nav-button next" catchtap="slideNext" style="color: {{colors.darkOlive}};">▶</view>
     </view>
   </view>
   
-  <!-- Add button -->
-  <view class="add-btn" bindtap="showAddOptions">
+  <!-- 详情大卡片 -->
+  <view class="detail-card-container" wx:if="{{selectedCategory}}" bindtap="onDetailBackgroundTap">
+    <view 
+      class="detail-card" 
+      style="background-color: {{colors.mediumBrown}};"
+      catchtap="preventBubble"
+    >
+      <!-- 卡片顶部 -->
+      <view class="detail-header">
+        <text class="detail-title" style="color: {{colors.darkOlive}};">{{selectedCategory.name}}</text>
+        <view class="close-button" bindtap="closeDetail" style="color: {{colors.darkOlive}};">×</view>
+      </view>
+
+      <!-- 衣物网格 -->
+      <scroll-view class="clothes-grid" scroll-y="true">
+        <view class="grid-container">
+          <block wx:for="{{filteredClothes}}" wx:key="_id">
+            <view 
+              class="clothes-item" 
+              style="background-color: {{colors.lightTaupe}};"
+              bindtap="viewClothesDetail"
+              data-id="{{item._id}}"
+            >
+              <image 
+                wx:if="{{item.tempImageUrl}}" 
+                src="{{item.tempImageUrl}}" 
+                mode="aspectFill" 
+                lazy-load="true"
+                class="clothes-image"></image>
+              <view 
+                class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" 
+                wx:else
+                style="color: {{colors.darkOlive}};"
+              ></view>
+              <view class="clothes-info">
+                <view class="clothes-name" style="color: {{colors.darkOlive}};">{{item.name || ((item.color || '') + ' ' + (item.style || ''))}}</view>
+                <view class="clothes-category" style="color: {{colors.darkCoffee}};">{{item.category || '未分类'}}</view>
+              </view>
+            </view>
+          </block>
+        </view>
+        
+        <!-- 空状态 -->
+        <view class="empty-state" wx:if="{{filteredClothes.length === 0}}">
+          <view class="empty-icon" style="color: {{colors.lightTaupe}};"></view>
+          <view class="empty-text" style="color: {{colors.darkCoffee}};">暂无{{selectedCategory.category || ''}}衣物，点击下方按钮添加。</view>
+        </view>
+      </scroll-view>
+      
+      <!-- 添加按钮 -->
+      <view class="add-button-container">
+        <view class="add-button" style="background-color: {{colors.darkOlive}}; color: {{colors.lightTaupe}};" bindtap="showAddOptions">+</view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 上传中状态 -->
+  <view class="upload-overlay" wx:if="{{isUploading}}">
+    <view class="upload-content" style="background-color: {{colors.lightTaupe}};">
+      <view class="upload-spinner" style="border-top-color: {{colors.darkOlive}}; border-color: {{colors.lightTaupe}};"></view>
+      <view class="upload-text" style="color: {{colors.darkOlive}};">上传分析中...</view>
+    </view>
+  </view>
+  
+  <!-- 添加按钮 -->
+  <view class="add-btn" bindtap="showAddOptions" style="background-color: {{colors.darkOlive}};">
     <view class="add-icon"></view>
   </view>
   
-  <!-- Add options dialog -->
+  <!-- 添加选项弹窗 -->
   <view class="add-options-overlay {{showAddOptions ? 'show' : ''}}" bindtap="hideAddOptions">
-    <view class="add-options-container" catchtap>
-      <view class="add-option-title">Add Item</view>
+    <view class="add-options-container" style="background-color: {{colors.lightTaupe}};" catchtap>
+      <view class="add-option-title" style="color: {{colors.darkOlive}};">添加衣物</view>
       <view class="add-option" bindtap="addByCamera">
         <view class="add-option-icon camera-icon"></view>
-        <view class="add-option-text">Add by camera (AI recognition)</view>
+        <view class="add-option-text" style="color: {{colors.darkOlive}};">使用相机拍照（AI识别）</view>
       </view>
       <view class="add-option" bindtap="addByAlbum">
         <view class="add-option-icon album-icon"></view>
-        <view class="add-option-text">Select from album (AI recognition)</view>
+        <view class="add-option-text" style="color: {{colors.darkOlive}};">从相册选择（AI识别）</view>
       </view>
       <view class="add-option" bindtap="addByUrl">
         <view class="add-option-icon url-icon"></view>
-        <view class="add-option-text">Manual entry (fill in details)</view>
+        <view class="add-option-text" style="color: {{colors.darkOlive}};">手动添加（填写详情）</view>
       </view>
-      <view class="cancel-btn" bindtap="hideAddOptions">Cancel</view>
+      <view class="cancel-btn" bindtap="hideAddOptions" style="background-color: {{colors.lightTaupe}}; color: {{colors.darkOlive}}; border: 1rpx solid {{colors.darkOlive}};">取消</view>
     </view>
   </view>
 </view>

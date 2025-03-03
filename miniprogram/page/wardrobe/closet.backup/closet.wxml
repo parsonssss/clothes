@@ -1,0 +1,95 @@
+<!--page/wardrobe/closet/closet.wxml-->
+<view class="container">
+  <!-- Loading state -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">Loading...</view>
+  </view>
+  
+  <!-- Category cards display -->
+  <swiper class="category-swiper" 
+    bindchange="onSwiperChange" 
+    current="{{currentCategoryIndex}}"
+    previous-margin="50rpx"
+    next-margin="50rpx"
+    circular="true"
+    wx:if="{{!isLoading}}">
+    <swiper-item wx:for="{{categories}}" wx:key="*this" class="category-swiper-item">
+      <view class="category-card {{currentCategoryIndex === index ? 'active' : ''}}" bindtap="showCategoryClothes" data-category="{{item}}">
+        <view class="category-icon {{item === '上衣' ? 'tops' : item === '裤子' ? 'pants' : (item === '外套' ? 'coat' : (item === '裙子' ? 'skirt' : (item === '鞋子' ? 'shoes' : (item === '配饰' ? 'accessories' : 'all'))))}}"></view>
+        <view class="category-name">{{item}}</view>
+        <view class="category-count">{{getCategoryCount(item)}} items</view>
+      </view>
+    </swiper-item>
+  </swiper>
+  
+  <!-- Clothes list dialog -->
+  <view class="clothes-dialog {{showClothesDialog ? 'show' : ''}}">
+    <view class="clothes-dialog-header">
+      <view class="clothes-dialog-title">{{dialogCategory}} Items</view>
+      <view class="clothes-dialog-close" bindtap="hideClothesDialog">×</view>
+    </view>
+    
+    <scroll-view scroll-y="true" class="clothes-dialog-content">
+      <view class="clothes-grid">
+        <view 
+          class="clothes-item"
+          wx:for="{{filteredClothes}}" 
+          wx:key="_id"
+          bindtap="viewClothesDetail"
+          data-id="{{item._id}}">
+          <image 
+            wx:if="{{item.tempImageUrl}}" 
+            src="{{item.tempImageUrl}}" 
+            mode="aspectFill" 
+            lazy-load="true"
+            class="clothes-image"></image>
+          <view class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" wx:else></view>
+          <view class="clothes-info">
+            <view class="clothes-name">{{item.name || ((item.color || '') + ' ' + (item.style || ''))}}</view>
+            <view class="clothes-category">{{item.category || 'Uncategorized'}}</view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- Empty state -->
+      <view class="empty-state" wx:if="{{filteredClothes.length === 0}}">
+        <view class="empty-icon"></view>
+        <view class="empty-text">No {{dialogCategory !== '全部' ? dialogCategory : ''}} items yet. Click the button below to add.</view>
+      </view>
+    </scroll-view>
+  </view>
+  
+  <!-- Uploading state -->
+  <view class="upload-overlay" wx:if="{{isUploading}}">
+    <view class="upload-content">
+      <view class="upload-spinner"></view>
+      <view class="upload-text">Uploading and analyzing item...</view>
+    </view>
+  </view>
+  
+  <!-- Add button -->
+  <view class="add-btn" bindtap="showAddOptions">
+    <view class="add-icon"></view>
+  </view>
+  
+  <!-- Add options dialog -->
+  <view class="add-options-overlay {{showAddOptions ? 'show' : ''}}" bindtap="hideAddOptions">
+    <view class="add-options-container" catchtap>
+      <view class="add-option-title">Add Item</view>
+      <view class="add-option" bindtap="addByCamera">
+        <view class="add-option-icon camera-icon"></view>
+        <view class="add-option-text">Add by camera (AI recognition)</view>
+      </view>
+      <view class="add-option" bindtap="addByAlbum">
+        <view class="add-option-icon album-icon"></view>
+        <view class="add-option-text">Select from album (AI recognition)</view>
+      </view>
+      <view class="add-option" bindtap="addByUrl">
+        <view class="add-option-icon url-icon"></view>
+        <view class="add-option-text">Manual entry (fill in details)</view>
+      </view>
+      <view class="cancel-btn" bindtap="hideAddOptions">Cancel</view>
+    </view>
+  </view>
+</view>
