@@ -2,17 +2,17 @@
 Page({
   data: {
     currentCategory: '全部',
+    currentCategoryIndex: 0,
+    dialogCategory: '', // 弹窗显示的类别
     categories: ['全部', '上衣', '裤子', '裙子', '外套', '鞋子', '配饰'],
     clothes: [],
     filteredClothes: [],
+    showClothesDialog: false, // 是否显示衣物弹窗
     showAddOptions: false,
     isUploading: false,
     isLoading: true,
-    scrollHeight: 0,
-    categoriesHeight: 50, // 调整默认高度值
-    lastUrlRefreshTime: 0, // 最后一次更新图片URL的时间
-    leaveTime: null, // 记录页面离开时间
-    userOpenId: '' // 存储用户的openid
+    userOpenId: '', // 存储用户的openid
+    categoryCounts: {} // 存储各类别的衣物数量
   },
   
   onLoad: function() {
@@ -21,7 +21,6 @@ Page({
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
     } else {
       wx.cloud.init({
-        // env: 'your-env-id', // 默认环境，也可以在云开发控制台手动指定
         env: 'cloud1-3gi97kso9ab01185',
         traceUser: true,
       });
@@ -29,9 +28,6 @@ Page({
     
     // 获取用户OpenID
     this.getUserOpenId();
-    
-    // 获取窗口高度，用于设置滚动区域高度
-    this.setScrollHeight();
   },
   
   onShow: function() {
@@ -39,29 +35,6 @@ Page({
     if (this.data.userOpenId) {
       this.getClothes();
     }
-    
-    // 检查并更新临时URL
-    this.checkAndRefreshUrls();
-    
-    // 如果有记录离开时间，并且离开超过10分钟，立即刷新
-    if (this.data.leaveTime) {
-      const now = Date.now();
-      const tenMinutesInMs = 10 * 60 * 1000;
-      
-      if (now - this.data.leaveTime > tenMinutesInMs) {
-        console.log('页面重新显示，已离开超过10分钟，立即刷新图片');
-        this.checkAndRefreshUrls();
-      }
-      
-      // 清除离开时间记录
-      this.data.leaveTime = null;
-    }
-  },
-  
-  // 添加定时器，确保即使在后台也能定期刷新
-  onHide: function() {
-    // 记录离开时间
-    this.data.leaveTime = Date.now();
   },
   
   // 获取当前用户的OpenID
@@ -170,112 +143,6 @@ Page({
     });
   },
   
-  // 设置滚动区域高度
-  setScrollHeight: function() {
-    const that = this;
-    const query = wx.createSelectorQuery();
-    
-    // 获取系统信息
-    const systemInfo = wx.getSystemInfoSync();
-    
-    // 首先获取分类栏的高度
-    query.select('.categories').boundingClientRect(function(categoriesRect) {
-      if (!categoriesRect) {
-        // 如果获取失败，使用默认值
-        console.log('获取分类栏高度失败，使用默认值');
-        return;
-      }
-      
-      // 存储分类栏实际高度便于计算
-      that.setData({
-        categoriesHeight: Math.ceil(categoriesRect.height)
-      });
-      
-      console.log('Categories actual height:', categoriesRect.height);
-    }).exec();
-  },
-  
-  // 检查是否需要更新临时URL
-  checkAndRefreshUrls: function() {
-    const now = Date.now();
-    const tenMinutesInMs = 10 * 60 * 1000; // 10分钟的毫秒数
-    
-    // 如果距离上次更新超过10分钟或首次加载，则更新URL
-    if (now - this.data.lastUrlRefreshTime > tenMinutesInMs) {
-      console.log('更新临时URL，距离上次更新时间：', (now - this.data.lastUrlRefreshTime) / 1000, '秒');
-      this.setData({
-        lastUrlRefreshTime: now
-      });
-      
-      // 如果有衣物数据，重新获取临时URL
-      if (this.data.clothes && this.data.clothes.length > 0) {
-        this.refreshClothesImages(this.data.clothes);
-      }
-    }
-  },
-  
-  // 更新衣物图片的临时URL
-  refreshClothesImages: function(clothes) {
-    if (!clothes || clothes.length === 0) {
-      return;
-    }
-    
-    // 收集所有非空的fileID
-    const fileIDs = clothes.map(item => item.fileID).filter(fileID => fileID);
-    
-    if (fileIDs.length === 0) {
-      return;
-    }
-    
-    // 显示加载状态
-    wx.showLoading({
-      title: '更新图片...',
-      mask: false
-    });
-    
-    // 批量获取临时链接
-    wx.cloud.getTempFileURL({
-      fileList: fileIDs,
-      success: res => {
-        console.log('更新临时链接成功', res);
-        
-        // 创建fileID到临时路径的映射
-        const fileIDToPath = {};
-        res.fileList.forEach(item => {
-          if (item.fileID && item.tempFileURL) {
-            fileIDToPath[item.fileID] = item.tempFileURL;
-          }
-        });
-        
-        // 更新每个衣物对象的tempImageUrl
-        const updatedClothes = clothes.map(cloth => {
-          const tempUrl = cloth.fileID ? fileIDToPath[cloth.fileID] || '' : '';
-          return {
-            ...cloth,
-            tempImageUrl: tempUrl
-          };
-        });
-        
-        this.setData({
-          clothes: updatedClothes
-        });
-        
-        // 重新过滤当前分类的衣物
-        this.filterClothes();
-        
-        wx.hideLoading();
-      },
-      fail: err => {
-        console.error('获取临时链接失败', err);
-        wx.hideLoading();
-        wx.showToast({
-          title: '图片更新失败',
-          icon: 'none'
-        });
-      }
-    });
-  },
-  
   // 获取衣物列表
   getClothes: function() {
     // 如果没有获取到用户OpenID，不进行数据获取
@@ -302,10 +169,11 @@ Page({
         console.log('获取衣物列表成功', res);
         
         // 过滤当前用户的衣物
-        // 提示：因为已存在的衣物可能没有userOpenId字段，所以筛选
-        // 后续新添加的会按userOpenId区分
         let myClothes = res.data;
         console.log('之前的衣物总数量:', myClothes.length);
+        
+        // 统计各类别的数量
+        this.calculateCategoryCounts(myClothes);
         
         this.setData({
           clothes: myClothes,
@@ -325,6 +193,28 @@ Page({
           icon: 'none'
         });
       });
+  },
+  
+  // 统计各类别衣物数量
+  calculateCategoryCounts: function(clothes) {
+    const categoryCounts = {
+      '全部': clothes.length,
+      '上衣': 0,
+      '裤子': 0,
+      '裙子': 0,
+      '外套': 0,
+      '鞋子': 0,
+      '配饰': 0
+    };
+    
+    // 统计各类别的数量
+    clothes.forEach(item => {
+      if (item.category && categoryCounts[item.category] !== undefined) {
+        categoryCounts[item.category]++;
+      }
+    });
+    
+    this.setData({ categoryCounts });
   },
   
   // 下载衣物图片
@@ -350,7 +240,6 @@ Page({
         clothes: clothes,
         isLoading: false
       });
-      this.filterClothes();
       return;
     }
     
@@ -378,14 +267,10 @@ Page({
         
         console.log('处理后的衣物数据:', updatedClothes.length);
         
-        // 更新最后一次URL刷新时间
         this.setData({
           clothes: updatedClothes,
-          isLoading: false,
-          lastUrlRefreshTime: Date.now()
+          isLoading: false
         });
-        
-        this.filterClothes();
       },
       fail: err => {
         console.error('获取临时链接失败', err);
@@ -399,38 +284,57 @@ Page({
           clothes: updatedClothes,
           isLoading: false
         });
-        
-        this.filterClothes();
       }
     });
   },
   
-  // 切换分类
-  changeCategory: function(e) {
-    const category = e.currentTarget.dataset.category;
-    console.log('切换分类:', category);
+  // 轮播切换事件
+  onSwiperChange: function(e) {
     this.setData({
-      currentCategory: category
+      currentCategoryIndex: e.detail.current,
+      currentCategory: this.data.categories[e.detail.current]
     });
-    
-    this.filterClothes();
   },
   
-  // 根据当前分类筛选衣物
-  filterClothes: function() {
-    if (this.data.currentCategory === '全部') {
-      console.log('显示全部衣物:', this.data.clothes.length);
+  // 显示类别衣物对话框
+  showCategoryClothes: function(e) {
+    const category = e.currentTarget.dataset.category;
+    console.log('查看类别:', category);
+    
+    // 根据选中的类别筛选衣物
+    this.setData({
+      dialogCategory: category,
+      showClothesDialog: true
+    });
+    
+    this.filterClothesByCategory(category);
+  },
+  
+  // 隐藏衣物对话框
+  hideClothesDialog: function() {
+    this.setData({
+      showClothesDialog: false
+    });
+  },
+  
+  // 根据类别筛选衣物
+  filterClothesByCategory: function(category) {
+    if (category === '全部') {
       this.setData({
         filteredClothes: this.data.clothes
       });
       return;
     }
     
-    const filtered = this.data.clothes.filter(item => item.category === this.data.currentCategory);
-    console.log('筛选后衣物:', filtered.length);
+    const filtered = this.data.clothes.filter(item => item.category === category);
     this.setData({
       filteredClothes: filtered
     });
+  },
+  
+  // 计算类别衣物数量
+  getCategoryCount: function(category) {
+    return this.data.categoryCounts[category] || 0;
   },
   
   // 查看衣物详情
@@ -594,7 +498,7 @@ Page({
     
     const db = wx.cloud.database();
     
-    // 构建要保存的数据 - 根据新的JSON格式
+    // 构建要保存的数据
     const clothesData = {
       fileID: fileID,
       imageUrl: imageUrl,

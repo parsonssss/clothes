@@ -2,29 +2,29 @@
 Page({
   data: {
     weather: {
-      city: '上海',
-      day: '周日',
-      temperature: '23°C',
-      condition: '晴朗',
-      icon: 'sun'
+      city: '获取中...',
+      day: '',
+      temperature: '--°C',
+      condition: '获取中...',
+      icon: '',
+      iconUrl: '',
+      humidity: '',
+      windSpeed: ''
     },
-    outfitRecommendation: {
-      title: '春季自然风',
-      description: '适合今日天气与活动',
-      tags: ['休闲', '办公室'],
-      imageUrl: ''
-    },
-    recentlyAdded: [],
-    closetStats: {
-      total: 0,
-      tops: 0,
-      bottoms: 0,
-      coats: 0,
-      mostColor: '',
-      mostColorCount: 0
-    },
+    modelImageUrl: '', // AI模特图片URL
+    defaultModelUrl: '', // 默认模特图片URL
+    isGeneratingModel: false, // 是否正在生成AI模特
+    isGeneratingOutfit: false, // 是否正在生成搭配推荐
+    recommendedOutfit: [], // 推荐的衣物列表
     isLoading: true,
-    lastUrlRefreshTime: 0 // 最后一次图片URL刷新时间
+    lastUrlRefreshTime: 0, // 最后一次图片URL刷新时间
+    lastWeatherUpdateTime: 0 // 最后一次天气更新时间
+  },
+  
+  // OpenWeather API配置
+  weatherConfig: {
+    API_KEY: "a69ee4d99f8a1c1c328106e992214ab5",
+    BASE_URL: "https://api.openweathermap.org/data/2.5"
   },
   
   onLoad: function() {
@@ -33,11 +33,13 @@ Page({
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
     } else {
       wx.cloud.init({
-        // env: 'your-env-id',
         env: 'cloud1-3gi97kso9ab01185',
         traceUser: true,
       });
     }
+    
+    // 获取默认模特图片
+    this.getDefaultModelImage();
     
     // 加载页面数据
     this.loadPageData();
@@ -52,13 +54,18 @@ Page({
   checkAndRefreshData: function() {
     const now = Date.now();
     const tenMinutesInMs = 10 * 60 * 1000; // 10分钟的毫秒数
+    const oneHourInMs = 60 * 60 * 1000; // 1小时的毫秒数
     
-    // 如果距离上次刷新超过10分钟，则重新加载数据
+    // 如果距离上次刷新图片超过10分钟，则刷新
     if (now - this.data.lastUrlRefreshTime > tenMinutesInMs) {
-      console.log('超过10分钟未刷新，重新加载数据');
-      this.loadPageData();
-    } else {
-      console.log('距上次刷新不足10分钟，无需重新加载');
+      console.log('超过10分钟未刷新图片，重新加载图片');
+      this.refreshModelImages();
+    }
+    
+    // 如果距离上次刷新天气超过1小时，则刷新
+    if (now - this.data.lastWeatherUpdateTime > oneHourInMs) {
+      console.log('超过1小时未刷新天气，重新获取天气');
+      this.getWeatherData();
     }
   },
   
@@ -68,61 +75,359 @@ Page({
       isLoading: true
     });
     
-    // 获取天气数据（实际中应使用API）
+    // 获取天气数据
     this.getWeatherData();
     
-    // 获取最近添加的衣物
-    this.getRecentlyAdded();
+    // 获取保存的AI模特图片（如果有）
+    this.getModelImage();
+  },
+  
+  // 获取默认模特图片
+  getDefaultModelImage: function() {
+    const fileID = 'cloud://cloud1-3gi97kso9ab01185.636c-cloud1-3gi97kso9ab01185-1303166775/ComfyUI_01403_.png';
     
-    // 获取衣柜统计数据
-    this.getClosetStats();
+    wx.cloud.getTempFileURL({
+      fileList: [fileID],
+      success: res => {
+        console.log('获取默认模特图片成功', res);
+        if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
+          this.setData({
+            defaultModelUrl: res.fileList[0].tempFileURL
+          });
+        } else {
+          console.error('获取默认模特图片返回格式异常', res);
+          this.setData({
+            defaultModelUrl: '/image/default-model.png'
+          });
+        }
+      },
+      fail: err => {
+        console.error('获取默认模特图片失败', err);
+        this.setData({
+          defaultModelUrl: '/image/default-model.png'
+        });
+      }
+    });
+  },
+  
+  // 获取保存的AI模特图片
+  getModelImage: function() {
+    // 尝试从本地存储读取
+    const modelImageUrl = wx.getStorageSync('modelImageUrl');
+    if (modelImageUrl) {
+      this.setData({
+        modelImageUrl: modelImageUrl
+      });
+    }
+  },
+  
+  // 刷新图片URL
+  refreshModelImages: function() {
+    this.setData({
+      lastUrlRefreshTime: Date.now()
+    });
     
-    // 获取穿搭推荐
-    this.getOutfitRecommendation();
+    // 刷新模特图片URL可能会在以后实现
+    // 这里可能需要重新获取云存储的临时URL
   },
   
   // 获取天气数据
   getWeatherData: function() {
-    // 实际应用中这里应该调用天气API
-    // 这里用模拟数据
-    console.log('获取天气数据');
+    // 展示加载状态
+    wx.showLoading({
+      title: '获取天气中...',
+      mask: false
+    });
+    
+    // 获取用户位置
+    wx.getLocation({
+      type: 'gcj02', // 默认为 wgs84
+      success: res => {
+        const latitude = res.latitude;
+        const longitude = res.longitude;
+        
+        // 使用OpenWeather API获取天气
+        this.getWeatherByCoordinates(latitude, longitude);
+      },
+      fail: err => {
+        console.error('获取位置失败:', err);
+        wx.hideLoading();
+        
+        // 使用默认位置（上海）获取天气
+        this.getWeatherByCity('Shanghai');
+        
+        // 提示用户
+        wx.showToast({
+          title: '无法获取位置，使用默认位置',
+          icon: 'none'
+        });
+      }
+    });
   },
   
-  // 获取最近添加的衣物
-  getRecentlyAdded: function() {
-    const db = wx.cloud.database();
+  // 根据经纬度获取天气
+  getWeatherByCoordinates: function(latitude, longitude) {
+    // 构建API URL
+    const url = `${this.weatherConfig.BASE_URL}/weather?lat=${latitude}&lon=${longitude}&appid=${this.weatherConfig.API_KEY}&units=metric&lang=zh_cn`;
     
-    // 从云数据库获取最近添加的4件衣物
-    db.collection('clothes')
-      .orderBy('createTime', 'desc')
-      .limit(4)
-      .get()
-      .then(res => {
-        console.log('获取最近添加的衣物成功', res);
+    // 发起请求
+    wx.request({
+      url: url,
+      success: res => {
+        console.log('天气API返回:', res);
         
-        const clothes = res.data;
-        // 设置刷新时间
-        this.setData({
-          lastUrlRefreshTime: Date.now()
+        if (res.statusCode === 200 && res.data) {
+          this.processWeatherData(res.data);
+        } else {
+          console.error('天气API返回错误:', res);
+          wx.hideLoading();
+          wx.showToast({
+            title: '获取天气失败',
+            icon: 'none'
+          });
+        }
+      },
+      fail: err => {
+        console.error('天气请求失败:', err);
+        wx.hideLoading();
+        wx.showToast({
+          title: '获取天气失败',
+          icon: 'none'
         });
+      }
+    });
+  },
+  
+  // 根据城市名获取天气
+  getWeatherByCity: function(city) {
+    // 构建API URL
+    const url = `${this.weatherConfig.BASE_URL}/weather?q=${city}&appid=${this.weatherConfig.API_KEY}&units=metric&lang=zh_cn`;
+    
+    // 发起请求
+    wx.request({
+      url: url,
+      success: res => {
+        console.log('天气API返回:', res);
         
-        // 下载所有图片的临时URL
-        this.getClothesImages(clothes);
+        if (res.statusCode === 200 && res.data) {
+          this.processWeatherData(res.data);
+        } else {
+          console.error('天气API返回错误:', res);
+          wx.hideLoading();
+          wx.showToast({
+            title: '获取天气失败',
+            icon: 'none'
+          });
+        }
+      },
+      fail: err => {
+        console.error('天气请求失败:', err);
+        wx.hideLoading();
+        wx.showToast({
+          title: '获取天气失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+  
+  // 处理天气API返回的数据
+  processWeatherData: function(data) {
+    if (!data) return;
+    
+    // 获取星期几
+    const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const today = new Date();
+    const day = days[today.getDay()];
+    
+    // 处理温度（四舍五入到整数）
+    const temperature = Math.round(data.main.temp) + '°C';
+    
+    // 处理天气状况
+    const condition = data.weather[0].description;
+    
+    // 处理天气图标
+    const iconCode = data.weather[0].icon;
+    const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    
+    // 处理天气图标类型
+    let icon = 'cloud';
+    if (iconCode.includes('01') || iconCode.includes('02')) {
+      icon = 'sun';
+    } else if (iconCode.includes('09') || iconCode.includes('10') || iconCode.includes('11')) {
+      icon = 'rain';
+    }
+    
+    // 更新天气数据
+    this.setData({
+      'weather.city': data.name,
+      'weather.day': day,
+      'weather.temperature': temperature,
+      'weather.condition': condition,
+      'weather.icon': icon,
+      'weather.iconUrl': iconUrl,
+      'weather.humidity': data.main.humidity + '%',
+      'weather.windSpeed': data.wind.speed + ' m/s',
+      lastWeatherUpdateTime: Date.now(),
+      isLoading: false
+    });
+    
+    wx.hideLoading();
+  },
+  
+  // 获取穿搭推荐
+  getOutfitRecommendation: function(weatherData) {
+    // 设置生成状态
+    this.setData({
+      isGeneratingOutfit: true
+    });
+    
+    // 获取用户衣物列表
+    this.getUserClothes()
+      .then(clothes => {
+        // 调用云函数获取穿搭推荐
+        return wx.cloud.callFunction({
+          name: 'getOutfitRecommendation',
+          data: {
+            weatherData: this.data.weather,
+            userClothes: clothes
+          }
+        });
+      })
+      .then(res => {
+        console.log('获取穿搭推荐成功:', res);
+        
+        if (res.result && res.result.success) {
+          // 推荐成功
+          const recommendation = res.result.recommendation;
+          const matchedOutfit = res.result.matchedOutfit;
+          
+          // 如果有匹配的衣物，展示这些衣物
+          if (matchedOutfit && matchedOutfit.length > 0) {
+            // 获取衣物图片的临时URL
+            this.getOutfitImages(matchedOutfit);
+          } else {
+            // 如果没有匹配的衣物，根据推荐查找类似的衣物
+            this.findSimilarClothes(recommendation);
+          }
+        } else {
+          console.error('获取穿搭推荐失败:', res);
+          this.setData({
+            isGeneratingOutfit: false
+          });
+          wx.showToast({
+            title: '推荐生成失败',
+            icon: 'none'
+          });
+        }
       })
       .catch(err => {
-        console.error('获取最近添加的衣物失败', err);
+        console.error('获取穿搭推荐异常:', err);
         this.setData({
-          isLoading: false
+          isGeneratingOutfit: false
+        });
+        wx.showToast({
+          title: '推荐生成失败',
+          icon: 'none'
+        });
+      });
+  },
+  
+  // 获取用户衣物列表
+  getUserClothes: function() {
+    return new Promise((resolve, reject) => {
+      const db = wx.cloud.database();
+      
+      db.collection('clothes')
+        .get()
+        .then(res => {
+          console.log('获取衣物列表成功:', res);
+          resolve(res.data || []);
+        })
+        .catch(err => {
+          console.error('获取衣物列表失败:', err);
+          resolve([]); // 即使失败也返回空数组，不要中断流程
+        });
+    });
+  },
+  
+  // 根据推荐查找类似的衣物
+  findSimilarClothes: function(recommendation) {
+    if (!recommendation || !recommendation.recommendation || recommendation.recommendation.length === 0) {
+      this.setData({
+        isGeneratingOutfit: false,
+        recommendedOutfit: []
+      });
+      return;
+    }
+    
+    const db = wx.cloud.database();
+    const _ = db.command;
+    const promises = [];
+    
+    // 为每个推荐的衣物类型查找匹配的衣物
+    recommendation.recommendation.forEach(item => {
+      const query = {
+        category: item.category
+      };
+      
+      // 如果有颜色，添加颜色条件
+      if (item.color) {
+        query.color = item.color;
+      }
+      
+      // 如果有风格，添加风格条件
+      if (item.style) {
+        query.style = item.style;
+      }
+      
+      // 查询数据库
+      const promise = db.collection('clothes')
+        .where(query)
+        .limit(1)
+        .get();
+      
+      promises.push(promise);
+    });
+    
+    // 等待所有查询完成
+    Promise.all(promises)
+      .then(results => {
+        // 收集找到的衣物
+        const foundClothes = [];
+        
+        results.forEach(res => {
+          if (res.data && res.data.length > 0) {
+            foundClothes.push(res.data[0]);
+          }
+        });
+        
+        // 如果找到了衣物，获取图片URL
+        if (foundClothes.length > 0) {
+          this.getOutfitImages(foundClothes);
+        } else {
+          // 如果没有找到匹配的衣物，清空推荐
+          this.setData({
+            isGeneratingOutfit: false,
+            recommendedOutfit: []
+          });
+        }
+      })
+      .catch(err => {
+        console.error('查找类似衣物失败:', err);
+        this.setData({
+          isGeneratingOutfit: false,
+          recommendedOutfit: []
         });
       });
   },
   
   // 获取衣物图片的临时URL
-  getClothesImages: function(clothes) {
+  getOutfitImages: function(clothes) {
     if (!clothes || clothes.length === 0) {
       this.setData({
-        recentlyAdded: [],
-        isLoading: false
+        recommendedOutfit: [],
+        isGeneratingOutfit: false
       });
       return;
     }
@@ -131,20 +436,19 @@ Page({
     const fileIDs = clothes.map(item => item.fileID).filter(fileID => fileID);
     
     if (fileIDs.length === 0) {
+      // 如果没有图片，直接显示衣物
       this.setData({
-        recentlyAdded: clothes,
-        isLoading: false
+        recommendedOutfit: clothes,
+        isGeneratingOutfit: false
       });
       return;
     }
     
-    console.log('开始获取临时URL...');
-
-    // 获取临时URL而不是下载文件
+    // 获取临时URL
     wx.cloud.getTempFileURL({
       fileList: fileIDs,
       success: res => {
-        console.log('获取临时URL成功', res);
+        console.log('获取衣物图片URL成功:', res);
         
         // 创建fileID到临时URL的映射
         const fileIDToPath = {};
@@ -157,18 +461,19 @@ Page({
         // 更新每个衣物对象的tempImageUrl
         const updatedClothes = clothes.map(cloth => {
           return {
-            ...cloth, 
+            ...cloth,
             tempImageUrl: cloth.fileID ? fileIDToPath[cloth.fileID] || '' : ''
           };
         });
         
+        // 更新推荐列表
         this.setData({
-          recentlyAdded: updatedClothes,
-          isLoading: false
+          recommendedOutfit: updatedClothes,
+          isGeneratingOutfit: false
         });
       },
       fail: err => {
-        console.error('获取临时URL失败', err);
+        console.error('获取衣物图片URL失败:', err);
         
         // 如果获取失败，仍然显示衣物，但不显示图片
         const updatedClothes = clothes.map(cloth => {
@@ -176,112 +481,178 @@ Page({
         });
         
         this.setData({
-          recentlyAdded: updatedClothes,
-          isLoading: false
+          recommendedOutfit: updatedClothes,
+          isGeneratingOutfit: false
         });
       }
     });
   },
   
-  // 获取衣柜统计数据
-  getClosetStats: function() {
-    const db = wx.cloud.database();
-    
-    // 获取所有衣物
-    db.collection('clothes').get().then(res => {
-      const clothes = res.data;
-      
-      // 计算衣物总数
-      const total = clothes.length;
-      
-      // 按类别分类
-      const tops = clothes.filter(item => item.category === '上衣').length;
-      const bottoms = clothes.filter(item => 
-        item.category === '裤子' || item.category === '裙子'
-      ).length;
-      const coats = clothes.filter(item => item.category === '外套').length;
-      
-      // 统计颜色分布
-      const colorStats = {};
-      clothes.forEach(item => {
-        if (item.color) {
-          if (!colorStats[item.color]) {
-            colorStats[item.color] = 0;
-          }
-          colorStats[item.color]++;
-        }
-      });
-      
-      // 查找最多的颜色
-      let mostColor = '';
-      let mostColorCount = 0;
-      
-      for (const color in colorStats) {
-        if (colorStats[color] > mostColorCount) {
-          mostColor = color;
-          mostColorCount = colorStats[color];
-        }
+  // 上传个人照片生成AI模特
+  uploadPersonalPhoto: function() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        // 获取选择的图片路径
+        const tempFilePath = res.tempFiles[0].tempFilePath;
+        // 上传图片到云存储并生成AI模特
+        this.uploadAndGenerateModel(tempFilePath);
+      },
+      fail: (err) => {
+        console.error('选择图片失败', err);
+        wx.showToast({
+          title: '选择图片失败',
+          icon: 'none'
+        });
       }
-      
-      this.setData({
-        'closetStats.total': total,
-        'closetStats.tops': tops,
-        'closetStats.bottoms': bottoms,
-        'closetStats.coats': coats,
-        'closetStats.mostColor': mostColor,
-        'closetStats.mostColorCount': mostColorCount
-      });
-    }).catch(err => {
-      console.error('获取衣柜统计数据失败', err);
     });
   },
   
-  // 获取穿搭推荐
-  getOutfitRecommendation: function() {
-    // 实际应用中这里应该有推荐算法，根据天气、场合等因素
-    // 此处简化为随机选择一件外套作为推荐
-    const db = wx.cloud.database();
+  // 上传图片到云存储并生成AI模特
+  uploadAndGenerateModel: function(filePath) {
+    this.setData({
+      isGeneratingModel: true
+    });
     
-    db.collection('clothes')
-      .where({category: '外套'})
-      .get()
-      .then(res => {
-        if (res.data && res.data.length > 0) {
-          // 随机选择一件外套
-          const index = Math.floor(Math.random() * res.data.length);
-          const coat = res.data[index];
-          
-          // 获取临时URL
-          if (coat.fileID) {
-            wx.cloud.getTempFileURL({
-              fileList: [coat.fileID],
-              success: result => {
-                if (result.fileList && result.fileList.length > 0) {
-                  const tempFileURL = result.fileList[0].tempFileURL;
-                  
-                  const recommendation = {
-                    title: coat.name || (coat.color + coat.style + '外套'),
-                    description: '适合今日天气与活动',
-                    tags: coat.sceneApplicability || coat.scene_applicability || ['休闲'],
-                    imageUrl: tempFileURL,
-                    id: coat._id
-                  };
-                  
-                  this.setData({
-                    outfitRecommendation: recommendation
-                  });
-                }
-              },
-              fail: err => {
-                console.error('获取推荐衣物图片URL失败', err);
-              }
+    wx.showLoading({
+      title: '上传中...',
+    });
+    
+    // 上传到云存储
+    const cloudPath = 'model-photos/' + Date.now() + filePath.match(/\.[^.]+?$/)[0];
+    wx.cloud.uploadFile({
+      cloudPath: cloudPath,
+      filePath: filePath,
+      success: res => {
+        // 获取云存储文件ID
+        const fileID = res.fileID;
+        
+        // 获取临时访问URL
+        wx.cloud.getTempFileURL({
+          fileList: [fileID],
+          success: result => {
+            const imageUrl = result.fileList[0].tempFileURL;
+            console.log('上传成功，临时URL:', imageUrl);
+            wx.hideLoading();
+            wx.showLoading({
+              title: '生成AI模特中...',
             });
+            
+            // 调用云函数生成AI模特
+            this.generateAIModel(imageUrl, fileID);
+          },
+          fail: err => {
+            console.error('获取临时URL失败', err);
+            this.handleModelGenerationError('获取图片链接失败');
           }
+        });
+      },
+      fail: err => {
+        console.error('上传图片失败', err);
+        this.handleModelGenerationError('上传图片失败');
+      }
+    });
+  },
+  
+  // 调用DashScope API生成AI模特
+  generateAIModel: function(imageUrl, fileID) {
+    // 调用云函数发送请求到阿里DashScope API
+    wx.cloud.callFunction({
+      name: 'generateAIModel',
+      data: {
+        baseImageUrl: imageUrl,
+        prompt: "一名年轻女子，身穿白色短裤，极简风格调色板，长镜头，双色效果（暗银色和浅粉色）",
+        facePrompt: "年轻女子，面容姣好，最高品质"
+      },
+      success: res => {
+        if (res.result && res.result.taskId) {
+          console.log('AI模特生成任务已提交，任务ID:', res.result.taskId);
+          
+          // 轮询任务结果
+          this.pollTaskResult(res.result.taskId);
+        } else {
+          console.error('生成AI模特失败', res);
+          this.handleModelGenerationError('生成失败');
         }
-      })
-      .catch(err => {
-        console.error('获取穿搭推荐失败', err);
+      },
+      fail: err => {
+        console.error('调用生成函数失败', err);
+        this.handleModelGenerationError('生成请求失败');
+      }
+    });
+  },
+  
+  // 轮询任务结果
+  pollTaskResult: function(taskId) {
+    // 创建轮询间隔
+    const pollInterval = setInterval(() => {
+      wx.cloud.callFunction({
+        name: 'checkModelTaskStatus',
+        data: {
+          taskId: taskId
+        },
+        success: res => {
+          console.log('检查任务状态结果:', res);
+          
+          if (res.result && res.result.output) {
+            // 任务完成，获取结果
+            clearInterval(pollInterval);
+            
+            // 获取生成的图片URL
+            const modelImageUrl = res.result.output.results[0].url;
+            if (modelImageUrl) {
+              // 保存结果并更新UI
+              wx.setStorageSync('modelImageUrl', modelImageUrl);
+              this.setData({
+                modelImageUrl: modelImageUrl,
+                isGeneratingModel: false
+              });
+              
+              wx.hideLoading();
+              wx.showToast({
+                title: 'AI模特生成成功',
+                icon: 'success'
+              });
+            } else {
+              this.handleModelGenerationError('获取结果失败');
+            }
+          } else if (res.result && res.result.status === 'FAILED') {
+            // 任务失败
+            clearInterval(pollInterval);
+            this.handleModelGenerationError('生成失败');
+          }
+          // 其他状态继续轮询
+        },
+        fail: err => {
+          console.error('检查任务状态失败', err);
+          clearInterval(pollInterval);
+          this.handleModelGenerationError('检查状态失败');
+        }
       });
+    }, 5000); // 每5秒查询一次
+    
+    // 设置最大轮询次数（超时处理）
+    setTimeout(() => {
+      clearInterval(pollInterval);
+      if (this.data.isGeneratingModel) {
+        this.handleModelGenerationError('生成超时，请稍后再试');
+      }
+    }, 5 * 60 * 1000); // 5分钟超时
+  },
+  
+  // 处理模特生成错误
+  handleModelGenerationError: function(errorMsg) {
+    wx.hideLoading();
+    this.setData({
+      isGeneratingModel: false
+    });
+    
+    wx.showToast({
+      title: errorMsg || 'AI模特生成失败',
+      icon: 'none'
+    });
   },
   
   // 查看衣物详情
@@ -294,30 +665,14 @@ Page({
   
   // 查看天气详情
   viewWeatherDetail: function() {
-    wx.showToast({
-      title: '天气详情功能开发中',
-      icon: 'none'
-    });
-  },
-  
-  // 查看穿搭推荐详情
-  viewOutfitDetail: function() {
-    if (this.data.outfitRecommendation.id) {
-      wx.navigateTo({
-        url: '../detail/detail?id=' + this.data.outfitRecommendation.id
-      });
-    } else {
-      wx.showToast({
-        title: '推荐详情暂未生成',
-        icon: 'none'
-      });
-    }
-  },
-  
-  // 查看所有衣物
-  viewAllClothes: function() {
-    wx.switchTab({
-      url: '../closet/closet',
+    // 显示更详细的天气信息
+    wx.showModal({
+      title: this.data.weather.city + '天气',
+      content: `温度: ${this.data.weather.temperature}
+天气: ${this.data.weather.condition}
+湿度: ${this.data.weather.humidity}
+风速: ${this.data.weather.windSpeed}`,
+      showCancel: false
     });
   }
 })

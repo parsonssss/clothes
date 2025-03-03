@@ -1,12 +1,12 @@
 <!--page/wardrobe/index/index.wxml-->
 <view class="container">
-  <!-- 加载中状态 -->
+  <!-- Loading state -->
   <view class="loading-overlay" wx:if="{{isLoading}}">
     <view class="loading-spinner"></view>
     <view class="loading-text">加载中...</view>
   </view>
   
-  <!-- 天气组件 -->
+  <!-- Weather widget -->
   <view class="weather-widget" bindtap="viewWeatherDetail">
     <view class="weather-info">
       <view class="weather-location">{{weather.city}}，{{weather.day}}</view>
@@ -14,93 +14,87 @@
       <view class="weather-condition">{{weather.condition}}</view>
     </view>
     <view class="weather-icon">
-      <view class="icon-sun" wx:if="{{weather.icon == 'sun'}}"></view>
-      <view class="icon-cloud" wx:elif="{{weather.icon == 'cloud'}}"></view>
-      <view class="icon-rain" wx:elif="{{weather.icon == 'rain'}}"></view>
-    </view>
-  </view>
-  
-  <!-- 今日穿搭推荐 -->
-  <view class="section-header">
-    <view class="section-title">今日穿搭推荐</view>
-  </view>
-  
-  <view class="outfit-suggestion" bindtap="viewOutfitDetail">
-    <view class="outfit-img">
-      <image 
-        wx:if="{{outfitRecommendation.imageUrl}}"
-        src="{{outfitRecommendation.imageUrl}}"
-        mode="aspectFill"
-        class="outfit-image"
-      ></image>
-      <view class="icon-outfit" wx:else></view>
-    </view>
-    <view class="outfit-body">
-      <view class="card-title">{{outfitRecommendation.title}}</view>
-      <view class="card-text">{{outfitRecommendation.description}}</view>
-      <view class="tag-container">
-        <view class="tag" wx:for="{{outfitRecommendation.tags}}" wx:key="*this">{{item}}</view>
+      <view class="weather-icon-img">
+        <image wx:if="{{weather.iconUrl}}" src="{{weather.iconUrl}}" mode="aspectFit" class="weather-icon-image"></image>
+        <view class="icon-sun" wx:elif="{{weather.icon == 'sun'}}"></view>
+        <view class="icon-cloud" wx:elif="{{weather.icon == 'cloud'}}"></view>
+        <view class="icon-rain" wx:elif="{{weather.icon == 'rain'}}"></view>
       </view>
     </view>
   </view>
   
-  <!-- 最近添加的衣物 -->
-  <view class="section-header">
-    <view class="section-title">最近添加的衣物</view>
-    <view class="section-action" bindtap="viewAllClothes">查看全部</view>
-  </view>
-  
-  <view class="grid" wx:if="{{recentlyAdded.length > 0}}">
-    <view 
-      class="clothes-item" 
-      wx:for="{{recentlyAdded}}" 
-      wx:key="_id"
-      bindtap="viewClothesDetail"
-      data-id="{{item._id}}"
-    >
-      <image 
-        wx:if="{{item.tempImageUrl}}"
-        src="{{item.tempImageUrl}}"
-        mode="aspectFill"
-        class="clothes-thumbnail"
-      ></image>
-      <view class="icon-{{item.category === '上衣' ? 'tshirt' : (item.category === '裤子' ? 'pants' : 'jacket')}}" wx:else></view>
-      <view class="clothes-name-overlay">{{item.name || (item.color + item.style)}}</view>
-    </view>
-  </view>
-  <view class="empty-state" wx:else>
-    <view class="empty-text">暂无衣物，快去添加吧</view>
-  </view>
-  
-  <view class="divider"></view>
-  
-  <!-- 衣柜状态 -->
-  <view class="section-header">
-    <view class="section-title">衣柜状态</view>
-  </view>
-  
-  <view class="card">
-    <view class="card-body">
-      <view class="flex-between closet-stat-item">
-        <view class="closet-stat-label">总衣物</view>
-        <view class="closet-stat-value">{{closetStats.total}} 件</view>
+  <!-- OOTD and outfit area -->
+  <view class="ootd-container">
+    <!-- Model display -->
+    <view class="model-section">
+      <view class="section-header">
+        <view class="section-title">今日造型</view>
       </view>
-      <view class="flex-between closet-stat-item">
-        <view class="closet-stat-label">上衣</view>
-        <view class="closet-stat-value">{{closetStats.tops}} 件</view>
-      </view>
-      <view class="flex-between closet-stat-item">
-        <view class="closet-stat-label">裤裙</view>
-        <view class="closet-stat-value">{{closetStats.bottoms}} 件</view>
-      </view>
-      <view class="flex-between closet-stat-item">
-        <view class="closet-stat-label">外套</view>
-        <view class="closet-stat-value">{{closetStats.coats}} 件</view>
-      </view>
-      <view class="flex-between closet-stat-item" wx:if="{{closetStats.mostColor}}">
-        <view class="closet-stat-label">最多颜色</view>
-        <view class="closet-stat-value">{{closetStats.mostColor}} ({{closetStats.mostColorCount}} 件)</view>
+      
+      <view class="model-container" bindtap="uploadPersonalPhoto">
+        <image 
+          wx:if="{{modelImageUrl}}"
+          src="{{modelImageUrl}}"
+          mode="aspectFill"
+          class="model-image"
+        ></image>
+        <image 
+          wx:else
+          src="{{defaultModelUrl || '/image/default-model.png'}}"
+          mode="aspectFill"
+          class="model-image"
+        ></image>
+        <view class="model-upload-overlay">
+          <view class="model-upload-text">点击上传照片生成AI形象</view>
+        </view>
       </view>
     </view>
+    
+    <!-- Recommended outfits -->
+    <view class="outfit-section">
+      <view class="section-header">
+        <view class="section-title">搭配推荐</view>
+        <view class="recommend-button" bindtap="getOutfitRecommendation" wx:if="{{!isGeneratingOutfit && recommendedOutfit.length === 0}}">
+          <text class="recommend-button-text">获取推荐</text>
+        </view>
+      </view>
+      
+      <view class="outfit-cards">
+        <block wx:if="{{recommendedOutfit.length > 0}}">
+          <view class="outfit-card" wx:for="{{recommendedOutfit}}" wx:key="_id" bindtap="viewClothesDetail" data-id="{{item._id}}">
+            <image 
+              wx:if="{{item.tempImageUrl}}"
+              src="{{item.tempImageUrl}}"
+              mode="aspectFill"
+              class="outfit-card-image"
+            ></image>
+            <view class="outfit-card-icon {{item.category == '上衣' ? 'tops' : (item.category == '裤子' ? 'pants' : (item.category == '外套' ? 'coat' : (item.category == '裙子' ? 'skirt' : 'jacket')))}}" wx:else></view>
+            <view class="outfit-card-info">
+              <view class="outfit-card-name">{{item.name || item.category}}</view>
+              <view class="outfit-card-type">{{item.clothingType || item.category}}</view>
+            </view>
+          </view>
+        </block>
+        
+        <view class="thinking-container" wx:elif="{{isGeneratingOutfit}}">
+          <view class="thinking-animation">
+            <view class="thinking-dot"></view>
+            <view class="thinking-dot"></view>
+            <view class="thinking-dot"></view>
+          </view>
+          <view class="thinking-text">DeepSeek正在思考适合今天天气的搭配...</view>
+        </view>
+        
+        <view class="empty-outfit" wx:else>
+          <view class="empty-outfit-text">点击"获取推荐"按钮，基于天气获取最适合今天的穿搭建议</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <!-- Generation status indicator -->
+  <view class="generating-status" wx:if="{{isGeneratingModel}}">
+    <view class="generating-spinner"></view>
+    <view class="generating-text">AI造型生成中...</view>
   </view>
 </view>
