@@ -53,7 +53,7 @@
       <!-- 衣物网格 -->
       <scroll-view class="clothes-grid" scroll-y="true">
         <view class="grid-container">
-          <block wx:for="{{filteredClothes}}" wx:key="_id">
+          <block wx:for="{{currentPageClothes}}" wx:key="_id">
             <view 
               class="clothes-item" 
               style="background-color: {{colors.lightTaupe}};"
@@ -79,8 +79,86 @@
           </block>
         </view>
         
+        <!-- 分页控制 -->
+        <view class="pagination" wx:if="{{filteredClothes.length > itemsPerPage}}">
+          <view class="pagination-info" style="color: {{colors.darkCoffee}};">{{currentPage}}/{{totalPages}} 页</view>
+          <view class="pagination-controls">
+            <view 
+              class="pagination-button prev {{currentPage <= 1 ? 'disabled' : ''}}" 
+              bindtap="goToPrevPage"
+              style="color: {{colors.darkOlive}}; background-color: {{colors.lightTaupe}};"
+            >上一页</view>
+            
+            <!-- 页码按钮 -->
+            <block wx:for="{{totalPages}}" wx:key="*this" wx:if="{{totalPages <= 5}}">
+              <view 
+                class="pagination-page {{currentPage === index+1 ? 'active' : ''}}" 
+                data-page="{{index+1}}" 
+                bindtap="goToPage"
+                style="color: {{currentPage === index+1 ? colors.lightTaupe : colors.darkOlive}}; background-color: {{currentPage === index+1 ? colors.darkOlive : colors.lightTaupe}};"
+              >{{index+1}}</view>
+            </block>
+            
+            <!-- 如果页数过多，只显示部分页码 -->
+            <block wx:if="{{totalPages > 5}}">
+              <!-- 显示第1页 -->
+              <view 
+                class="pagination-page {{currentPage === 1 ? 'active' : ''}}" 
+                data-page="1" 
+                bindtap="goToPage"
+                style="color: {{currentPage === 1 ? colors.lightTaupe : colors.darkOlive}}; background-color: {{currentPage === 1 ? colors.darkOlive : colors.lightTaupe}};"
+              >1</view>
+              
+              <!-- 省略号 -->
+              <view wx:if="{{currentPage > 3}}" class="pagination-ellipsis" style="color: {{colors.darkCoffee}};">...</view>
+              
+              <!-- 当前页的前一页（如果存在且不是第1页） -->
+              <view 
+                wx:if="{{currentPage > 2}}" 
+                class="pagination-page" 
+                data-page="{{currentPage-1}}" 
+                bindtap="goToPage"
+                style="color: {{colors.darkOlive}}; background-color: {{colors.lightTaupe}};"
+              >{{currentPage-1}}</view>
+              
+              <!-- 当前页（如果不是第1页或最后一页） -->
+              <view 
+                wx:if="{{currentPage !== 1 && currentPage !== totalPages}}" 
+                class="pagination-page active" 
+                style="color: {{colors.lightTaupe}}; background-color: {{colors.darkOlive}};"
+              >{{currentPage}}</view>
+              
+              <!-- 当前页的后一页（如果存在且不是最后一页） -->
+              <view 
+                wx:if="{{currentPage < totalPages-1}}" 
+                class="pagination-page" 
+                data-page="{{currentPage+1}}" 
+                bindtap="goToPage"
+                style="color: {{colors.darkOlive}}; background-color: {{colors.lightTaupe}};"
+              >{{currentPage+1}}</view>
+              
+              <!-- 省略号 -->
+              <view wx:if="{{currentPage < totalPages-2}}" class="pagination-ellipsis" style="color: {{colors.darkCoffee}};">...</view>
+              
+              <!-- 显示最后一页 -->
+              <view 
+                class="pagination-page {{currentPage === totalPages ? 'active' : ''}}" 
+                data-page="{{totalPages}}" 
+                bindtap="goToPage"
+                style="color: {{currentPage === totalPages ? colors.lightTaupe : colors.darkOlive}}; background-color: {{currentPage === totalPages ? colors.darkOlive : colors.lightTaupe}};"
+              >{{totalPages}}</view>
+            </block>
+            
+            <view 
+              class="pagination-button next {{currentPage >= totalPages ? 'disabled' : ''}}" 
+              bindtap="goToNextPage"
+              style="color: {{colors.darkOlive}}; background-color: {{colors.lightTaupe}};"
+            >下一页</view>
+          </view>
+        </view>
+        
         <!-- 空状态 -->
-        <view class="empty-state" wx:if="{{filteredClothes.length === 0}}">
+        <view class="empty-state" wx:if="{{currentPageClothes.length === 0}}">
           <view class="empty-icon" style="color: {{colors.lightTaupe}};"></view>
           <view class="empty-text" style="color: {{colors.darkCoffee}};">暂无{{selectedCategory.category || ''}}衣物，点击下方按钮添加。</view>
         </view>

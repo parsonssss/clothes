@@ -1,2 +1,80 @@
-<!--page/wardrobe/outfit/outfit.wxml-->
-<text>page/wardrobe/outfit/outfit.wxml</text>
+<view class="container" style="background-color: {{colors.lightTaupe}};">
+  <!-- Loading state -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading-spinner" style="border-top-color: {{colors.darkOlive}}; border-color: {{colors.lightTaupe}};"></view>
+    <view class="loading-text" style="color: {{colors.darkOlive}};">加载中...</view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content" wx:if="{{!isLoading}}">
+    <!-- 今日搭配标题 -->
+    <view class="section-title" style="color: {{colors.darkOlive}};">今日搭配</view>
+    
+    <!-- 搭配展示区域 -->
+    <view class="outfit-display">
+      <view class="outfit-card" style="background-color: {{colors.mediumBrown}};">
+        <view class="outfit-items">
+          <view wx:for="{{currentOutfit.items}}" wx:key="id" class="outfit-item">
+            <image 
+              src="{{item.imageUrl}}" 
+              mode="aspectFill" 
+              class="item-image"
+              style="border: 2rpx solid {{colors.darkCoffee}};"
+            ></image>
+            <view class="item-name" style="color: {{colors.darkOlive}};">{{item.name}}</view>
+          </view>
+        </view>
+        
+        <!-- 搭配预览图 -->
+        <view class="outfit-preview">
+          <image 
+            src="{{currentOutfit.previewImage}}" 
+            mode="aspectFill" 
+            class="preview-image"
+            style="border: 2rpx solid {{colors.darkCoffee}};"
+          ></image>
+        </view>
+      </view>
+      
+      <!-- 推荐理由 -->
+      <view class="recommendation-reason" style="background-color: {{colors.lightTaupe}}; border: 1rpx solid {{colors.darkCoffee}};">
+        <view class="reason-title" style="color: {{colors.darkOlive}};">推荐理由</view>
+        <view class="reason-content" style="color: {{colors.darkCoffee}};">
+          <text>{{currentOutfit.reason}}</text>
+        </view>
+        <view class="reason-source" style="color: {{colors.darkCoffee}};">— Deepseek AI 推荐</view>
+      </view>
+      
+      <!-- 操作按钮 -->
+      <view class="action-buttons">
+        <view class="action-button refresh" bindtap="refreshOutfit" style="background-color: {{colors.darkOlive}}; color: {{colors.lightTaupe}};">
+          刷新搭配
+        </view>
+        <view class="action-button save" bindtap="saveOutfit" style="background-color: {{colors.darkBrown}}; color: {{colors.lightTaupe}};">
+          保存搭配
+        </view>
+      </view>
+    </view>
+    
+    <!-- 历史搭配 -->
+    <view class="saved-outfits-section">
+      <view class="section-title" style="color: {{colors.darkOlive}};">保存的搭配</view>
+      <scroll-view class="saved-outfits-list" scroll-x="true">
+        <view 
+          wx:for="{{savedOutfits}}" 
+          wx:key="id"
+          class="saved-outfit-item"
+          bindtap="selectSavedOutfit"
+          data-id="{{item.id}}"
+          style="background-color: {{colors.lightTaupe}}; border: 1rpx solid {{colors.darkCoffee}};"
+        >
+          <image src="{{item.previewImage}}" mode="aspectFill" class="saved-outfit-image"></image>
+          <view class="saved-outfit-date" style="color: {{colors.darkOlive}};">{{item.date}}</view>
+        </view>
+        <view wx:if="{{savedOutfits.length === 0}}" class="empty-saved" style="color: {{colors.darkCoffee}};">
+          暂无保存的搭配
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

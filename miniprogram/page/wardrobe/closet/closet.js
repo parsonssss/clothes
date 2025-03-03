@@ -9,6 +9,10 @@ Page({
       mediumBrown: '#B38A63',    // 中棕色（卡片背景和强调元素）
       darkCoffee: '#473B29',     // 深咖啡色（分割线和次要文字）
     },
+    // 分页相关
+    currentPage: 1,             // 当前页码
+    itemsPerPage: 12,           // 每页显示的衣物数量
+    totalPages: 1,              // 总页数
     
     // 定义衣物类别 - 使用日式名称和英文名称
     categories: [
@@ -284,6 +288,7 @@ Page({
       this.setData({
         clothes: [],
         filteredClothes: [],
+        currentPageClothes: [],
         isLoading: false
       });
       return;
@@ -330,6 +335,11 @@ Page({
           clothes: updatedClothes,
           isLoading: false
         });
+        
+        // 初始化时，如果有选中的类别，重新应用过滤
+        if (this.data.selectedCategory) {
+          this.filterClothesByCategory(this.data.selectedCategory);
+        }
       },
       fail: err => {
         console.error('获取临时链接失败', err);
@@ -343,6 +353,11 @@ Page({
           clothes: updatedClothes,
           isLoading: false
         });
+        
+        // 初始化时，如果有选中的类别，重新应用过滤
+        if (this.data.selectedCategory) {
+          this.filterClothesByCategory(this.data.selectedCategory);
+        }
       }
     });
   },
@@ -415,19 +430,76 @@ Page({
   
   // 根据类别筛选衣物
   filterClothesByCategory: function(category) {
+    let filtered;
     if (category.id === 0) {
       // 全部衣物
-      this.setData({
-        filteredClothes: this.data.clothes
-      });
-      return;
+      filtered = this.data.clothes;
+    } else {
+      // 按类别筛选
+      filtered = this.data.clothes.filter(item => item.category === category.category);
     }
     
-    // 按类别筛选
-    const filtered = this.data.clothes.filter(item => item.category === category.category);
+    // 计算总页数
+    const totalPages = Math.ceil(filtered.length / this.data.itemsPerPage);
+    
     this.setData({
-      filteredClothes: filtered
+      filteredClothes: filtered,
+      totalPages: totalPages || 1,  // 确保至少有1页
+      currentPage: 1                // 重置为第1页
     });
+    
+    // 应用分页
+    this.applyPagination();
+  },
+  
+  // 应用分页逻辑，获取当前页的衣物
+  applyPagination: function() {
+    const { filteredClothes, currentPage, itemsPerPage } = this.data;
+    
+    // 计算当前页的起始和结束索引
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    // 获取当前页的衣物
+    const currentPageClothes = filteredClothes.slice(startIndex, endIndex);
+    
+    this.setData({
+      currentPageClothes: currentPageClothes
+    });
+  },
+  
+  // 前往下一页
+  goToNextPage: function() {
+    if (this.data.currentPage < this.data.totalPages) {
+      this.setData({
+        currentPage: this.data.currentPage + 1
+      }, () => {
+        this.applyPagination();
+      });
+    }
+  },
+  
+  // 前往上一页
+  goToPrevPage: function() {
+    if (this.data.currentPage > 1) {
+      this.setData({
+        currentPage: this.data.currentPage - 1
+      }, () => {
+        this.applyPagination();
+      });
+    }
+  },
+  
+  // 前往指定页
+  goToPage: function(e) {
+    const page = parseInt(e.currentTarget.dataset.page);
+    if (page >= 1 && page <= this.data.totalPages) {
+      this.setData({
+        currentPage: page
+      }, () => {
+        this.applyPagination();
+      });
+    }
   },
   
   // 查看衣物详情

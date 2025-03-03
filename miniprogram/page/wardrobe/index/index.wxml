@@ -1,24 +1,23 @@
-<!--page/wardrobe/index/index.wxml-->
-<view class="container">
+<view class="container" style="background-color: {{colors.lightTaupe}};">
   <!-- Loading state -->
-  <view class="loading-overlay" wx:if="{{isLoading}}">
-    <view class="loading-spinner"></view>
-    <view class="loading-text">加载中...</view>
+  <view class="loading-overlay" wx:if="{{isLoading}}" style="background-color: {{colors.lightTaupe}};">
+    <view class="loading-spinner" style="border-top-color: {{colors.darkOlive}}; border-color: {{colors.lightTaupe}};"></view>
+    <view class="loading-text" style="color: {{colors.darkOlive}};">加载中...</view>
   </view>
   
   <!-- Weather widget -->
-  <view class="weather-widget" bindtap="viewWeatherDetail">
+  <view class="weather-widget" bindtap="viewWeatherDetail" style="background-color: {{colors.mediumBrown}};">
     <view class="weather-info">
-      <view class="weather-location">{{weather.city}}，{{weather.day}}</view>
-      <view class="weather-temp">{{weather.temperature}}</view>
-      <view class="weather-condition">{{weather.condition}}</view>
+      <view class="weather-location" style="color: {{colors.darkOlive}};">{{weather.city}}，{{weather.day}}</view>
+      <view class="weather-temp" style="color: {{colors.darkOlive}};">{{weather.temperature}}</view>
+      <view class="weather-condition" style="color: {{colors.darkCoffee}};">{{weather.condition}}</view>
     </view>
     <view class="weather-icon">
       <view class="weather-icon-img">
         <image wx:if="{{weather.iconUrl}}" src="{{weather.iconUrl}}" mode="aspectFit" class="weather-icon-image"></image>
-        <view class="icon-sun" wx:elif="{{weather.icon == 'sun'}}"></view>
-        <view class="icon-cloud" wx:elif="{{weather.icon == 'cloud'}}"></view>
-        <view class="icon-rain" wx:elif="{{weather.icon == 'rain'}}"></view>
+        <view class="icon-sun" wx:elif="{{weather.icon == 'sun'}}" style="background-color: {{colors.darkOlive}};"></view>
+        <view class="icon-cloud" wx:elif="{{weather.icon == 'cloud'}}" style="background-color: {{colors.darkOlive}};"></view>
+        <view class="icon-rain" wx:elif="{{weather.icon == 'rain'}}" style="background-color: {{colors.darkOlive}};"></view>
       </view>
     </view>
   </view>
@@ -26,12 +25,12 @@
   <!-- OOTD and outfit area -->
   <view class="ootd-container">
     <!-- Model display -->
-    <view class="model-section">
+    <view class="section">
       <view class="section-header">
-        <view class="section-title">今日造型</view>
+        <view class="section-title" style="color: {{colors.darkOlive}};">今日造型</view>
       </view>
       
-      <view class="model-container" bindtap="uploadPersonalPhoto">
+      <view class="model-container" bindtap="uploadPersonalPhoto" style="border: 1px solid {{colors.darkCoffee}};">
         <image 
           wx:if="{{modelImageUrl}}"
           src="{{modelImageUrl}}"
@@ -44,57 +43,57 @@
           mode="aspectFill"
           class="model-image"
         ></image>
-        <view class="model-upload-overlay">
-          <view class="model-upload-text">点击上传照片生成AI形象</view>
+        <view class="model-upload-overlay" style="background-color: rgba(71, 59, 41, 0.7);">
+          <view class="model-upload-text" style="color: {{colors.lightTaupe}};">点击上传照片生成AI形象</view>
         </view>
       </view>
     </view>
     
     <!-- Recommended outfits -->
-    <view class="outfit-section">
+    <view class="section">
       <view class="section-header">
-        <view class="section-title">搭配推荐</view>
-        <view class="recommend-button" bindtap="getOutfitRecommendation" wx:if="{{!isGeneratingOutfit && recommendedOutfit.length === 0}}">
-          <text class="recommend-button-text">获取推荐</text>
+        <view class="section-title" style="color: {{colors.darkOlive}};">搭配推荐</view>
+        <view class="recommend-button" bindtap="getOutfitRecommendation" wx:if="{{!isGeneratingOutfit && recommendedOutfit.length === 0}}" style="background-color: {{colors.darkOlive}};">
+          <text class="recommend-button-text" style="color: {{colors.lightTaupe}};">获取推荐</text>
         </view>
       </view>
       
       <view class="outfit-cards">
         <block wx:if="{{recommendedOutfit.length > 0}}">
-          <view class="outfit-card" wx:for="{{recommendedOutfit}}" wx:key="_id" bindtap="viewClothesDetail" data-id="{{item._id}}">
+          <view class="outfit-card" wx:for="{{recommendedOutfit}}" wx:key="_id" bindtap="viewClothesDetail" data-id="{{item._id}}" style="background-color: {{colors.lightTaupe}}; border: 1px solid {{colors.darkCoffee}};">
             <image 
               wx:if="{{item.tempImageUrl}}"
               src="{{item.tempImageUrl}}"
               mode="aspectFill"
               class="outfit-card-image"
             ></image>
-            <view class="outfit-card-icon {{item.category == '上衣' ? 'tops' : (item.category == '裤子' ? 'pants' : (item.category == '外套' ? 'coat' : (item.category == '裙子' ? 'skirt' : 'jacket')))}}" wx:else></view>
-            <view class="outfit-card-info">
-              <view class="outfit-card-name">{{item.name || item.category}}</view>
-              <view class="outfit-card-type">{{item.clothingType || item.category}}</view>
+            <view class="outfit-card-icon {{item.category == '上衣' ? 'tops' : (item.category == '裤子' ? 'pants' : (item.category == '外套' ? 'coat' : (item.category == '裙子' ? 'skirt' : 'jacket')))}}" wx:else style="color: {{colors.darkOlive}};"></view>
+            <view class="outfit-card-info" style="background-color: rgba(179, 138, 99, 0.8);">
+              <view class="outfit-card-name" style="color: {{colors.darkOlive}};">{{item.name || item.category}}</view>
+              <view class="outfit-card-type" style="color: {{colors.darkCoffee}};">{{item.clothingType || item.category}}</view>
             </view>
           </view>
         </block>
         
-        <view class="thinking-container" wx:elif="{{isGeneratingOutfit}}">
+        <view class="thinking-container" wx:elif="{{isGeneratingOutfit}}" style="background-color: {{colors.lightTaupe}}; border: 1px solid {{colors.darkCoffee}};">
           <view class="thinking-animation">
-            <view class="thinking-dot"></view>
-            <view class="thinking-dot"></view>
-            <view class="thinking-dot"></view>
+            <view class="thinking-dot" style="background-color: {{colors.darkOlive}};"></view>
+            <view class="thinking-dot" style="background-color: {{colors.darkOlive}};"></view>
+            <view class="thinking-dot" style="background-color: {{colors.darkOlive}};"></view>
           </view>
-          <view class="thinking-text">DeepSeek正在思考适合今天天气的搭配...</view>
+          <view class="thinking-text" style="color: {{colors.darkCoffee}};">DeepSeek正在思考适合今天天气的搭配...</view>
         </view>
         
-        <view class="empty-outfit" wx:else>
-          <view class="empty-outfit-text">点击"获取推荐"按钮，基于天气获取最适合今天的穿搭建议</view>
+        <view class="empty-outfit" wx:else style="background-color: {{colors.lightTaupe}}; border: 1px solid {{colors.darkCoffee}};">
+          <view class="empty-outfit-text" style="color: {{colors.darkCoffee}};">点击"获取推荐"按钮，基于天气获取最适合今天的穿搭建议</view>
         </view>
       </view>
     </view>
   </view>
   
   <!-- Generation status indicator -->
-  <view class="generating-status" wx:if="{{isGeneratingModel}}">
-    <view class="generating-spinner"></view>
-    <view class="generating-text">AI造型生成中...</view>
+  <view class="generating-status" wx:if="{{isGeneratingModel}}" style="background-color: rgba(71, 59, 41, 0.9);">
+    <view class="generating-spinner" style="border-top-color: {{colors.lightTaupe}}; border-color: rgba(190, 184, 167, 0.3);"></view>
+    <view class="generating-text" style="color: {{colors.lightTaupe}};">AI造型生成中...</view>
   </view>
 </view>

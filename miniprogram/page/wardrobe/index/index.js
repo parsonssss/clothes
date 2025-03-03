@@ -1,6 +1,14 @@
 // page/wardrobe/index/index.js
 Page({
   data: {
+    // 定义颜色常量 - 与衣柜页面保持一致的颜色方案
+    colors: {
+      darkBrown: '#56513E',      // 深棕色（导航栏背景）
+      darkOlive: '#3B3A30',      // 深橄榄绿（文字和图标）
+      lightTaupe: '#BEB8A7',     // 浅灰褐色（页面背景和次要元素）
+      mediumBrown: '#B38A63',    // 中棕色（卡片背景和强调元素）
+      darkCoffee: '#473B29',     // 深咖啡色（分割线和次要文字）
+    },
     weather: {
       city: '获取中...',
       day: '',
@@ -276,7 +284,7 @@ Page({
   },
   
   // 获取穿搭推荐
-  getOutfitRecommendation: function(weatherData) {
+  getOutfitRecommendation: function() {
     // 设置生成状态
     this.setData({
       isGeneratingOutfit: true
@@ -285,6 +293,24 @@ Page({
     // 获取用户衣物列表
     this.getUserClothes()
       .then(clothes => {
+        if (!clothes || clothes.length === 0) {
+          // 没有衣物数据，压断处理
+          wx.showToast({
+            title: '您的衣柜还没有衣物，请先添加衣物',
+            icon: 'none',
+            duration: 2000
+          });
+          this.setData({
+            isGeneratingOutfit: false
+          });
+          return Promise.reject(new Error('没有衣物数据'));
+        }
+        
+        // 模拟生成推荐数据（如果云函数不可用）
+        if (!wx.cloud || this.data.weather.condition.includes('获取中')) {
+          return this.generateMockRecommendation(clothes);
+        }
+        
         // 调用云函数获取穿搭推荐
         return wx.cloud.callFunction({
           name: 'getOutfitRecommendation',
@@ -295,6 +321,13 @@ Page({
         });
       })
       .then(res => {
+        // 支持模拟数据和云函数结果两种形式
+        if (res.mockData) {
+          // 直接使用模拟数据
+          this.getOutfitImages(res.mockData);
+          return;
+        }
+        
         console.log('获取穿搭推荐成功:', res);
         
         if (res.result && res.result.success) {
@@ -326,10 +359,12 @@ Page({
         this.setData({
           isGeneratingOutfit: false
         });
-        wx.showToast({
-          title: '推荐生成失败',
-          icon: 'none'
-        });
+        if (err.message !== '没有衣物数据') {
+          wx.showToast({
+            title: '推荐生成失败',
+            icon: 'none'
+          });
+        }
       });
   },
   
@@ -675,4 +710,4 @@ Page({
       showCancel: false
     });
   }
-})
+});

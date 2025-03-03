@@ -1,1 +1,217 @@
 /* page/wardrobe/outfit/outfit.wxss */
+
+/* 全局容器 */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  padding: 32rpx;
+  box-sizing: border-box;
+}
+
+/* 主要内容区域 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* 段落标题 */
+.section-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  margin: 20rpx 0;
+  letter-spacing: 2rpx;
+  text-align: center;
+}
+
+/* 搭配展示区域 */
+.outfit-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+/* 搭配卡片 */
+.outfit-card {
+  width: 90%;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 搭配物品容器 */
+.outfit-items {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30rpx;
+}
+
+/* 单个搭配物品 */
+.outfit-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150rpx;
+}
+
+/* 物品图片 */
+.item-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 10rpx;
+  margin-bottom: 10rpx;
+  object-fit: cover;
+}
+
+/* 物品名称 */
+.item-name {
+  font-size: 24rpx;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 搭配预览图 */
+.outfit-preview {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* 预览图片 */
+.preview-image {
+  width: 300rpx;
+  height: 450rpx;
+  border-radius: 10rpx;
+  object-fit: cover;
+}
+
+/* 推荐理由卡片 */
+.recommendation-reason {
+  width: 90%;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  margin-bottom: 30rpx;
+}
+
+/* 理由标题 */
+.reason-title {
+  font-size: 28rpx;
+  margin-bottom: 16rpx;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* 理由内容 */
+.reason-content {
+  font-size: 26rpx;
+  line-height: 1.5;
+  margin-bottom: 20rpx;
+  text-align: justify;
+}
+
+/* 理由来源 */
+.reason-source {
+  font-size: 24rpx;
+  text-align: right;
+  font-style: italic;
+}
+
+/* 操作按钮区域 */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 90%;
+  margin-bottom: 40rpx;
+}
+
+/* 操作按钮 */
+.action-button {
+  width: 48%;
+  height: 80rpx;
+  border-radius: 40rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28rpx;
+}
+
+/* 保存的搭配区域 */
+.saved-outfits-section {
+  width: 100%;
+}
+
+/* 保存的搭配列表 */
+.saved-outfits-list {
+  width: 100%;
+  white-space: nowrap;
+  margin-bottom: 20rpx;
+}
+
+/* 保存的搭配项 */
+.saved-outfit-item {
+  display: inline-block;
+  width: 200rpx;
+  margin-right: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+/* 保存的搭配图片 */
+.saved-outfit-image {
+  width: 100%;
+  height: 300rpx;
+  object-fit: cover;
+}
+
+/* 保存的搭配日期 */
+.saved-outfit-date {
+  font-size: 24rpx;
+  padding: 10rpx;
+  text-align: center;
+}
+
+/* 空状态 */
+.empty-saved {
+  padding: 40rpx;
+  text-align: center;
+  font-size: 28rpx;
+}
+
+/* 加载中状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 5rpx solid;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+}
