@@ -67,6 +67,7 @@ Page({
   onShow: function() {
     // 如果已经有OpenID，刷新衣物列表
     if (this.data.userOpenId) {
+      this.checkAndRefreshTempUrls();
       this.getClothes();
     }
   },
@@ -293,10 +294,49 @@ Page({
     this.setData({ categories });
   },
   
-  // 下载衣物图片 - 使用优化后的模块化函数
+  // 下载衣物图片
   downloadClothesImages: function(clothes) {
-    // 调用模块化的下载函数，并绑定this上下文
-    downloadClothesImages.call(this, clothes);
+    // 过滤出需要获取临时链接的文件ID
+    const fileList = clothes
+      .filter(item => item.fileID && !item.tempImageUrl)
+      .map(item => item.fileID);
+    
+    if (fileList.length === 0) {
+      return;
+    }
+    
+    // 获取临时链接
+    wx.cloud.getTempFileURL({
+      fileList: fileList,
+      success: res => {
+        if (res.fileList && res.fileList.length > 0) {
+          // 更新衣物的临时链接
+          const updatedClothes = clothes.map(item => {
+            const fileInfo = res.fileList.find(file => file.fileID === item.fileID);
+            if (fileInfo && fileInfo.tempFileURL) {
+              item.tempImageUrl = fileInfo.tempFileURL;
+              // 记录临时链接的获取时间
+              item.tempUrlUpdateTime = Date.now();
+            }
+            return item;
+          });
+          
+          // 更新所有相关的数据
+          this.setData({
+            clothes: updatedClothes,
+            filteredClothes: updatedClothes,
+            currentPageClothes: updatedClothes.slice(
+              (this.data.currentPage - 1) * this.data.pageSize,
+              this.data.currentPage * this.data.pageSize
+            ),
+            lastImageUrlUpdateTime: Date.now()
+          });
+        }
+      },
+      fail: err => {
+        console.error('获取临时链接失败:', err);
+      }
+    });
   },
   
   // 滑动卡片到下一个
@@ -460,14 +500,14 @@ Page({
       sourceType: ['camera'],
       success: (res) => {
         wx.showLoading({
-          title: '处理中...',
+          title: '开始处理...',
         });
         
         const tempFilePath = res.tempFiles[0].tempFilePath;
         console.log('拍摄的图片:', tempFilePath);
         
-        // 上传图片到云存储
-        this.uploadImageToCloud(tempFilePath);
+        // 创建处理任务
+        this.createClothingTask(tempFilePath, 'camera');
       },
       fail: (err) => {
         console.error('拍照失败:', err);
@@ -490,14 +530,14 @@ Page({
       sourceType: ['album'],
       success: (res) => {
         wx.showLoading({
-          title: '处理中...',
+          title: '开始处理...',
         });
         
         const tempFilePath = res.tempFiles[0].tempFilePath;
         console.log('选择的图片:', tempFilePath);
         
-        // 上传图片到云存储
-        this.uploadImageToCloud(tempFilePath);
+        // 创建处理任务
+        this.createClothingTask(tempFilePath, 'album');
       },
       fail: (err) => {
         console.error('选择图片失败:', err);
@@ -520,581 +560,134 @@ Page({
       success: (res) => {
         if (res.confirm && res.content) {
           wx.showLoading({
-            title: '处理中...',
+            title: '开始处理...',
           });
           
           const imageUrl = res.content.trim();
-          // 直接使用URL进行抠图处理
-          this.processImageWithKoutu(imageUrl);
+          // 创建处理任务
+          this.createClothingTask(imageUrl, 'url');
         }
       }
     });
   },
   
-  // 上传图片到云存储
-  uploadImageToCloud: function(filePath) {
-    const cloudPath = `clothing_images/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
-    
-    wx.cloud.uploadFile({
-      cloudPath: cloudPath,
-      filePath: filePath,
-      success: (res) => {
-        console.log('上传成功:', res);
-        const fileID = res.fileID;
-        
-        // 获取临时访问链接
-        this.getTempFileURL(fileID);
-      },
-      fail: (err) => {
-        console.error('上传失败:', err);
-        wx.hideLoading();
-        wx.showToast({
-          title: '上传失败',
-          icon: 'none'
-        });
-      }
-    });
-  },
-  
-  // 获取文件临时URL
-  getTempFileURL: function(fileID) {
+  // 创建衣物处理任务
+  createClothingTask: function(imagePath, sourceType) {
+    // 调用云函数创建任务
     wx.cloud.callFunction({
-      name: 'getTempFileURL',
+      name: 'createClothingTask',
       data: {
-        fileIdList: [fileID]
+        imagePath: imagePath,
+        sourceType: sourceType,
+        userOpenId: this.data.userOpenId
       },
       success: (res) => {
-        console.log('获取临时URL成功:', res);
-        if (res.result && res.result.length > 0) {
-          const tempFileURL = res.result[0].tempFileURL;
-          
-          // 使用临时URL进行抠图处理
-          this.processImageWithKoutu(tempFileURL);
+        console.log('创建任务成功:', res);
+        if (res.result && res.result.taskId) {
+          // 开始轮询任务状态
+          this.pollTaskStatus(res.result.taskId);
         } else {
           wx.hideLoading();
           wx.showToast({
-            title: '获取图片链接失败',
+            title: '创建任务失败',
             icon: 'none'
           });
         }
       },
       fail: (err) => {
-        console.error('获取临时URL失败:', err);
+        console.error('创建任务失败:', err);
         wx.hideLoading();
         wx.showToast({
-          title: '获取图片链接失败',
+          title: '创建任务失败',
           icon: 'none'
         });
       }
     });
   },
   
-  // 调用抠图API处理图片
-  processImageWithKoutu: function(imageUrl) {
-    console.log('开始处理图片:', imageUrl);
-    // 获取抠图API请求模板
-    const fs = wx.getFileSystemManager();
+  // 轮询任务状态
+  pollTaskStatus: function(taskId) {
+    // 设置轮询间隔（3秒）
+    const pollInterval = 3000;
+    let pollCount = 0;
+    const maxPolls = 20; // 最多轮询20次（1分钟）
     
-    // 使用用户目录下的模板
-    const templatePath = `${wx.env.USER_DATA_PATH}/koutu.json`;
-    console.log('模板文件路径:', templatePath);
-    
-    fs.readFile({
-      filePath: templatePath,
-      encoding: 'utf-8',
-      success: (res) => {
-        try {
-          // 解析模板
-          const koutuTemplate = JSON.parse(res.data);
-          console.log('模板读取成功');
-          
-          // 替换URL
-          if (koutuTemplate.prompt && koutuTemplate.prompt["27"] && koutuTemplate.prompt["27"].inputs) {
-            koutuTemplate.prompt["27"].inputs.image = imageUrl;
-            console.log('替换图片URL成功');
-            
-            // 向抠图API发送请求
-            this.sendKoutuRequest(koutuTemplate, imageUrl);
-          } else {
-            console.error('模板结构不正确, 找不到节点27:', JSON.stringify(koutuTemplate.prompt, null, 2));
-            this.handleKoutuError();
-          }
-        } catch (error) {
-          console.error('解析koutu.json失败:', error);
-          this.handleKoutuError();
-        }
-      },
-      fail: (err) => {
-        console.error('读取koutu.json失败:', err);
-        
-        // 尝试读取项目内的模板文件
-        fs.readFile({
-          filePath: 'miniprogram/page/wardrobe/closet/koutu.json',
-          encoding: 'utf-8',
-          success: (innerRes) => {
-            try {
-              const koutuTemplate = JSON.parse(innerRes.data);
-              koutuTemplate.prompt["27"].inputs.image = imageUrl;
-              
-              // 保存到用户目录便于下次使用
-              fs.writeFile({
-                filePath: templatePath,
-                data: innerRes.data,
-                encoding: 'utf-8',
-                success: () => {
-                  console.log('保存模板到用户目录成功');
-                }
-              });
-              
-              this.sendKoutuRequest(koutuTemplate, imageUrl);
-            } catch (error) {
-              console.error('解析内置模板失败:', error);
-              this.handleKoutuError();
-            }
-          },
-          fail: (innerErr) => {
-            console.error('读取内置模板失败，尝试使用硬编码模板:', innerErr);
-            
-            // 如果内置模板也读取失败，则使用硬编码的模板
-            this.useHardcodedTemplate(imageUrl, templatePath);
-          }
+    const checkStatus = () => {
+      if (pollCount >= maxPolls) {
+        wx.hideLoading();
+        wx.showToast({
+          title: '处理超时，请重试',
+          icon: 'none'
         });
+        return;
       }
-    });
-  },
-  
-  // 使用硬编码的抠图模板
-  useHardcodedTemplate: function(imageUrl, savePath) {
-    // 硬编码的抠图模板
-    const hardcodedTemplate = {
-      "prompt": {
-        "14": {
-          "inputs": {
-            "aspect_ratio": "original",
-            "proportional_width": 1,
-            "proportional_height": 1,
-            "fit": "letterbox",
-            "method": "lanczos",
-            "round_to_multiple": "8",
-            "scale_to_longest_side": true,
-            "longest_side": 1024,
-            "image": [
-              "27",
-              0
-            ]
-          },
-          "class_type": "LayerUtility: ImageScaleByAspectRatio",
-          "_meta": {
-            "title": "LayerUtility: ImageScaleByAspectRatio"
-          }
-        },
-        "17": {
-          "inputs": {
-            "invert_mask": false,
-            "blend_mode": "normal",
-            "opacity": 100,
-            "x_percent": 50,
-            "y_percent": 50,
-            "mirror": "None",
-            "scale": 1,
-            "aspect_ratio": 1,
-            "rotate": 0,
-            "transform_method": "lanczos",
-            "anti_aliasing": 0,
-            "background_image": [
-              "18",
-              0
-            ],
-            "layer_image": [
-              "14",
-              0
-            ],
-            "layer_mask": [
-              "24",
-              1
-            ]
-          },
-          "class_type": "LayerUtility: ImageBlendAdvance V2",
-          "_meta": {
-            "title": "LayerUtility: ImageBlendAdvance V2"
-          }
-        },
-        "18": {
-          "inputs": {
-            "panel_width": [
-              "20",
-              0
-            ],
-            "panel_height": [
-              "20",
-              1
-            ],
-            "fill_color": "white",
-            "fill_color_hex": "#000000"
-          },
-          "class_type": "CR Color Panel",
-          "_meta": {
-            "title": "🌁 CR Color Panel"
-          }
-        },
-        "20": {
-          "inputs": {
-            "image": [
-              "14",
-              0
-            ]
-          },
-          "class_type": "easy imageSize",
-          "_meta": {
-            "title": "ImageSize"
-          }
-        },
-        "21": {
-          "inputs": {
-            "filename_prefix": "ComfyUI",
-            "images": [
-              "17",
-              0
-            ]
-          },
-          "class_type": "SaveImage",
-          "_meta": {
-            "title": "Save Image"
-          }
-        },
-        "24": {
-          "inputs": {
-            "sam_model": "sam_hq_vit_h (2.57GB)",
-            "grounding_dino_model": "GroundingDINO_SwinT_OGC (694MB)",
-            "threshold": 0.3,
-            "detail_method": "VITMatte(local)",
-            "detail_erode": 6,
-            "detail_dilate": 6,
-            "black_point": 0.15,
-            "white_point": 0.99,
-            "process_detail": false,
-            "prompt": "clothes",
-            "device": "cuda",
-            "max_megapixels": 2,
-            "cache_model": false,
-            "image": [
-              "14",
-              0
-            ]
-          },
-          "class_type": "LayerMask: SegmentAnythingUltra V2",
-          "_meta": {
-            "title": "LayerMask: SegmentAnythingUltra V2"
-          }
-        },
-        "27": {
-          "inputs": {
-            "image": imageUrl,
-            "keep_alpha_channel": false,
-            "output_mode": false
-          },
-          "class_type": "LoadImageFromUrl",
-          "_meta": {
-            "title": "Load Image From URL"
-          }
-        }
-      }
-    };
       
-    // 保存到用户目录便于下次使用
-    const fs = wx.getFileSystemManager();
-    fs.writeFile({
-      filePath: savePath,
-      data: JSON.stringify(hardcodedTemplate),
-      encoding: 'utf-8',
-      success: () => {
-        console.log('保存硬编码模板到用户目录成功');
-      }
-    });
-    
-    // 发送硬编码模板
-    this.sendKoutuRequest(hardcodedTemplate, imageUrl);
-  },
-  
-  // 发送抠图请求
-  sendKoutuRequest: function(requestBody, originalImageUrl) {
-    console.log('发送抠图请求:',JSON.stringify(requestBody, null, 2));
-    wx.request({
-      url: 'https://wp05.unicorn.org.cn:12753/api/prompt',
-      method: 'POST',
-      header: {
-        'Content-Type': 'application/json'
-      },
-      data: requestBody,
-      success: (res) => {
-        console.log('抠图请求成功:', res.data);
-        // 检查是否返回prompt_id
-        if (res.data && res.data.prompt_id) {
-          const promptId = res.data.prompt_id;
-          console.log('获取到promptId:', promptId);
-          // 将promptId存储到storage中，方便调试
-          wx.setStorageSync('lastPromptId', promptId);
-          // 获取抠图结果
-          this.getKoutuResult(promptId, originalImageUrl);
-        } else if (res.data && res.data.error) {
-          // 如果有错误信息
-          console.error('抠图请求返回错误:', res.data.error);
-          wx.showToast({
-            title: '抠图失败: ' + res.data.error,
-            icon: 'none'
-          });
-          this.handleKoutuError();
-        } else {
-          console.error('抠图请求响应不符合预期:', res.data);
-          this.handleKoutuError();
-        }
-      },
-      fail: (err) => {
-        console.error('抠图请求失败:', err);
-        this.handleKoutuError();
-      }
-    });
-  },
-  
-  // 获取抠图结果
-  getKoutuResult: function(promptId, originalImageUrl) {
-    // 轮询获取结果，实际项目中可能需要更复杂的处理
-    const checkResult = () => {
-      wx.request({
-        url: `https://wp05.unicorn.org.cn:12753/history/${promptId}`,
-        method: 'GET',
-        header: {
+      wx.cloud.callFunction({
+        name: 'getClothingTaskStatus',
+        data: {
+          taskId: taskId
         },
         success: (res) => {
-          console.log('获取抠图结果:', res);
-          // 确保res.data存在且不为空
-          if (res.data && Object.keys(res.data).length > 0) {
-            // 检查是否存在输出节点
-            const firstKey = Object.keys(res.data)[0];
-            // 获取第一个key对应的对象中的outputs
-            if (res.data[firstKey].outputs && Object.keys(res.data[firstKey].outputs).length > 0) {
-              // 查找包含SaveImage节点的输出
-              const outputKey = Object.keys(res.data[firstKey].outputs).find(key => {
-                return res.data[firstKey].outputs[key]?.images && res.data[firstKey].outputs[key].images.length > 0;
-              });
+          console.log('任务状态:', res);
+          if (res.result && res.result.status) {
+            switch (res.result.status) {
+              case 'completed':
+                // 任务完成，刷新衣物列表
+                wx.hideLoading();
+                wx.showToast({
+                  title: '添加成功',
+                  icon: 'success'
+                });
+                this.loadClothes();
+                break;
               
-              if (outputKey && res.data[firstKey].outputs[outputKey]?.images && res.data[firstKey].outputs[outputKey].images.length > 0) {
-                // 获取第一张输出图片的信息
-                const imageInfo = res.data[firstKey].outputs[outputKey].images[0];
-                const filename = imageInfo.filename; // 例如 "ComfyUI_00052_.png"
-                const subfolder = imageInfo.subfolder || ""; // 子文件夹，可能为空字符串
-                const type = imageInfo.type || "output"; // 类型，默认为output
-                
-                // 构建图片URL
-                const imageUrl = `https://wp05.unicorn.org.cn:12753/view?filename=${filename}&subfolder=${subfolder}&type=${type}`;
-                console.log('构建的图片URL:', imageUrl);
-                
-                // 直接使用构建的URL下载图片
-                this.downloadKoutuResult(imageUrl, originalImageUrl);
-              } else {
-                console.error('未找到SaveImage节点输出:', res.data[firstKey].outputs);
-                
-                // 检查是否处理中，如果是则继续轮询
-                if (res.data[firstKey].status === 'processing' || res.data[firstKey].status === 'pending') {
-                  setTimeout(checkResult, 2000);
-                } else {
-                  this.handleKoutuError();
-                }
-              }
-            } else if (res.data[firstKey].status === 'processing' || res.data[firstKey].status === 'pending') {
-              // 如果还在处理中，继续轮询
-              setTimeout(checkResult, 2000);
-            } else {
-              console.error('无效的输出数据:', res.data[firstKey]);
-              this.handleKoutuError();
+              case 'failed':
+                // 任务失败
+                wx.hideLoading();
+                wx.showToast({
+                  title: res.result.error || '处理失败',
+                  icon: 'none'
+                });
+                break;
+              
+              case 'processing':
+                // 更新加载提示
+                wx.showLoading({
+                  title: res.result.progress || '处理中...',
+                });
+                // 继续轮询
+                pollCount++;
+                setTimeout(checkStatus, pollInterval);
+                break;
+              
+              default:
+                wx.hideLoading();
+                wx.showToast({
+                  title: '未知状态',
+                  icon: 'none'
+                });
             }
-          } else if (res.data && res.data.status === 'failed') {
-            this.handleKoutuError();
           } else {
-            // 继续轮询
-            setTimeout(checkResult, 2000);
+            wx.hideLoading();
+            wx.showToast({
+              title: '获取状态失败',
+              icon: 'none'
+            });
           }
         },
         fail: (err) => {
-          console.error('获取抠图结果失败:', err);
-          this.handleKoutuError();
+          console.error('获取任务状态失败:', err);
+          wx.hideLoading();
+          wx.showToast({
+            title: '获取状态失败',
+            icon: 'none'
+          });
         }
       });
     };
     
-    checkResult();
-  },
-  
-  // 下载抠图结果
-  downloadKoutuResult: function(outputUrl, originalImageUrl) {
-    console.log('开始下载抠图结果:', outputUrl);
-    
-    // 处理URL，确保所有参数都正确编码
-    const encodedUrl = outputUrl.replace(/([^:]\/\/[^\/]+\/)(.*)/, function(match, prefix, suffix) {
-      return prefix + encodeURIComponent(suffix).replace(/%2F/g, '/').replace(/%3F/g, '?').replace(/%3D/g, '=').replace(/%26/g, '&');
-    });
-    
-    wx.downloadFile({
-      url: outputUrl,
-      success: (res) => {
-        console.log('下载结果:', res);
-        if (res.statusCode === 200) {
-          const tempFilePath = res.tempFilePath;
-          
-          // 上传抠图结果到云存储
-          const cloudPath = `clothing_processed/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
-          
-          wx.cloud.uploadFile({
-            cloudPath: cloudPath,
-            filePath: tempFilePath,
-            success: (uploadRes) => {
-              const fileID = uploadRes.fileID;
-              console.log('抠图结果上传成功:', fileID);
-              
-              // 分析衣物
-              this.analyzeClothing(fileID, originalImageUrl);
-            },
-            fail: (err) => {
-              console.error('上传抠图结果失败:', err);
-              this.handleKoutuError();
-            }
-          });
-        } else {
-          console.error('下载抠图结果失败，状态码:', res.statusCode);
-          // 尝试直接使用原始图片
-          wx.showModal({
-            title: '抠图失败',
-            content: '图片处理失败，是否使用原始图片？',
-            success: (modalRes) => {
-              if (modalRes.confirm) {
-                // 使用原始图片
-                this.analyzeClothing(originalImageUrl, originalImageUrl);
-              } else {
-                this.handleKoutuError();
-              }
-            }
-          });
-        }
-      },
-      fail: (err) => {
-        console.error('下载抠图结果失败:', err);
-        // 尝试直接使用原始图片
-        wx.showModal({
-          title: '抠图失败',
-          content: '抠图结果下载失败，是否使用原始图片？',
-          success: (modalRes) => {
-            if (modalRes.confirm) {
-              // 使用原始图片
-              this.analyzeClothing(originalImageUrl, originalImageUrl);
-            } else {
-              this.handleKoutuError();
-            }
-          }
-        });
-      }
-    });
-  },
-  
-  // 分析衣物
-  analyzeClothing: function(fileID, originalImageUrl) {
-    // 获取临时URL用于分析
-    wx.cloud.getTempFileURL({
-      fileList: [fileID],
-      success: (res) => {
-        if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
-          const imageUrl = res.fileList[0].tempFileURL;
-          
-          // 调用云函数分析衣物
-          wx.cloud.callFunction({
-            name: 'analyzeClothing',
-            data: {
-              imageUrl: imageUrl
-            },
-            success: (analysisRes) => {
-              console.log('分析结果:', analysisRes);
-              
-              if (analysisRes.result && analysisRes.result.success) {
-                // 保存到数据库
-                this.saveClothingToDatabase(fileID, originalImageUrl, analysisRes.result.data);
-              } else {
-                this.handleAnalysisError();
-              }
-            },
-            fail: (err) => {
-              console.error('分析衣物失败:', err);
-              this.handleAnalysisError();
-            }
-          });
-        } else {
-          this.handleAnalysisError();
-        }
-      },
-      fail: (err) => {
-        console.error('获取分析图片URL失败:', err);
-        this.handleAnalysisError();
-      }
-    });
-  },
-  
-  // 保存衣物到数据库
-  saveClothingToDatabase: function(fileID, originalImageUrl, analysisData) {
-    const db = wx.cloud.database();
-    
-    // 创建新衣物记录
-    const clothingData = {
-      name: analysisData.name || '新衣物',
-      imageFileID: fileID,
-      originalImageUrl: originalImageUrl,
-      category: analysisData.category || '未分类',
-      type: analysisData.clothing_type || '未知',
-      color: analysisData.color || '未知',
-      style: analysisData.style || '未知',
-      warmthLevel: analysisData.warmth_level || 3,
-      scenes: analysisData.scene_applicability || ['休闲'],
-      userOpenid: this.data.userOpenId, // 手动添加用户OpenID关联，确保账号与数据关联
-      createTime: db.serverDate()
-    };
-    
-    db.collection('clothes').add({
-      data: clothingData,
-      success: (res) => {
-        console.log('保存衣物成功:', res);
-        wx.hideLoading();
-        wx.showToast({
-          title: '添加衣物成功',
-          icon: 'success'
-        });
-        
-        // 重新加载衣物列表
-        this.loadClothes();
-      },
-      fail: (err) => {
-        console.error('保存衣物失败:', err);
-        wx.hideLoading();
-        wx.showToast({
-          title: '保存失败',
-          icon: 'none'
-        });
-      }
-    });
-  },
-  
-  // 处理抠图错误
-  handleKoutuError: function() {
-    wx.hideLoading();
-    wx.showToast({
-      title: '抠图处理失败',
-      icon: 'none'
-    });
-  },
-  
-  // 处理分析错误
-  handleAnalysisError: function() {
-    wx.hideLoading();
-    wx.showToast({
-      title: '分析衣物失败',
-      icon: 'none'
-    });
+    // 开始轮询
+    checkStatus();
   },
   
   // 确保抠图模板文件可用
@@ -1287,5 +880,78 @@ Page({
         this.applyPagination();
       });
     }
+  },
+  
+  // 处理图片加载错误
+  handleImageError: function(e) {
+    const index = e.currentTarget.dataset.index;
+    const clothes = this.data.currentPageClothes;
+    const item = clothes[index];
+    
+    console.log('图片加载失败:', item);
+    
+    // 如果是使用临时链接失败，尝试使用 fileID
+    if (item.tempImageUrl && item.fileID) {
+      console.log('尝试使用fileID');
+      // 更新所有相关数据中的临时链接
+      const updatedClothes = this.data.clothes.map(c => {
+        if (c._id === item._id) {
+          c.tempImageUrl = '';
+        }
+        return c;
+      });
+      
+      this.setData({
+        clothes: updatedClothes,
+        filteredClothes: updatedClothes,
+        currentPageClothes: updatedClothes.slice(
+          (this.data.currentPage - 1) * this.data.pageSize,
+          this.data.currentPage * this.data.pageSize
+        )
+      });
+      return;
+    }
+    
+    // 如果 fileID 也失败了，尝试重新获取临时链接
+    if (item.fileID) {
+      console.log('尝试刷新临时链接');
+      wx.cloud.getTempFileURL({
+        fileList: [item.fileID],
+        success: res => {
+          if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
+            // 更新所有相关数据中的临时链接
+            const updatedClothes = this.data.clothes.map(c => {
+              if (c._id === item._id) {
+                c.tempImageUrl = res.fileList[0].tempFileURL;
+              }
+              return c;
+            });
+            
+            this.setData({
+              clothes: updatedClothes,
+              filteredClothes: updatedClothes,
+              currentPageClothes: updatedClothes.slice(
+                (this.data.currentPage - 1) * this.data.pageSize,
+                this.data.currentPage * this.data.pageSize
+              )
+            });
+          }
+        }
+      });
+    }
+  },
+  
+  // 检查并刷新临时链接
+  checkAndRefreshTempUrls: function() {
+    const now = Date.now();
+    const TWO_HOURS = 2 * 60 * 60 * 1000; // 2小时的毫秒数
+    
+    // 如果距离上次更新未超过2小时，不进行刷新
+    if (this.data.lastImageUrlUpdateTime && (now - this.data.lastImageUrlUpdateTime) < TWO_HOURS) {
+      return;
+    }
+    
+    // 重新获取当前页面衣物的临时链接
+    this.downloadClothesImages(this.data.currentPageClothes);
   },
 })
