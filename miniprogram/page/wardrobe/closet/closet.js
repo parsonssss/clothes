@@ -60,6 +60,7 @@ Page({
     preventTapCount: 0,       // 阻止点击计数器，用于区分意外点击和真实点击
     tapCoolingEndTime: 0,     // 记录点击冷却结束时间
     currentCategoryFilter: null,  // 使用新的数据属性来记录当前类别过滤条件
+    categoriesInitialized: false, // 标记类别数量已初始化
   },
   
   // 页面加载
@@ -87,7 +88,7 @@ Page({
   onShow: function() {
     // 如果已经有OpenID，刷新衣物列表
     if (this.data.userOpenId) {
-      this.loadClothes();
+      this.loadClothes(true, true); // 强制更新类别数量，显示加载提示
     }
   },
   
@@ -115,6 +116,7 @@ Page({
         currentIndex: this.data.currentIndex + 1
       });
       this.updateCardPositions();
+      console.log('滑动到下一张卡片:', this.data.categories[this.data.currentIndex].name);
       this.filterClothesByCategory(this.data.categories[this.data.currentIndex].id);
     }
   },
@@ -126,6 +128,7 @@ Page({
         currentIndex: this.data.currentIndex - 1
       });
       this.updateCardPositions();
+      console.log('滑动到上一张卡片:', this.data.categories[this.data.currentIndex].name);
       this.filterClothesByCategory(this.data.categories[this.data.currentIndex].id);
     }
   },
@@ -341,8 +344,8 @@ Page({
         this.setData({
           userOpenId: openid
         });
-        // 获取到OpenID后，获取衣物列表
-        this.loadClothes();
+        // 获取到OpenID后，获取衣物列表（首次加载，需要更新类别数量）
+        this.loadClothes(true, true);
       })
       .catch(err => {
         console.error('获取用户OpenID失败:', err);
@@ -367,14 +370,19 @@ Page({
   },
   
   // 获取衣物列表
-  loadClothes: function() {
+  loadClothes: function(forceUpdateCounts = false, showLoading = true) {
     // 如果没有获取到用户OpenID，不进行数据获取
     if (!this.data.userOpenId) {
       console.log('未获取到用户OpenID，无法获取衣物列表');
       return;
     }
     
-    closetUtils.showLoading('加载衣物...');
+    console.log('加载衣物列表，是否强制更新类别数量:', forceUpdateCounts, '显示加载提示:', showLoading);
+    
+    // 仅在需要时显示加载提示
+    if (showLoading) {
+      closetUtils.showLoading('加载衣物...');
+    }
     
     // 获取当前过滤的类别对象
     let filterCategory = null;
@@ -393,13 +401,21 @@ Page({
       this.data.pageSize
     )
       .then(result => {
-        closetUtils.hideLoading();
+        if (showLoading) {
+          closetUtils.hideLoading();
+        }
         
-        // 更新类别数量
-        const updatedCategories = cardManager.calculateCategoryCounts(
-          result.clothes,
-          this.data.categories
-        );
+        // 仅在首次加载或添加衣物后更新类别数量
+        let updatedCategories = this.data.categories;
+        if (forceUpdateCounts || !this.data.categoriesInitialized) {
+          console.log('更新类别数量');
+          updatedCategories = cardManager.calculateCategoryCounts(
+            result.totalClothesData || result.clothes,
+            this.data.categories
+          );
+        } else {
+          console.log('跳过更新类别数量');
+        }
         
         this.setData({
           clothes: result.clothes,
@@ -408,6 +424,7 @@ Page({
           totalClothes: result.totalClothes,
           totalPages: result.totalPages,
           categories: updatedCategories,
+          categoriesInitialized: true, // 标记类别数量已初始化
           isLoading: false
         });
         
@@ -415,7 +432,9 @@ Page({
         this.downloadClothesImages(result.clothes);
       })
       .catch(err => {
-        closetUtils.hideLoading();
+        if (showLoading) {
+          closetUtils.hideLoading();
+        }
         console.error('获取衣物列表失败', err);
         
         // 出错时使用模拟数据
@@ -438,14 +457,16 @@ Page({
       return;
     }
     
+    console.log('切换到类别:', categoryObj.name, '(ID:', categoryId, ')');
+    
     // 设置当前类别过滤条件，但不打开详情视图
     this.setData({
       currentCategoryFilter: categoryId,  // 使用新的数据属性来记录当前类别过滤条件
       currentPage: 1  // 重置为第1页
     });
     
-    // 重新加载服务器数据
-    this.loadClothes();
+    // 重新加载服务器数据，不更新类别数量，也不显示加载提示
+    this.loadClothes(false, false);
   },
   
   // 下载衣物图片
@@ -460,8 +481,8 @@ Page({
   
   // 应用分页逻辑
   applyPagination: function() {
-    // 直接重新加载当前页的数据
-    this.loadClothes();
+    // 直接重新加载当前页的数据（不需要更新类别数量）
+    this.loadClothes(false, true); // 分页操作要显示加载提示
   },
   
   // 前往下一页
@@ -677,8 +698,8 @@ Page({
         });
         closetUtils.showSuccessToast('添加衣物成功');
         
-        // 重新加载衣物列表
-        this.loadClothes();
+        // 更新衣物列表，并强制更新类别数量
+        this.loadClothes(true, true);
       })
       .catch(err => {
         console.error('分析或保存失败:', err);
@@ -702,5 +723,44 @@ Page({
       isUploading: false
     });
     closetUtils.showErrorToast('分析衣物失败');
-  }
+  },
+  
+  // 处理选择图片上传
+  handleAddFromAlbum: function() {
+    // ... existing code ...
+  },
+  
+  // 处理拍照上传
+  handleAddFromCamera: function() {
+    // ... existing code ...
+  },
+  
+  // 删除衣物
+  deleteClothing: function(id) {
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这件衣物吗？',
+      success: res => {
+        if (res.confirm) {
+          wx.cloud.callFunction({
+            name: 'deleteClothing',
+            data: {
+              clothingId: id
+            }
+          })
+          .then(res => {
+            console.log('删除衣物成功:', res);
+            closetUtils.showSuccessToast('删除成功');
+            
+            // 更新衣物列表，并强制更新类别数量
+            this.loadClothes(true, true);
+          })
+          .catch(err => {
+            console.error('删除衣物失败:', err);
+            closetUtils.showErrorToast('删除失败');
+          });
+        }
+      }
+    });
+  },
 });

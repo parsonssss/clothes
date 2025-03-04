@@ -43,18 +43,29 @@ function loadClothes(userOpenId, selectedCategory, currentPage, pageSize) {
         
         const totalPages = Math.ceil(totalClothes / pageSize) || 1; // 计算总页数，确保至少有1页
         
-        // 然后获取当前页数据
+        // 查询是否需要获取所有衣物用于计算分类数量
+        let needTotalClothes = selectedCategory ? selectedCategory.id === 0 : true;
+        
+        let totalClothesPromise = Promise.resolve(null);
+        if (needTotalClothes) {
+          // 如果是查询所有衣物或需要更新计数，获取所有衣物用于分类统计
+          totalClothesPromise = db.collection('clothes')
+            .where({ _openid: userOpenId })
+            .field({ category: true }) // 只获取category字段以减小数据量
+            .get()
+            .then(totalRes => totalRes.data);
+        }
+        
+        // 获取当前页数据
         return db.collection('clothes')
           .where(query)
           .skip(skip)
           .limit(pageSize)
           .orderBy('createTime', 'desc')
           .get()
-          .then(res => {
-            console.log('查询到的衣物:', res.data);
-            
+          .then(pageRes => {
             // 处理衣物数据
-            const clothes = res.data.map(item => {
+            const clothes = pageRes.data.map(item => {
               return {
                 _id: item._id,
                 name: item.name,
@@ -69,15 +80,19 @@ function loadClothes(userOpenId, selectedCategory, currentPage, pageSize) {
               };
             });
             
-            resolve({
-              clothes: clothes,
-              totalClothes: totalClothes,
-              totalPages: totalPages
+            // 先获取总分类数据，再返回结果
+            return totalClothesPromise.then(totalClothesData => {
+              resolve({
+                clothes: clothes,
+                totalClothes: totalClothes,
+                totalPages: totalPages,
+                totalClothesData: totalClothesData // 为计算分类数量而返回所有衣物数据
+              });
             });
           });
       })
       .catch(err => {
-        console.error('查询衣物失败:', err);
+        console.error('获取衣物列表失败:', err);
         reject(err);
       });
   });
