@@ -32,7 +32,7 @@
 
 /* 卡片包装器 */
 .card-wrapper {
-  width: 50%;
+  width: 60%;  /* 介绍从50%到60%，使卡片占据屏幕中心60%左右 */
   height: 400rpx;
   position: relative;
 }

@@ -79,11 +79,11 @@ Page({
       // 计算每张卡片相对于当前卡片的位置
       const relativePos = i - this.data.currentIndex;
       
-      // 只显示当前卡片前后各2张卡片
-      const visible = Math.abs(relativePos) <= 2;
+      // 全部卡片都应该可见，只是通过transform移出可视区域
+      const visible = true;
       
       // 计算卡片的X轴偏移量
-      const translateX = relativePos * 60;
+      const translateX = relativePos * 120; // 增加偏移量，使卡片间距更大
       
       // 计算z-index，确保当前卡片在最上层
       const zIndex = 10 - Math.abs(relativePos);
@@ -684,22 +684,34 @@ Page({
   
   // 调用抠图API处理图片
   processImageWithKoutu: function(imageUrl) {
+    console.log('开始处理图片:', imageUrl);
     // 获取抠图API请求模板
     const fs = wx.getFileSystemManager();
     
+    // 使用用户目录下的模板
+    const templatePath = `${wx.env.USER_DATA_PATH}/koutu.json`;
+    console.log('模板文件路径:', templatePath);
+    
     fs.readFile({
-      filePath: `${wx.env.USER_DATA_PATH}/koutu.json`,
+      filePath: templatePath,
       encoding: 'utf-8',
       success: (res) => {
         try {
           // 解析模板
           const koutuTemplate = JSON.parse(res.data);
+          console.log('模板读取成功');
           
           // 替换URL
-          koutuTemplate.prompt["27"].inputs.image = imageUrl;
-          
-          // 向抠图API发送请求
-          this.sendKoutuRequest(koutuTemplate, imageUrl);
+          if (koutuTemplate.prompt && koutuTemplate.prompt["27"] && koutuTemplate.prompt["27"].inputs) {
+            koutuTemplate.prompt["27"].inputs.image = imageUrl;
+            console.log('替换图片URL成功');
+            
+            // 向抠图API发送请求
+            this.sendKoutuRequest(koutuTemplate, imageUrl);
+          } else {
+            console.error('模板结构不正确, 找不到节点27:', JSON.stringify(koutuTemplate.prompt, null, 2));
+            this.handleKoutuError();
+          }
         } catch (error) {
           console.error('解析koutu.json失败:', error);
           this.handleKoutuError();
@@ -708,42 +720,225 @@ Page({
       fail: (err) => {
         console.error('读取koutu.json失败:', err);
         
-        // 尝试从网络资源加载模板
-        wx.request({
-          url: 'https://raw.githubusercontent.com/user/repo/main/koutu.json',
-          success: (res) => {
+        // 尝试读取项目内的模板文件
+        fs.readFile({
+          filePath: 'miniprogram/page/wardrobe/closet/koutu.json',
+          encoding: 'utf-8',
+          success: (innerRes) => {
             try {
-              const koutuTemplate = res.data;
+              const koutuTemplate = JSON.parse(innerRes.data);
               koutuTemplate.prompt["27"].inputs.image = imageUrl;
+              
+              // 保存到用户目录便于下次使用
+              fs.writeFile({
+                filePath: templatePath,
+                data: innerRes.data,
+                encoding: 'utf-8',
+                success: () => {
+                  console.log('保存模板到用户目录成功');
+                }
+              });
+              
               this.sendKoutuRequest(koutuTemplate, imageUrl);
             } catch (error) {
-              console.error('解析网络模板失败:', error);
+              console.error('解析内置模板失败:', error);
               this.handleKoutuError();
             }
           },
-          fail: () => {
-            this.handleKoutuError();
+          fail: (innerErr) => {
+            console.error('读取内置模板失败，尝试使用硬编码模板:', innerErr);
+            
+            // 如果内置模板也读取失败，则使用硬编码的模板
+            this.useHardcodedTemplate(imageUrl, templatePath);
           }
         });
       }
     });
   },
   
+  // 使用硬编码的抠图模板
+  useHardcodedTemplate: function(imageUrl, savePath) {
+    // 硬编码的抠图模板
+    const hardcodedTemplate = {
+      "prompt": {
+        "14": {
+          "inputs": {
+            "aspect_ratio": "original",
+            "proportional_width": 1,
+            "proportional_height": 1,
+            "fit": "letterbox",
+            "method": "lanczos",
+            "round_to_multiple": "8",
+            "scale_to_longest_side": true,
+            "longest_side": 1024,
+            "image": [
+              "27",
+              0
+            ]
+          },
+          "class_type": "LayerUtility: ImageScaleByAspectRatio",
+          "_meta": {
+            "title": "LayerUtility: ImageScaleByAspectRatio"
+          }
+        },
+        "17": {
+          "inputs": {
+            "invert_mask": false,
+            "blend_mode": "normal",
+            "opacity": 100,
+            "x_percent": 50,
+            "y_percent": 50,
+            "mirror": "None",
+            "scale": 1,
+            "aspect_ratio": 1,
+            "rotate": 0,
+            "transform_method": "lanczos",
+            "anti_aliasing": 0,
+            "background_image": [
+              "18",
+              0
+            ],
+            "layer_image": [
+              "14",
+              0
+            ],
+            "layer_mask": [
+              "24",
+              1
+            ]
+          },
+          "class_type": "LayerUtility: ImageBlendAdvance V2",
+          "_meta": {
+            "title": "LayerUtility: ImageBlendAdvance V2"
+          }
+        },
+        "18": {
+          "inputs": {
+            "panel_width": [
+              "20",
+              0
+            ],
+            "panel_height": [
+              "20",
+              1
+            ],
+            "fill_color": "white",
+            "fill_color_hex": "#000000"
+          },
+          "class_type": "CR Color Panel",
+          "_meta": {
+            "title": "🌁 CR Color Panel"
+          }
+        },
+        "20": {
+          "inputs": {
+            "image": [
+              "14",
+              0
+            ]
+          },
+          "class_type": "easy imageSize",
+          "_meta": {
+            "title": "ImageSize"
+          }
+        },
+        "21": {
+          "inputs": {
+            "filename_prefix": "ComfyUI",
+            "images": [
+              "17",
+              0
+            ]
+          },
+          "class_type": "SaveImage",
+          "_meta": {
+            "title": "Save Image"
+          }
+        },
+        "24": {
+          "inputs": {
+            "sam_model": "sam_hq_vit_h (2.57GB)",
+            "grounding_dino_model": "GroundingDINO_SwinT_OGC (694MB)",
+            "threshold": 0.3,
+            "detail_method": "VITMatte(local)",
+            "detail_erode": 6,
+            "detail_dilate": 6,
+            "black_point": 0.15,
+            "white_point": 0.99,
+            "process_detail": false,
+            "prompt": "clothes",
+            "device": "cuda",
+            "max_megapixels": 2,
+            "cache_model": false,
+            "image": [
+              "14",
+              0
+            ]
+          },
+          "class_type": "LayerMask: SegmentAnythingUltra V2",
+          "_meta": {
+            "title": "LayerMask: SegmentAnythingUltra V2"
+          }
+        },
+        "27": {
+          "inputs": {
+            "image": imageUrl,
+            "keep_alpha_channel": false,
+            "output_mode": false
+          },
+          "class_type": "LoadImageFromUrl",
+          "_meta": {
+            "title": "Load Image From URL"
+          }
+        }
+      }
+    };
+      
+    // 保存到用户目录便于下次使用
+    const fs = wx.getFileSystemManager();
+    fs.writeFile({
+      filePath: savePath,
+      data: JSON.stringify(hardcodedTemplate),
+      encoding: 'utf-8',
+      success: () => {
+        console.log('保存硬编码模板到用户目录成功');
+      }
+    });
+    
+    // 发送硬编码模板
+    this.sendKoutuRequest(hardcodedTemplate, imageUrl);
+  },
+  
   // 发送抠图请求
   sendKoutuRequest: function(requestBody, originalImageUrl) {
+    console.log('发送抠图请求:',JSON.stringify(requestBody, null, 2));
     wx.request({
-      url: 'https://wp05.unicorn.org.cn:14427/api/prompt',
+      url: 'https://wp05.unicorn.org.cn:12753/api/prompt',
       method: 'POST',
       header: {
         'Content-Type': 'application/json'
       },
       data: requestBody,
       success: (res) => {
-        console.log('抠图请求成功:', res);
+        console.log('抠图请求成功:', res.data);
+        // 检查是否返回prompt_id
         if (res.data && res.data.prompt_id) {
+          const promptId = res.data.prompt_id;
+          console.log('获取到promptId:', promptId);
+          // 将promptId存储到storage中，方便调试
+          wx.setStorageSync('lastPromptId', promptId);
           // 获取抠图结果
-          this.getKoutuResult(res.data.prompt_id, originalImageUrl);
+          this.getKoutuResult(promptId, originalImageUrl);
+        } else if (res.data && res.data.error) {
+          // 如果有错误信息
+          console.error('抠图请求返回错误:', res.data.error);
+          wx.showToast({
+            title: '抠图失败: ' + res.data.error,
+            icon: 'none'
+          });
+          this.handleKoutuError();
         } else {
+          console.error('抠图请求响应不符合预期:', res.data);
           this.handleKoutuError();
         }
       },
@@ -759,7 +954,7 @@ Page({
     // 轮询获取结果，实际项目中可能需要更复杂的处理
     const checkResult = () => {
       wx.request({
-        url: `https://wp05.unicorn.org.cn:14427/history/${promptId}`,
+        url: `https://wp05.unicorn.org.cn:12753/history/${promptId}`,
         method: 'GET',
         header: {
         },
@@ -767,21 +962,43 @@ Page({
           console.log('获取抠图结果:', res);
           // 确保res.data存在且不为空
           if (res.data && Object.keys(res.data).length > 0) {
-            // 从输出数据中获取图片信息
-            if (res.data.outputs && Array.isArray(res.data.outputs)) {
-              const outputData = res.data.outputs.find(item => item.type === 'output');
-              if (outputData && outputData.filename && outputData.subfolder !== undefined) {
+            // 检查是否存在输出节点
+            const firstKey = Object.keys(res.data)[0];
+            // 获取第一个key对应的对象中的outputs
+            if (res.data[firstKey].outputs && Object.keys(res.data[firstKey].outputs).length > 0) {
+              // 查找包含SaveImage节点的输出
+              const outputKey = Object.keys(res.data[firstKey].outputs).find(key => {
+                return res.data[firstKey].outputs[key]?.images && res.data[firstKey].outputs[key].images.length > 0;
+              });
+              
+              if (outputKey && res.data[firstKey].outputs[outputKey]?.images && res.data[firstKey].outputs[outputKey].images.length > 0) {
+                // 获取第一张输出图片的信息
+                const imageInfo = res.data[firstKey].outputs[outputKey].images[0];
+                const filename = imageInfo.filename; // 例如 "ComfyUI_00052_.png"
+                const subfolder = imageInfo.subfolder || ""; // 子文件夹，可能为空字符串
+                const type = imageInfo.type || "output"; // 类型，默认为output
+                
                 // 构建图片URL
-                const imageUrl = `https://wp05.unicorn.org.cn:14427/view?filename=${outputData.filename}&subfolder=${outputData.subfolder}&type=${outputData.type || 'output'}`;
+                const imageUrl = `https://wp05.unicorn.org.cn:12753/view?filename=${filename}&subfolder=${subfolder}&type=${type}`;
                 console.log('构建的图片URL:', imageUrl);
+                
                 // 直接使用构建的URL下载图片
                 this.downloadKoutuResult(imageUrl, originalImageUrl);
               } else {
-                console.error('输出数据格式不正确:', res.data.outputs);
-                this.handleKoutuError();
+                console.error('未找到SaveImage节点输出:', res.data[firstKey].outputs);
+                
+                // 检查是否处理中，如果是则继续轮询
+                if (res.data[firstKey].status === 'processing' || res.data[firstKey].status === 'pending') {
+                  setTimeout(checkResult, 2000);
+                } else {
+                  this.handleKoutuError();
+                }
               }
+            } else if (res.data[firstKey].status === 'processing' || res.data[firstKey].status === 'pending') {
+              // 如果还在处理中，继续轮询
+              setTimeout(checkResult, 2000);
             } else {
-              console.error('无效的输出数据:', res.data.outputs);
+              console.error('无效的输出数据:', res.data[firstKey]);
               this.handleKoutuError();
             }
           } else if (res.data && res.data.status === 'failed') {
@@ -803,10 +1020,17 @@ Page({
   
   // 下载抠图结果
   downloadKoutuResult: function(outputUrl, originalImageUrl) {
+    console.log('开始下载抠图结果:', outputUrl);
+    
+    // 处理URL，确保所有参数都正确编码
+    const encodedUrl = outputUrl.replace(/([^:]\/\/[^\/]+\/)(.*)/, function(match, prefix, suffix) {
+      return prefix + encodeURIComponent(suffix).replace(/%2F/g, '/').replace(/%3F/g, '?').replace(/%3D/g, '=').replace(/%26/g, '&');
+    });
     
     wx.downloadFile({
       url: outputUrl,
       success: (res) => {
+        console.log('下载结果:', res);
         if (res.statusCode === 200) {
           const tempFilePath = res.tempFilePath;
           
@@ -818,6 +1042,7 @@ Page({
             filePath: tempFilePath,
             success: (uploadRes) => {
               const fileID = uploadRes.fileID;
+              console.log('抠图结果上传成功:', fileID);
               
               // 分析衣物
               this.analyzeClothing(fileID, originalImageUrl);
@@ -828,12 +1053,37 @@ Page({
             }
           });
         } else {
-          this.handleKoutuError();
+          console.error('下载抠图结果失败，状态码:', res.statusCode);
+          // 尝试直接使用原始图片
+          wx.showModal({
+            title: '抠图失败',
+            content: '图片处理失败，是否使用原始图片？',
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                // 使用原始图片
+                this.analyzeClothing(originalImageUrl, originalImageUrl);
+              } else {
+                this.handleKoutuError();
+              }
+            }
+          });
         }
       },
       fail: (err) => {
         console.error('下载抠图结果失败:', err);
-        this.handleKoutuError();
+        // 尝试直接使用原始图片
+        wx.showModal({
+          title: '抠图失败',
+          content: '抠图结果下载失败，是否使用原始图片？',
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              // 使用原始图片
+              this.analyzeClothing(originalImageUrl, originalImageUrl);
+            } else {
+              this.handleKoutuError();
+            }
+          }
+        });
       }
     });
   },
