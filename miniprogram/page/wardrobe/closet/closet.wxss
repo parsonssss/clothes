@@ -7,7 +7,7 @@
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  padding: 32rpx 0;
+  padding: 20rpx 0;
   box-sizing: border-box;
 }
 
@@ -15,47 +15,94 @@
 .main-content {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 40rpx 0;
+  justify-content: flex-start;
+  padding: 10rpx 0 40rpx 0;
+}
+
+/* 衣柜标题 */
+.wardrobe-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  margin-top: 10vh;
+  margin-bottom: 30rpx;
+  color: #4A4A4A;
+  text-align: center;
+  position: relative;
+}
+
+.wardrobe-title::after {
+  content: '';
+  position: absolute;
+  bottom: -12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background-color: #A78A7F;
+  border-radius: 3rpx;
 }
 
 /* 卡片容器 */
 .card-container {
   width: 100%;
+  height: 60vh;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   padding: 0 60rpx;
+  margin-top: 20rpx;
 }
 
 /* 卡片包装器 */
 .card-wrapper {
-  width: 60%;  /* 介绍从50%到60%，使卡片占据屏幕中心60%左右 */
-  height: 400rpx;
+  display: flex;
+  width: 80%;
+  height: 100%;
   position: relative;
+  overflow: visible;
+  justify-content: center;
+  align-items: center;
+  touch-action: pan-x;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: auto;
 }
 
 /* 类别卡片 */
 .category-card {
-  width: 100%;
-  height: 100%;
   position: absolute;
-  top: 0;
-  left: 0;
+  width: 85%;
+  height: 85%;
   border-radius: 20rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  padding: 30rpx;
+  box-sizing: border-box;
+  will-change: transform, opacity;
+  transition: all 0.3s ease-out;
+  transform-origin: center center;
+  -webkit-tap-highlight-color: transparent;  /* 禁用默认的点击高亮 */
+  pointer-events: auto;
+}
+
+/* 禁用点击样式和触发 */
+.category-card.no-tap {
+  pointer-events: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out !important;
+  cursor: default !important;
+  touch-action: none !important;
 }
 
 .category-card.active {
-  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.2);
-  transform: scale(1.02);
+  box-shadow: 0 10rpx 20rpx rgba(0, 0, 0, 0.15);
+  transform-origin: center center;
 }
 
 .category-icon {
@@ -115,11 +162,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1000; /* 提高z-index确保在最顶层 */
   padding: 32rpx;
 }
 
 .detail-card {
+  animation: slideUp 0.3s ease-out;
   width: 90%;
   height: 85%;
   border-radius: 20rpx;
@@ -169,6 +217,12 @@
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
   position: relative;
   box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clothes-item:active {
+  transform: scale(0.97);
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
 .clothes-image {
@@ -518,4 +572,59 @@
 
 .upload-text {
   font-size: 30rpx;
+}
+
+/* 点击反馈 */
+.category-card:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* 添加详情卡片打开动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50rpx); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.detail-card-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.detail-card {
+  animation: slideUp 0.3s ease-out;
+  width: 90%;
+  height: 85%;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 衣物项目的点击反馈 */
+.clothes-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clothes-item:active {
+  transform: scale(0.97);
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 卡片点击状态 */
+.card-hover {
+  opacity: 0.8 !important;
+  transform: scale(0.98) !important;
+  transition: all 0.1s ease-out !important;
+}
+
+/* 卡片点击冷却状态 - 防止触发点击反馈 */
+.card-cooling {
+  pointer-events: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: none !important;
 }

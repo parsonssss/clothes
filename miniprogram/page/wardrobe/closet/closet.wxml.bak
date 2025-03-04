@@ -16,21 +16,17 @@
       <view class="nav-button prev" catchtap="slidePrev" style="color: {{colors.darkOlive}};">◀</view>
       
       <!-- 类别卡片 -->
-      <view class="card-wrapper" 
-            capture-bind:touchstart="handleTouchStart" 
-            capture-bind:touchmove="handleTouchMove" 
-            capture-bind:touchend="handleTouchEnd"
-            capture-bind:touchcancel="handleTouchEnd">
+      <view class="card-wrapper" bindtouchstart="handleTouchStart" bindtouchmove="handleTouchMove" bindtouchend="handleTouchEnd">
         <view 
           wx:for="{{categories}}" 
           wx:key="id"
-          class="category-card {{currentIndex === index ? 'active' : ''}} {{isSliding || slidingLocked || Date.now() - lastSlideTime < 800 ? 'no-tap' : ''}} {{Date.now() - lastSlideTime < 100 ? 'card-cooling' : ''}}" 
-          style="background-color: {{currentIndex === index ? colors.mediumBrown : colors.lightTaupe}}; z-index: {{cards[index].zIndex}}; transform: translateX({{cards[index].translateX}}rpx) scale({{cards[index].scale}}); opacity: {{cards[index].opacity}};"
+          class="category-card {{currentIndex === index ? 'active' : ''}}" 
+          style="background-color: {{currentIndex === index ? colors.mediumBrown : colors.lightTaupe}}; 
+                 z-index: {{cards[index].zIndex}}; 
+                 transform: translateX({{cards[index].translateX}}rpx) scale({{cards[index].scale}});
+                 opacity: {{cards[index].opacity}};"
           catchtap="onCardTap"
           data-index="{{index}}"
-          hover-class="{{!isSliding && !slidingLocked && Date.now() - lastSlideTime >= 800 ? 'card-hover' : ''}}"
-          hover-stay-time="50"
-          hover-start-time="50"
           hidden="{{!cards[index].visible}}"
         >
           <view class="category-icon" style="background-color: {{colors.darkOlive}}; color: {{colors.lightTaupe}};">
@@ -61,15 +57,14 @@
       </view>
 
       <!-- 衣物网格 -->
-      <scroll-view class="clothes-grid" scroll-y="true" enable-flex="true">
+      <scroll-view class="clothes-grid" scroll-y="true">
         <view class="grid-container">
           <block wx:for="{{currentPageClothes}}" wx:key="_id">
             <view 
               class="clothes-item" 
               style="background-color: {{colors.lightTaupe}};"
-              catchtap="viewClothesDetail"
+              bindtap="viewClothesDetail"
               data-id="{{item._id}}"
-              hover-class="clothes-item-hover"
             >
               <image 
                 wx:if="{{item.tempImageUrl}}" 
@@ -89,12 +84,6 @@
               </view>
             </view>
           </block>
-        </view>
-        
-        <!-- 空状态提示 -->
-        <view class="empty-state" wx:if="{{filteredClothes.length === 0 && !isLoading}}">
-          <view class="empty-icon" style="color: {{colors.darkCoffee}};">📷</view>
-          <view class="empty-text" style="color: {{colors.darkOlive}};">暂无衣物，点击"+"添加</view>
         </view>
         
         <!-- 分页控制 -->
@@ -174,6 +163,12 @@
             >下一页</view>
           </view>
         </view>
+        
+        <!-- 空状态提示 -->
+        <view class="empty-state" wx:if="{{filteredClothes.length === 0 && !isLoading}}">
+          <view class="empty-icon" style="color: {{colors.darkCoffee}};">📷</view>
+          <view class="empty-text" style="color: {{colors.darkOlive}};">暂无衣物，点击"+"添加</view>
+        </view>
       </scroll-view>
       
       <!-- 添加按钮 -->
@@ -198,7 +193,7 @@
   
   <!-- 添加选项弹窗 -->
   <view class="add-options-overlay {{showAddOptions ? 'show' : ''}}" bindtap="hideAddOptions">
-    <view class="add-options-container" style="background-color: {{colors.lightTaupe}};" catchtap="preventBubble">
+    <view class="add-options-container" style="background-color: {{colors.lightTaupe}};" catchtap>
       <view class="add-option-title" style="color: {{colors.darkOlive}};">添加衣物</view>
       <view class="add-option" bindtap="addByCamera">
         <view class="add-option-icon camera-icon"></view>
@@ -215,4 +210,4 @@
       <view class="cancel-btn" bindtap="hideAddOptions" style="background-color: {{colors.lightTaupe}}; color: {{colors.darkOlive}}; border: 1rpx solid {{colors.darkOlive}};">取消</view>
     </view>
   </view>
-</view> 
+</view>
