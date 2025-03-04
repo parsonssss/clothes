@@ -1,5 +1,6 @@
 // page/wardrobe/closet/closet.js
 const colors = require('../../../util/colors');
+const downloadClothesImages = require('./downloadClothesImages');
 
 Page({
   data: {
@@ -15,6 +16,7 @@ Page({
     currentPage: 1,             // 当前页码
     pageSize: 12,           // 每页显示的衣物数量
     totalPages: 1,              // 总页数
+    lastImageUrlUpdateTime: 0,  // 上次更新临时链接的时间戳
     
     // 定义衣物类别 - 使用日式名称和英文名称
     categories: [
@@ -232,15 +234,17 @@ Page({
     
     // 从云数据库获取当前用户的衣物列表
     clothesCollection
-      .where({}) // 先不加筛选条件，获取所有衣物
+      .where({
+        _openid: this.data.userOpenId // 使用用户OpenID过滤，确保只获取当前用户的衣物
+      })
       .orderBy('createTime', 'desc')
       .get()
       .then(res => {
         console.log('获取衣物列表成功', res);
         
-        // 过滤当前用户的衣物
+        // 获取当前用户的衣物
         let myClothes = res.data;
-        console.log('衣物总数量:', myClothes.length);
+        console.log('当前用户衣物总数量:', myClothes.length);
         
         // 统计各类别的数量
         this.calculateCategoryCounts(myClothes);
@@ -289,85 +293,10 @@ Page({
     this.setData({ categories });
   },
   
-  // 下载衣物图片
+  // 下载衣物图片 - 使用优化后的模块化函数
   downloadClothesImages: function(clothes) {
-    if (!clothes || clothes.length === 0) {
-      console.log('没有衣物数据，显示空状态');
-      this.setData({
-        clothes: [],
-        filteredClothes: [],
-        currentPageClothes: [],
-        isLoading: false
-      });
-      return;
-    }
-    
-    // 收集所有非空的fileID
-    const fileIDs = clothes.map(item => item.fileID).filter(fileID => fileID);
-    console.log('需要处理的图片数量:', fileIDs.length);
-    
-    if (fileIDs.length === 0) {
-      console.log('没有图片需要加载，直接显示衣物');
-      this.setData({
-        clothes: clothes,
-        isLoading: false
-      });
-      return;
-    }
-    
-    // 获取临时URL
-    wx.cloud.getTempFileURL({
-      fileList: fileIDs,
-      success: res => {
-        console.log('获取临时链接成功', res);
-        
-        // 创建fileID到临时URL的映射
-        const fileIDToPath = {};
-        res.fileList.forEach(item => {
-          if (item.fileID && item.tempFileURL) {
-            fileIDToPath[item.fileID] = item.tempFileURL;
-          }
-        });
-        
-        // 更新每个衣物对象的tempImageUrl
-        const updatedClothes = clothes.map(cloth => {
-          return {
-            ...cloth, 
-            tempImageUrl: cloth.fileID ? fileIDToPath[cloth.fileID] || '' : ''
-          };
-        });
-        
-        console.log('处理后的衣物数据:', updatedClothes.length);
-        
-        this.setData({
-          clothes: updatedClothes,
-          isLoading: false
-        });
-        
-        // 初始化时，如果有选中的类别，重新应用过滤
-        if (this.data.selectedCategory) {
-          this.filterClothesByCategory(this.data.selectedCategory);
-        }
-      },
-      fail: err => {
-        console.error('获取临时链接失败', err);
-        
-        // 如果失败，仍然显示衣物，但不显示图片
-        const updatedClothes = clothes.map(cloth => {
-          return {...cloth, tempImageUrl: ''};
-        });
-        
-        this.setData({
-          clothes: updatedClothes,
-          isLoading: false
-        });
-        
-        // 初始化时，如果有选中的类别，重新应用过滤
-        if (this.data.selectedCategory) {
-          this.filterClothesByCategory(this.data.selectedCategory);
-        }
-      }
-    });
+    // 调用模块化的下载函数，并绑定this上下文
+    downloadClothesImages.call(this, clothes);
   },
   
   // 滑动卡片到下一个
@@ -439,42 +368,20 @@ Page({
   
   // 根据类别筛选衣物
   filterClothesByCategory: function(category) {
-    let filtered;
-    if (category.id === 0) {
-      // 全部衣物
-      filtered = this.data.clothes;
-    } else {
-      // 按类别筛选
-      filtered = this.data.clothes.filter(item => item.category === category.category);
-    }
-    
-    // 计算总页数
-    const totalPages = Math.ceil(filtered.length / this.data.pageSize);
-    
+    // 设置选中类别并重置页码
     this.setData({
-      filteredClothes: filtered,
-      totalPages: totalPages || 1,  // 确保至少有1页
-      currentPage: 1                // 重置为第1页
+      selectedCategory: category,
+      currentPage: 1  // 重置为第1页
     });
     
-    // 应用分页
-    this.applyPagination();
+    // 重新加载服务器数据
+    this.loadClothes();
   },
   
-  // 应用分页逻辑，获取当前页的衣物
+  // 应用分页逻辑，重新从服务器加载当前页数据
   applyPagination: function() {
-    const { filteredClothes, currentPage, pageSize } = this.data;
-    
-    // 计算当前页的起始和结束索引
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    
-    // 获取当前页的衣物
-    const currentPageClothes = filteredClothes.slice(startIndex, endIndex);
-    
-    this.setData({
-      currentPageClothes: currentPageClothes
-    });
+    // 直接重新加载当前页的数据
+    this.loadClothes();
   },
   
   // 前往下一页
@@ -1144,6 +1051,7 @@ Page({
       style: analysisData.style || '未知',
       warmthLevel: analysisData.warmth_level || 3,
       scenes: analysisData.scene_applicability || ['休闲'],
+      _openid: this.data.userOpenId, // 手动添加用户OpenID关联，确保账号与数据关联
       createTime: db.serverDate()
     };
     
@@ -1271,11 +1179,13 @@ Page({
     const _ = db.command;
     
     // 构建查询条件
-    let query = {};
+    let query = {
+      _openid: this.data.userOpenId // 确保只获取当前用户的衣物
+    };
     
     // 按类别筛选
-    if (this.data.selectedCategory !== '全部') {
-      query.category = this.data.selectedCategory;
+    if (this.data.selectedCategory && this.data.selectedCategory.category && this.data.selectedCategory.id !== 0) {
+      query.category = this.data.selectedCategory.category;
     }
     
     // 分页查询
@@ -1287,6 +1197,7 @@ Page({
       .count()
       .then(countRes => {
         const totalClothes = countRes.total;
+        const totalPages = Math.ceil(totalClothes / this.data.pageSize) || 1; // 计算总页数，确保至少有1页
         
         // 然后获取当前页数据
         return db.collection('clothes')
@@ -1303,9 +1214,10 @@ Page({
             // 处理衣物数据
             const clothes = res.data.map(item => {
               return {
-                id: item._id,
+                _id: item._id,
                 name: item.name,
-                imageUrl: item.imageFileID,
+                fileID: item.imageFileID,
+                tempImageUrl: '', // 先设置为空，后面会获取临时URL
                 category: item.category,
                 type: item.type,
                 color: item.color,
@@ -1317,8 +1229,14 @@ Page({
             
             this.setData({
               clothes: clothes,
-              totalClothes: totalClothes
+              filteredClothes: clothes, // 同时更新过滤后的衣物列表
+              currentPageClothes: clothes, // 直接使用服务器返回的当前页数据
+              totalClothes: totalClothes,
+              totalPages: totalPages
             });
+            
+            // 下载所有衣物图片
+            this.downloadClothesImages(clothes);
           });
       })
       .catch(err => {
