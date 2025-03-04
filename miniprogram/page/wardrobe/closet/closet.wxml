@@ -42,7 +42,7 @@
     <view 
       class="detail-card" 
       style="background-color: {{colors.mediumBrown}};"
-      catchtap="preventClose"
+      catchtap="preventBubble"
     >
       <!-- 卡片顶部 -->
       <view class="detail-header">
@@ -61,13 +61,11 @@
               data-id="{{item._id}}"
             >
               <image 
-                wx:if="{{item.tempImageUrl || item.fileID}}" 
-                src="{{item.tempImageUrl || item.fileID}}" 
+                wx:if="{{item.tempImageUrl}}" 
+                src="{{item.tempImageUrl}}" 
                 mode="aspectFill" 
                 lazy-load="true"
                 class="clothes-image"
-                binderror="handleImageError"
-                data-index="{{index}}"
               ></image>
               <view 
                 class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" 
@@ -83,7 +81,7 @@
         </view>
         
         <!-- 分页控制 -->
-        <view class="pagination" wx:if="{{filteredClothes.length > pageSize}}">
+        <view class="pagination" wx:if="{{totalClothes > pageSize}}">
           <view class="pagination-info" style="color: {{colors.darkCoffee}};">{{currentPage}}/{{totalPages}} 页</view>
           <view class="pagination-controls">
             <view 
@@ -160,10 +158,10 @@
           </view>
         </view>
         
-        <!-- 空状态 -->
-        <view class="empty-state" wx:if="{{currentPageClothes.length === 0}}">
-          <view class="empty-icon" style="color: {{colors.darkOlive}};"></view>
-          <view class="empty-text" style="color: {{colors.darkCoffee}};">暂无{{selectedCategory.category || ''}}衣物，点击下方按钮添加。</view>
+        <!-- 空状态提示 -->
+        <view class="empty-state" wx:if="{{filteredClothes.length === 0 && !isLoading}}">
+          <view class="empty-icon" style="color: {{colors.darkCoffee}};">📷</view>
+          <view class="empty-text" style="color: {{colors.darkOlive}};">暂无衣物，点击"+"添加</view>
         </view>
       </scroll-view>
       

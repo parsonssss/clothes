@@ -29,7 +29,7 @@ exports.main = async (event, context) => {
         content: [
           {
             type: "text",
-            text: "**识别图片中的衣服，将衣服的信息以json格式返回 要求识别衣服的信息：**\n** **\n1. **衣服类型（上衣，下衣，外套，饰品）**\n2. **衣服颜色**\n3. **衣服风格**\n4. **衣服的保暖程度（1-5）**\n5. **场景适用性（工作，休闲等）**"
+            text: "**识别图片中的衣服，将衣服的信息以json格式返回(仅仅输出json结果即可，不要输出任何解释，key为clothing_type，color，style，warmth_level，sceneApplicability） 要求识别衣服的信息：**\n** **\n1. **衣服类型（上衣，下衣，外套，饰品）**\n2. **衣服颜色**\n3. **衣服风格**\n4. **衣服的保暖程度（等级为1-5，根据衣服类型打分）**\n5. **场景适用性（工作，休闲等）**"
           },
           {
             type: "image_url",
@@ -100,7 +100,7 @@ exports.main = async (event, context) => {
         // 标准化类别
         let category = '未分类';
         if (clothingData.clothing_type.includes('上衣') || clothingData.clothing_type.includes('衬衫') || 
-            clothingData.clothing_type.includes('T恤') || clothingData.clothing_type.includes('卫衣')) {
+            clothingData.clothing_type.includes('T恤') || clothingData.clothing_type.includes('卫衣') || clothingData.clothing_type.includes('毛衣')) {
           category = '上衣';
         } else if (clothingData.clothing_type.includes('裤') || clothingData.clothing_type.includes('下衣')) {
           category = '裤子';

@@ -19,6 +19,8 @@ module.exports = function(clothes) {
     console.log('没有图片需要加载，直接显示衣物');
     this.setData({
       clothes: clothes,
+      filteredClothes: clothes,
+      currentPageClothes: clothes,
       isLoading: false
     });
     return;
@@ -38,21 +40,20 @@ module.exports = function(clothes) {
     
     // 更新每个衣物对象的tempImageUrl
     const updatedClothes = clothes.map(cloth => {
+      const tempUrl = cloth.fileID && cachedURLs[cloth.fileID] ? cachedURLs[cloth.fileID] : '';
       return {
         ...cloth, 
-        tempImageUrl: cloth.fileID && cachedURLs[cloth.fileID] ? cachedURLs[cloth.fileID] : ''
+        tempImageUrl: tempUrl
       };
     });
     
     this.setData({
       clothes: updatedClothes,
+      filteredClothes: updatedClothes,
+      currentPageClothes: updatedClothes,
       isLoading: false
     });
     
-    // 初始化时，如果有选中的类别，重新应用过滤
-    if (this.data.selectedCategory) {
-      this.filterClothesByCategory(this.data.selectedCategory);
-    }
     return;
   }
   
@@ -75,9 +76,13 @@ module.exports = function(clothes) {
       
       // 更新每个衣物对象的tempImageUrl
       const updatedClothes = clothes.map(cloth => {
+        let tempUrl = '';
+        if (cloth.fileID) {
+          tempUrl = fileIDToPath[cloth.fileID] || '';
+        }
         return {
           ...cloth, 
-          tempImageUrl: cloth.fileID ? fileIDToPath[cloth.fileID] || '' : ''
+          tempImageUrl: tempUrl
         };
       });
       
@@ -89,14 +94,11 @@ module.exports = function(clothes) {
       // 更新最后获取时间戳
       this.setData({
         clothes: updatedClothes,
+        filteredClothes: updatedClothes,
+        currentPageClothes: updatedClothes,
         isLoading: false,
         lastImageUrlUpdateTime: currentTime
       });
-      
-      // 初始化时，如果有选中的类别，重新应用过滤
-      if (this.data.selectedCategory) {
-        this.filterClothesByCategory(this.data.selectedCategory);
-      }
     },
     fail: err => {
       console.error('获取临时链接失败', err);
@@ -104,33 +106,102 @@ module.exports = function(clothes) {
       // 如果失败，尝试使用缓存中的临时URL
       if (Object.keys(cachedURLs).length > 0) {
         console.log('使用缓存的临时URL作为备用');
+        
         const updatedClothes = clothes.map(cloth => {
+          const tempUrl = cloth.fileID && cachedURLs[cloth.fileID] ? cachedURLs[cloth.fileID] : '';
           return {
             ...cloth, 
-            tempImageUrl: cloth.fileID && cachedURLs[cloth.fileID] ? cachedURLs[cloth.fileID] : ''
+            tempImageUrl: tempUrl
           };
         });
         
         this.setData({
           clothes: updatedClothes,
+          filteredClothes: updatedClothes,
+          currentPageClothes: updatedClothes,
           isLoading: false
         });
       } else {
-        // 如果没有缓存，仍然显示衣物，但不显示图片
-        const updatedClothes = clothes.map(cloth => {
-          return {...cloth, tempImageUrl: ''};
-        });
-        
-        this.setData({
-          clothes: updatedClothes,
-          isLoading: false
-        });
-      }
-      
-      // 初始化时，如果有选中的类别，重新应用过滤
-      if (this.data.selectedCategory) {
-        this.filterClothesByCategory(this.data.selectedCategory);
+        // 如果没有缓存，使用备用方式获取临时链接
+        this.getBackupTempUrls(clothes);
       }
     }
   });
 };
+
+// 备用方式获取临时链接（通过云函数）
+function getBackupTempUrls(clothes) {
+  // 收集所有非空的fileID
+  const fileIDs = clothes.map(item => item.fileID).filter(fileID => fileID);
+  
+  if (fileIDs.length === 0) {
+    this.setData({
+      clothes: clothes,
+      filteredClothes: clothes,
+      currentPageClothes: clothes,
+      isLoading: false
+    });
+    return;
+  }
+  
+  // 通过云函数获取临时链接
+  wx.cloud.callFunction({
+    name: 'getTempFileURL',
+    data: {
+      fileIdList: fileIDs
+    },
+    success: res => {
+      console.log('备用方式获取临时链接成功', res);
+      
+      // 创建fileID到临时URL的映射
+      const fileIDToPath = {};
+      if (res.result && Array.isArray(res.result)) {
+        res.result.forEach(item => {
+          if (item.fileID && item.tempFileURL) {
+            fileIDToPath[item.fileID] = item.tempFileURL;
+          }
+        });
+      }
+      
+      // 更新每个衣物对象的tempImageUrl
+      const updatedClothes = clothes.map(cloth => {
+        let tempUrl = '';
+        if (cloth.fileID && fileIDToPath[cloth.fileID]) {
+          tempUrl = fileIDToPath[cloth.fileID];
+        }
+        return {
+          ...cloth, 
+          tempImageUrl: tempUrl
+        };
+      });
+      
+      // 保存到本地缓存
+      if (Object.keys(fileIDToPath).length > 0) {
+        wx.setStorageSync('tempImageURLs', fileIDToPath);
+      }
+      
+      this.setData({
+        clothes: updatedClothes,
+        filteredClothes: updatedClothes,
+        currentPageClothes: updatedClothes,
+        isLoading: false,
+        lastImageUrlUpdateTime: Date.now()
+      });
+    },
+    fail: err => {
+      console.error('备用方式获取临时链接失败', err);
+      
+      // 如果备用方式也失败，显示无图像的衣物列表
+      const updatedClothes = clothes.map(cloth => {
+        return {...cloth, tempImageUrl: ''};
+      });
+      
+      this.setData({
+        clothes: updatedClothes,
+        filteredClothes: updatedClothes,
+        currentPageClothes: updatedClothes,
+        isLoading: false
+      });
+    }
+  });
+}

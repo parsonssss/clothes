@@ -1,6 +1,5 @@
 {
   "pages": [
-    "page/wardrobe/login/login",
     "page/wardrobe/index/index",
     "page/wardrobe/closet/closet",
     "page/wardrobe/detail/detail",
@@ -188,25 +187,25 @@
   "window": {
     "navigationBarTextStyle": "white",
     "navigationBarTitleText": "衣柜橱窗",
-    "navigationBarBackgroundColor": "#8d6e63",
-    "backgroundColor": "#f8f5f2"
+    "navigationBarBackgroundColor": "#5D4534",
+    "backgroundColor": "#BEB8A7"
   },
   "tabBar": {
-    "color": "#a1887f",
-    "selectedColor": "#5d4037",
+    "color": "#D2C8B6",
+    "selectedColor": "#C69C6D",
     "borderStyle": "white",
-    "backgroundColor": "#f8f5f2",
+    "backgroundColor": "#3F2E22",
     "list": [
       {
         "pagePath": "page/wardrobe/index/index",
-        "iconPath": "image/icon_component.png",
-        "selectedIconPath": "image/icon_component_HL.png",
+        "iconPath": "image/short-dress.png",
+        "selectedIconPath": "image/short-dress-HL.png",
         "text": "OOTD"
       },
       {
         "pagePath": "page/wardrobe/closet/closet",
-        "iconPath": "image/icon_API.png",
-        "selectedIconPath": "image/icon_API_HL.png",
+        "iconPath": "image/wardrobe-icon.png",
+        "selectedIconPath": "image/wardrobe-icon-HL.png",
         "text": "衣柜"
       }
     ]
@@ -227,7 +226,7 @@
   },
   "cloud": true,
   "sitemapLocation": "sitemap.json",
-  "themeLocation": "demo.theme.json",
+  "themeLocation": "theme.json",
   "darkmode": true,
   "resizable": true,
   "useExtendedLib": {
