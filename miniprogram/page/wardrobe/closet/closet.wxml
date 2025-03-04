@@ -65,7 +65,8 @@
                 src="{{item.tempImageUrl}}" 
                 mode="aspectFill" 
                 lazy-load="true"
-                class="clothes-image"></image>
+                class="clothes-image"
+              ></image>
               <view 
                 class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" 
                 wx:else

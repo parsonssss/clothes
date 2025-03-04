@@ -1,13 +1,15 @@
 // page/wardrobe/index/index.js
+const colors = require('../../../util/colors');
+
 Page({
   data: {
-    // 定义颜色常量 - 与衣柜页面保持一致的颜色方案
+    // 使用全局颜色配置
     colors: {
-      darkBrown: '#56513E',      // 深棕色（导航栏背景）
-      darkOlive: '#3B3A30',      // 深橄榄绿（文字和图标）
-      lightTaupe: '#BEB8A7',     // 浅灰褐色（页面背景和次要元素）
-      mediumBrown: '#B38A63',    // 中棕色（卡片背景和强调元素）
-      darkCoffee: '#473B29',     // 深咖啡色（分割线和次要文字）
+      darkBrown: colors.darkBrown,
+      darkOlive: colors.deepOlive,
+      lightTaupe: colors.lightTaupe,
+      mediumBrown: colors.mediumBrown,
+      darkCoffee: colors.darkCoffee,
     },
     weather: {
       city: '获取中...',

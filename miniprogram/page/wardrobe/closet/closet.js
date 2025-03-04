@@ -1,17 +1,19 @@
 // page/wardrobe/closet/closet.js
+const colors = require('../../../util/colors');
+
 Page({
   data: {
-    // 定义颜色常量
+    // 使用全局颜色配置
     colors: {
-      darkBrown: '#56513E',      // 深棕色（导航栏背景）
-      darkOlive: '#3B3A30',      // 深橄榄绿（文字和图标）
-      lightTaupe: '#BEB8A7',     // 浅灰褐色（页面背景和次要元素）
-      mediumBrown: '#B38A63',    // 中棕色（卡片背景和强调元素）
-      darkCoffee: '#473B29',     // 深咖啡色（分割线和次要文字）
+      darkBrown: colors.darkBrown,
+      darkOlive: colors.deepOlive,
+      lightTaupe: colors.lightTaupe,
+      mediumBrown: colors.mediumBrown,
+      darkCoffee: colors.darkCoffee,
     },
     // 分页相关
     currentPage: 1,             // 当前页码
-    itemsPerPage: 12,           // 每页显示的衣物数量
+    pageSize: 12,           // 每页显示的衣物数量
     totalPages: 1,              // 总页数
     
     // 定义衣物类别 - 使用日式名称和英文名称
@@ -36,7 +38,7 @@ Page({
     userOpenId: '',              // 存储用户的openid
   },
   
-  onLoad: function() {
+  onLoad: function(options) {
     // 初始化云环境
     if (!wx.cloud) {
       console.error('请使用 2.2.3 或以上的基础库以使用云能力');
@@ -52,6 +54,12 @@ Page({
     
     // 获取用户OpenID
     this.getUserOpenId();
+    
+    // 初始化页面
+    this.loadClothes();
+    
+    // 确保抠图模板文件在用户目录中可用
+    this.ensureKoutuTemplate();
   },
   
   onShow: function() {
@@ -424,8 +432,9 @@ Page({
   },
   
   // 阻止冒泡
-  preventBubble: function() {
-    // 阻止点击事件冒泡
+  preventClose: function(e) {
+    // 阻止事件冒泡
+    return;
   },
   
   // 根据类别筛选衣物
@@ -440,7 +449,7 @@ Page({
     }
     
     // 计算总页数
-    const totalPages = Math.ceil(filtered.length / this.data.itemsPerPage);
+    const totalPages = Math.ceil(filtered.length / this.data.pageSize);
     
     this.setData({
       filteredClothes: filtered,
@@ -454,11 +463,11 @@ Page({
   
   // 应用分页逻辑，获取当前页的衣物
   applyPagination: function() {
-    const { filteredClothes, currentPage, itemsPerPage } = this.data;
+    const { filteredClothes, currentPage, pageSize } = this.data;
     
     // 计算当前页的起始和结束索引
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
     
     // 获取当前页的衣物
     const currentPageClothes = filteredClothes.slice(startIndex, endIndex);
@@ -537,35 +546,578 @@ Page({
   addByCamera: function() {
     this.hideAddOptions();
     
-    wx.showToast({
-      title: '拍照添加衣物功能',
-      icon: 'none'
+    // 调用相机API拍照
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['camera'],
+      success: (res) => {
+        wx.showLoading({
+          title: '处理中...',
+        });
+        
+        const tempFilePath = res.tempFiles[0].tempFilePath;
+        console.log('拍摄的图片:', tempFilePath);
+        
+        // 上传图片到云存储
+        this.uploadImageToCloud(tempFilePath);
+      },
+      fail: (err) => {
+        console.error('拍照失败:', err);
+        wx.showToast({
+          title: '拍照失败',
+          icon: 'none'
+        });
+      }
     });
-    
-    // 实际代码中应该调用chooseMedia API并处理上传
   },
   
   // 通过相册添加衣物
   addByAlbum: function() {
     this.hideAddOptions();
     
-    wx.showToast({
-      title: '从相册添加衣物功能',
-      icon: 'none'
+    // 从相册选择图片
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album'],
+      success: (res) => {
+        wx.showLoading({
+          title: '处理中...',
+        });
+        
+        const tempFilePath = res.tempFiles[0].tempFilePath;
+        console.log('选择的图片:', tempFilePath);
+        
+        // 上传图片到云存储
+        this.uploadImageToCloud(tempFilePath);
+      },
+      fail: (err) => {
+        console.error('选择图片失败:', err);
+        wx.showToast({
+          title: '选择图片失败',
+          icon: 'none'
+        });
+      }
     });
-    
-    // 实际代码中应该调用chooseMedia API并处理上传
   },
   
   // 通过URL添加衣物
   addByUrl: function() {
     this.hideAddOptions();
     
+    wx.showModal({
+      title: '输入图片URL',
+      editable: true,
+      placeholderText: '请输入有效的图片URL',
+      success: (res) => {
+        if (res.confirm && res.content) {
+          wx.showLoading({
+            title: '处理中...',
+          });
+          
+          const imageUrl = res.content.trim();
+          // 直接使用URL进行抠图处理
+          this.processImageWithKoutu(imageUrl);
+        }
+      }
+    });
+  },
+  
+  // 上传图片到云存储
+  uploadImageToCloud: function(filePath) {
+    const cloudPath = `clothing_images/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
+    
+    wx.cloud.uploadFile({
+      cloudPath: cloudPath,
+      filePath: filePath,
+      success: (res) => {
+        console.log('上传成功:', res);
+        const fileID = res.fileID;
+        
+        // 获取临时访问链接
+        this.getTempFileURL(fileID);
+      },
+      fail: (err) => {
+        console.error('上传失败:', err);
+        wx.hideLoading();
+        wx.showToast({
+          title: '上传失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+  
+  // 获取文件临时URL
+  getTempFileURL: function(fileID) {
+    wx.cloud.callFunction({
+      name: 'getTempFileURL',
+      data: {
+        fileIdList: [fileID]
+      },
+      success: (res) => {
+        console.log('获取临时URL成功:', res);
+        if (res.result && res.result.length > 0) {
+          const tempFileURL = res.result[0].tempFileURL;
+          
+          // 使用临时URL进行抠图处理
+          this.processImageWithKoutu(tempFileURL);
+        } else {
+          wx.hideLoading();
+          wx.showToast({
+            title: '获取图片链接失败',
+            icon: 'none'
+          });
+        }
+      },
+      fail: (err) => {
+        console.error('获取临时URL失败:', err);
+        wx.hideLoading();
+        wx.showToast({
+          title: '获取图片链接失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+  
+  // 调用抠图API处理图片
+  processImageWithKoutu: function(imageUrl) {
+    // 获取抠图API请求模板
+    const fs = wx.getFileSystemManager();
+    
+    fs.readFile({
+      filePath: `${wx.env.USER_DATA_PATH}/koutu.json`,
+      encoding: 'utf-8',
+      success: (res) => {
+        try {
+          // 解析模板
+          const koutuTemplate = JSON.parse(res.data);
+          
+          // 替换URL
+          koutuTemplate.prompt["27"].inputs.image = imageUrl;
+          
+          // 向抠图API发送请求
+          this.sendKoutuRequest(koutuTemplate, imageUrl);
+        } catch (error) {
+          console.error('解析koutu.json失败:', error);
+          this.handleKoutuError();
+        }
+      },
+      fail: (err) => {
+        console.error('读取koutu.json失败:', err);
+        
+        // 尝试从网络资源加载模板
+        wx.request({
+          url: 'https://raw.githubusercontent.com/user/repo/main/koutu.json',
+          success: (res) => {
+            try {
+              const koutuTemplate = res.data;
+              koutuTemplate.prompt["27"].inputs.image = imageUrl;
+              this.sendKoutuRequest(koutuTemplate, imageUrl);
+            } catch (error) {
+              console.error('解析网络模板失败:', error);
+              this.handleKoutuError();
+            }
+          },
+          fail: () => {
+            this.handleKoutuError();
+          }
+        });
+      }
+    });
+  },
+  
+  // 发送抠图请求
+  sendKoutuRequest: function(requestBody, originalImageUrl) {
+    wx.request({
+      url: 'https://wp05.unicorn.org.cn:14427/api/prompt',
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json'
+      },
+      data: requestBody,
+      success: (res) => {
+        console.log('抠图请求成功:', res);
+        if (res.data && res.data.prompt_id) {
+          // 获取抠图结果
+          this.getKoutuResult(res.data.prompt_id, originalImageUrl);
+        } else {
+          this.handleKoutuError();
+        }
+      },
+      fail: (err) => {
+        console.error('抠图请求失败:', err);
+        this.handleKoutuError();
+      }
+    });
+  },
+  
+  // 获取抠图结果
+  getKoutuResult: function(promptId, originalImageUrl) {
+    // 轮询获取结果，实际项目中可能需要更复杂的处理
+    const checkResult = () => {
+      wx.request({
+        url: `https://wp05.unicorn.org.cn:14427/history/${promptId}`,
+        method: 'GET',
+        header: {
+        },
+        success: (res) => {
+          console.log('获取抠图结果:', res);
+          // 确保res.data存在且不为空
+          if (res.data && Object.keys(res.data).length > 0) {
+            // 从输出数据中获取图片信息
+            if (res.data.outputs && Array.isArray(res.data.outputs)) {
+              const outputData = res.data.outputs.find(item => item.type === 'output');
+              if (outputData && outputData.filename && outputData.subfolder !== undefined) {
+                // 构建图片URL
+                const imageUrl = `https://wp05.unicorn.org.cn:14427/view?filename=${outputData.filename}&subfolder=${outputData.subfolder}&type=${outputData.type || 'output'}`;
+                console.log('构建的图片URL:', imageUrl);
+                // 直接使用构建的URL下载图片
+                this.downloadKoutuResult(imageUrl, originalImageUrl);
+              } else {
+                console.error('输出数据格式不正确:', res.data.outputs);
+                this.handleKoutuError();
+              }
+            } else {
+              console.error('无效的输出数据:', res.data.outputs);
+              this.handleKoutuError();
+            }
+          } else if (res.data && res.data.status === 'failed') {
+            this.handleKoutuError();
+          } else {
+            // 继续轮询
+            setTimeout(checkResult, 2000);
+          }
+        },
+        fail: (err) => {
+          console.error('获取抠图结果失败:', err);
+          this.handleKoutuError();
+        }
+      });
+    };
+    
+    checkResult();
+  },
+  
+  // 下载抠图结果
+  downloadKoutuResult: function(outputUrl, originalImageUrl) {
+    
+    wx.downloadFile({
+      url: outputUrl,
+      success: (res) => {
+        if (res.statusCode === 200) {
+          const tempFilePath = res.tempFilePath;
+          
+          // 上传抠图结果到云存储
+          const cloudPath = `clothing_processed/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
+          
+          wx.cloud.uploadFile({
+            cloudPath: cloudPath,
+            filePath: tempFilePath,
+            success: (uploadRes) => {
+              const fileID = uploadRes.fileID;
+              
+              // 分析衣物
+              this.analyzeClothing(fileID, originalImageUrl);
+            },
+            fail: (err) => {
+              console.error('上传抠图结果失败:', err);
+              this.handleKoutuError();
+            }
+          });
+        } else {
+          this.handleKoutuError();
+        }
+      },
+      fail: (err) => {
+        console.error('下载抠图结果失败:', err);
+        this.handleKoutuError();
+      }
+    });
+  },
+  
+  // 分析衣物
+  analyzeClothing: function(fileID, originalImageUrl) {
+    // 获取临时URL用于分析
+    wx.cloud.getTempFileURL({
+      fileList: [fileID],
+      success: (res) => {
+        if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
+          const imageUrl = res.fileList[0].tempFileURL;
+          
+          // 调用云函数分析衣物
+          wx.cloud.callFunction({
+            name: 'analyzeClothing',
+            data: {
+              imageUrl: imageUrl
+            },
+            success: (analysisRes) => {
+              console.log('分析结果:', analysisRes);
+              
+              if (analysisRes.result && analysisRes.result.success) {
+                // 保存到数据库
+                this.saveClothingToDatabase(fileID, originalImageUrl, analysisRes.result.data);
+              } else {
+                this.handleAnalysisError();
+              }
+            },
+            fail: (err) => {
+              console.error('分析衣物失败:', err);
+              this.handleAnalysisError();
+            }
+          });
+        } else {
+          this.handleAnalysisError();
+        }
+      },
+      fail: (err) => {
+        console.error('获取分析图片URL失败:', err);
+        this.handleAnalysisError();
+      }
+    });
+  },
+  
+  // 保存衣物到数据库
+  saveClothingToDatabase: function(fileID, originalImageUrl, analysisData) {
+    const db = wx.cloud.database();
+    
+    // 创建新衣物记录
+    const clothingData = {
+      name: analysisData.name || '新衣物',
+      imageFileID: fileID,
+      originalImageUrl: originalImageUrl,
+      category: analysisData.category || '未分类',
+      type: analysisData.clothing_type || '未知',
+      color: analysisData.color || '未知',
+      style: analysisData.style || '未知',
+      warmthLevel: analysisData.warmth_level || 3,
+      scenes: analysisData.scene_applicability || ['休闲'],
+      createTime: db.serverDate()
+    };
+    
+    db.collection('clothes').add({
+      data: clothingData,
+      success: (res) => {
+        console.log('保存衣物成功:', res);
+        wx.hideLoading();
+        wx.showToast({
+          title: '添加衣物成功',
+          icon: 'success'
+        });
+        
+        // 重新加载衣物列表
+        this.loadClothes();
+      },
+      fail: (err) => {
+        console.error('保存衣物失败:', err);
+        wx.hideLoading();
+        wx.showToast({
+          title: '保存失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+  
+  // 处理抠图错误
+  handleKoutuError: function() {
+    wx.hideLoading();
     wx.showToast({
-      title: '手动添加衣物功能',
+      title: '抠图处理失败',
       icon: 'none'
     });
+  },
+  
+  // 处理分析错误
+  handleAnalysisError: function() {
+    wx.hideLoading();
+    wx.showToast({
+      title: '分析衣物失败',
+      icon: 'none'
+    });
+  },
+  
+  // 确保抠图模板文件可用
+  ensureKoutuTemplate: function() {
+    const fs = wx.getFileSystemManager();
+    const templatePath = `${wx.env.USER_DATA_PATH}/koutu.json`;
     
-    // 实际代码中应该跳转到添加页面
-  }
+    // 检查文件是否已存在
+    fs.access({
+      path: templatePath,
+      success: () => {
+        console.log('抠图模板已存在');
+      },
+      fail: () => {
+        console.log('抠图模板不存在，从项目中复制');
+        
+        // 从项目文件中读取模板
+        fs.readFile({
+          filePath: 'miniprogram/page/wardrobe/closet/koutu.json',
+          encoding: 'utf-8',
+          success: (res) => {
+            // 写入到用户目录
+            fs.writeFile({
+              filePath: templatePath,
+              data: res.data,
+              encoding: 'utf-8',
+              success: () => {
+                console.log('抠图模板复制成功');
+              },
+              fail: (writeErr) => {
+                console.error('写入抠图模板失败:', writeErr);
+              }
+            });
+          },
+          fail: (readErr) => {
+            console.error('读取项目抠图模板失败:', readErr);
+            
+            // 尝试从网络获取模板
+            this.downloadKoutuTemplate();
+          }
+        });
+      }
+    });
+  },
+  
+  // 从网络下载抠图模板
+  downloadKoutuTemplate: function() {
+    const fs = wx.getFileSystemManager();
+    const templatePath = `${wx.env.USER_DATA_PATH}/koutu.json`;
+    
+    wx.request({
+      url: 'https://raw.githubusercontent.com/user/repo/main/koutu.json',
+      success: (res) => {
+        if (res.data) {
+          // 写入到用户目录
+          fs.writeFile({
+            filePath: templatePath,
+            data: JSON.stringify(res.data),
+            encoding: 'utf-8',
+            success: () => {
+              console.log('从网络下载抠图模板成功');
+            },
+            fail: (writeErr) => {
+              console.error('写入网络抠图模板失败:', writeErr);
+            }
+          });
+        }
+      },
+      fail: (err) => {
+        console.error('从网络获取抠图模板失败:', err);
+      }
+    });
+  },
+  
+  // 加载衣物列表
+  loadClothes: function() {
+    wx.showLoading({
+      title: '加载中...',
+    });
+    
+    const db = wx.cloud.database();
+    const _ = db.command;
+    
+    // 构建查询条件
+    let query = {};
+    
+    // 按类别筛选
+    if (this.data.selectedCategory !== '全部') {
+      query.category = this.data.selectedCategory;
+    }
+    
+    // 分页查询
+    const skip = (this.data.currentPage - 1) * this.data.pageSize;
+    
+    // 首先获取符合条件的总数
+    db.collection('clothes')
+      .where(query)
+      .count()
+      .then(countRes => {
+        const totalClothes = countRes.total;
+        
+        // 然后获取当前页数据
+        return db.collection('clothes')
+          .where(query)
+          .skip(skip)
+          .limit(this.data.pageSize)
+          .orderBy('createTime', 'desc')
+          .get()
+          .then(res => {
+            wx.hideLoading();
+            
+            console.log('查询到的衣物:', res.data);
+            
+            // 处理衣物数据
+            const clothes = res.data.map(item => {
+              return {
+                id: item._id,
+                name: item.name,
+                imageUrl: item.imageFileID,
+                category: item.category,
+                type: item.type,
+                color: item.color,
+                style: item.style,
+                warmthLevel: item.warmthLevel,
+                scenes: item.scenes
+              };
+            });
+            
+            this.setData({
+              clothes: clothes,
+              totalClothes: totalClothes
+            });
+          });
+      })
+      .catch(err => {
+        wx.hideLoading();
+        console.error('查询衣物失败:', err);
+        wx.showToast({
+          title: '加载失败',
+          icon: 'none'
+        });
+      });
+  },
+  
+  // 切换类别
+  changeCategory: function(e) {
+    const category = e.currentTarget.dataset.category;
+    
+    this.setData({
+      selectedCategory: category,
+      currentPage: 1  // 切换类别时重置为第一页
+    }, () => {
+      this.loadClothes();
+    });
+  },
+  
+  // 应用分页
+  applyPagination: function() {
+    this.loadClothes();
+  },
+  
+  // 下一页
+  nextPage: function() {
+    const totalPages = Math.ceil(this.data.totalClothes / this.data.pageSize);
+    if (this.data.currentPage < totalPages) {
+      this.setData({
+        currentPage: this.data.currentPage + 1
+      }, () => {
+        this.applyPagination();
+      });
+    }
+  },
+  
+  // 上一页
+  prevPage: function() {
+    if (this.data.currentPage > 1) {
+      this.setData({
+        currentPage: this.data.currentPage - 1
+      }, () => {
+        this.applyPagination();
+      });
+    }
+  },
 })

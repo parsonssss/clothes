@@ -146,16 +146,98 @@
   padding: 10rpx;
 }
 
+/* 衣物网格样式 */
 .clothes-grid {
-  flex: 1;
-  padding: 16rpx;
+  height: calc(100vh - 300rpx); /* 根据实际布局调整高度 */
+  width: 100%;
+  overflow-y: auto;
 }
 
 .grid-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-gap: 32rpx;
-  padding: 16rpx;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.clothes-item {
+  width: calc(50% - 20rpx); /* 确保每行两个项目 */
+  height: 300rpx;
+  margin: 10rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.clothes-image {
+  width: 100%;
+  height: 220rpx;
+  object-fit: cover;
+}
+
+.clothes-info {
+  padding: 10rpx;
+  height: 80rpx;
+  box-sizing: border-box;
+}
+
+.clothes-name {
+  font-size: 24rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clothes-category {
+  font-size: 20rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clothes-icon {
+  width: 100%;
+  height: 220rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 80rpx;
+}
+
+/* 类别图标样式 */
+.clothes-icon.tops:after {
+  content: "";
+  width: 60%;
+  height: 60%;
+  background-color: currentColor;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 30%, 100% 100%, 0% 100%, 0% 30%);
+}
+
+.clothes-icon.pants:after {
+  content: "";
+  width: 60%;
+  height: 60%;
+  background-color: currentColor;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 100% 100%, 70% 100%, 70% 30%, 30% 30%, 30% 100%, 0% 100%, 0% 20%);
+}
+
+.clothes-icon.coat:after,
+.clothes-icon.jacket:after {
+  content: "";
+  width: 60%;
+  height: 60%;
+  background-color: currentColor;
+  clip-path: polygon(40% 0%, 60% 0%, 80% 20%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 20% 20%);
+}
+
+.clothes-icon.skirt:after {
+  content: "";
+  width: 60%;
+  height: 60%;
+  background-color: currentColor;
+  clip-path: polygon(30% 0%, 70% 0%, 100% 20%, 90% 100%, 10% 100%, 0% 20%);
 }
 
 /* 分页控制 */
@@ -209,57 +291,6 @@
   font-size: 26rpx;
   margin: 0 8rpx;
 }
-
-.clothes-item {
-  border-radius: 16rpx;
-  overflow: hidden;
-  position: relative;
-  aspect-ratio: 3/4;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-}
-
-.clothes-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.clothes-icon {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 80rpx;
-}
-
-.clothes-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 16rpx;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
-}
-
-.clothes-name {
-  font-size: 26rpx;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.clothes-category {
-  font-size: 22rpx;
-  opacity: 0.8;
-}
-
-/* 图标样式 */
-.tops:after { content: "上"; }
-.pants:after { content: "裤"; }
-.coat:after { content: "外"; }
-.skirt:after { content: "裙"; }
-.accessories:after { content: "饰"; }
 
 /* 加载中状态 */
 .loading-container {
