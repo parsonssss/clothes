@@ -1051,7 +1051,7 @@ Page({
       style: analysisData.style || '未知',
       warmthLevel: analysisData.warmth_level || 3,
       scenes: analysisData.scene_applicability || ['休闲'],
-      _openid: this.data.userOpenId, // 手动添加用户OpenID关联，确保账号与数据关联
+      userOpenid: this.data.userOpenId, // 手动添加用户OpenID关联，确保账号与数据关联
       createTime: db.serverDate()
     };
     
