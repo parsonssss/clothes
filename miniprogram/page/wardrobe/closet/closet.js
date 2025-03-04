@@ -83,6 +83,9 @@ Page({
     
     // 确保抠图模板文件在用户目录中可用
     this.ensureKoutuTemplate();
+    
+    // 每24小时更新一次模板（确保使用最新的云端模板）
+    this.setTemplateUpdateInterval();
   },
   
   onShow: function() {
@@ -667,7 +670,28 @@ Page({
   
   // 调用抠图API处理图片
   processImageWithKoutu: function(imageUrl, fileID = '') {
-    imageProcessor.processImageWithKoutu(imageUrl, this.data.templatePath)
+    if (!this.data.templatePath) {
+      console.error('抠图模板路径为空，尝试重新获取');
+      return userManager.ensureKoutuTemplate()
+        .then(templatePath => {
+          this.setData({
+            templatePath: templatePath
+          });
+          console.log('重新获取抠图模板成功，继续处理图片');
+          return this.processImageWithKoutu(imageUrl, fileID);
+        })
+        .catch(err => {
+          console.error('重新获取抠图模板失败:', err);
+          closetUtils.hideLoading();
+          this.setData({
+            isUploading: false
+          });
+          closetUtils.showErrorToast('处理失败，请重试');
+          return Promise.reject(err);
+        });
+    }
+    
+    return imageProcessor.processImageWithKoutu(imageUrl, this.data.templatePath)
       .then(processedImageUrl => {
         // 分析衣物
         return this.analyzeClothing(processedImageUrl, imageUrl, fileID);
@@ -675,6 +699,7 @@ Page({
       .catch(err => {
         console.error('抠图处理失败:', err);
         this.handleKoutuError();
+        return Promise.reject(err);
       });
   },
   
@@ -762,5 +787,29 @@ Page({
         }
       }
     });
+  },
+  
+  // 设置模板更新定时器
+  setTemplateUpdateInterval: function() {
+    // 清除旧的定时器（如果存在）
+    if (this.templateUpdateTimer) {
+      clearInterval(this.templateUpdateTimer);
+    }
+    
+    // 设置24小时更新一次（24小时 * 60分钟 * 60秒 * 1000毫秒）
+    const UPDATE_INTERVAL = 24 * 60 * 60 * 1000;
+    
+    this.templateUpdateTimer = setInterval(() => {
+      console.log('定时任务：更新抠图模板');
+      this.ensureKoutuTemplate();
+    }, UPDATE_INTERVAL);
+  },
+  
+  // 页面卸载时清除定时器
+  onUnload: function() {
+    if (this.templateUpdateTimer) {
+      clearInterval(this.templateUpdateTimer);
+      this.templateUpdateTimer = null;
+    }
   },
 });

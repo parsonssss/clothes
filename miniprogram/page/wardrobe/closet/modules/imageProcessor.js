@@ -51,6 +51,12 @@ function getTempFileURL(fileID) {
 function processImageWithKoutu(imageUrl, templatePath) {
   return new Promise((resolve, reject) => {
     console.log('开始处理图片:', imageUrl);
+    console.log('使用模板路径:', templatePath);
+    
+    if (!templatePath) {
+      reject(new Error('抠图模板路径为空'));
+      return;
+    }
     
     // 获取抠图API请求模板
     const fs = wx.getFileSystemManager();
@@ -74,8 +80,9 @@ function processImageWithKoutu(imageUrl, templatePath) {
               .then(resolve)
               .catch(reject);
           } else {
-            console.error('模板结构不正确, 找不到节点27:', JSON.stringify(koutuTemplate.prompt, null, 2));
-            reject(new Error('模板结构不正确'));
+            const error = new Error('模板结构不正确, 找不到节点27');
+            console.error(error.message, JSON.stringify(koutuTemplate.prompt, null, 2));
+            reject(error);
           }
         } catch (error) {
           console.error('解析koutu.json失败:', error);
@@ -83,7 +90,7 @@ function processImageWithKoutu(imageUrl, templatePath) {
         }
       },
       fail: (err) => {
-        console.error('读取koutu.json失败:', err);
+        console.error('读取koutu.json失败:', err, '路径:', templatePath);
         reject(err);
       }
     });

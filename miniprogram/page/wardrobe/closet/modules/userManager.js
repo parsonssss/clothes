@@ -49,60 +49,60 @@ function getUserOpenId() {
 function ensureKoutuTemplate() {
   return new Promise((resolve, reject) => {
     const fs = wx.getFileSystemManager();
-    const templatePath = `../koutu.json`;
+    // 使用绝对路径，确保在所有环境下可用
+    const templatePath = `${wx.env.USER_DATA_PATH}/koutu.json`;
     
-    // 检查文件是否已存在
-    fs.access({
-      path: templatePath,
-      success: () => {
-        console.log('抠图模板已存在');
+    console.log('正在获取抠图模板...');
+    
+    // 获取最新的云端模板
+    downloadKoutuTemplate(templatePath)
+      .then(() => {
+        console.log('成功从云端获取最新模板');
         resolve(templatePath);
-      },
-      fail: () => {
-        console.log('抠图模板不存在，从项目中复制');
+      })
+      .catch(err => {
+        console.error('从云端获取模板失败，尝试使用本地已有模板', err);
         
-        // 从项目文件中读取模板
-        fs.readFile({
-          filePath: 'miniprogram/page/wardrobe/closet/koutu.json',
-          encoding: 'utf-8',
-          success: (res) => {
-            // 写入到用户目录
-            fs.writeFile({
-              filePath: templatePath,
-              data: res.data,
-              encoding: 'utf-8',
-              success: () => {
-                console.log('抠图模板复制成功');
-                resolve(templatePath);
-              },
-              fail: (writeErr) => {
-                console.error('写入抠图模板失败:', writeErr);
-                // 尝试从网络获取模板
-                downloadKoutuTemplate(templatePath)
-                  .then(() => {
-                    resolve(templatePath);
-                  })
-                  .catch(err => {
-                    reject(err);
-                  });
-              }
-            });
+        // 如果云端获取失败，检查本地是否有缓存
+        fs.access({
+          path: templatePath,
+          success: () => {
+            console.log('使用本地已缓存的抠图模板');
+            resolve(templatePath);
           },
-          fail: (readErr) => {
-            console.error('读取项目抠图模板失败:', readErr);
+          fail: () => {
+            console.error('本地也没有可用的抠图模板，尝试使用包内模板');
             
-            // 尝试从网络获取模板
-            downloadKoutuTemplate(templatePath)
-              .then(() => {
-                resolve(templatePath);
-              })
-              .catch(err => {
-                reject(err);
+            // 尝试读取内置的模板文件
+            // 使用相对路径 - 这里读取的是小程序包内的文件
+            const packagePath = '/templates/koutu.json';
+            console.log('尝试读取小程序包内模板:', packagePath);
+            
+            try {
+              // 同步读取小程序包内的模板文件
+              const fileContent = fs.readFileSync(packagePath, 'utf-8');
+              
+              // 写入到用户目录
+              fs.writeFile({
+                filePath: templatePath,
+                data: fileContent,
+                encoding: 'utf-8',
+                success: () => {
+                  console.log('成功从包内复制模板到用户目录');
+                  resolve(templatePath);
+                },
+                fail: (writeErr) => {
+                  console.error('写入模板到用户目录失败:', writeErr);
+                  reject(writeErr);
+                }
               });
+            } catch (readErr) {
+              console.error('读取包内模板失败，无法获取抠图模板:', readErr);
+              reject(readErr);
+            }
           }
         });
-      }
-    });
+      });
   });
 }
 
@@ -115,11 +115,14 @@ function downloadKoutuTemplate(templatePath) {
   return new Promise((resolve, reject) => {
     const fs = wx.getFileSystemManager();
     
+    console.log('尝试从云存储下载抠图模板...');
     // 从云存储获取模板
     wx.cloud.downloadFile({
-      fileID: 'cloud://cloud1-3gi97kso9ab01185.636c-cloud1-3gi97kso9ab01185-1308332131/templates/koutu.json',
+      fileID: 'cloud://cloud1-3gi97kso9ab01185.636c-cloud1-3gi97kso9ab01185-1303166775/templates/koutu.json',
       success: (res) => {
         if (res.tempFilePath) {
+          console.log('云端模板下载成功，临时路径:', res.tempFilePath);
+          
           // 读取临时文件内容
           fs.readFile({
             filePath: res.tempFilePath,
@@ -131,22 +134,24 @@ function downloadKoutuTemplate(templatePath) {
                 data: readRes.data,
                 encoding: 'utf-8',
                 success: () => {
-                  console.log('从云存储下载抠图模板成功');
-                  resolve();
+                  console.log('抠图模板从云端复制成功');
+                  resolve(templatePath);
                 },
                 fail: (writeErr) => {
-                  console.error('写入从云存储下载的抠图模板失败:', writeErr);
+                  console.error('写入从云端下载的抠图模板失败:', writeErr);
                   reject(writeErr);
                 }
               });
             },
             fail: (readErr) => {
-              console.error('读取从云存储下载的抠图模板失败:', readErr);
+              console.error('读取从云端下载的抠图模板失败:', readErr);
               reject(readErr);
             }
           });
         } else {
-          reject(new Error('下载抠图模板失败，未获取到临时文件路径'));
+          const error = new Error('云存储下载的临时文件路径为空');
+          console.error(error);
+          reject(error);
         }
       },
       fail: (err) => {
