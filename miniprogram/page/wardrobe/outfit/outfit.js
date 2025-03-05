@@ -1,13 +1,13 @@
 // page/wardrobe/outfit/outfit.js
 Page({
   data: {
-    // 定义颜色常量 - 与衣柜页面保持一致的颜色方案
+    // 定义颜色常量 - 秋季色彩方案
     colors: {
-      darkBrown: '#56513E',      // 深棕色（导航栏背景）
-      darkOlive: '#3B3A30',      // 深橄榄绿（文字和图标）
-      lightTaupe: '#BEB8A7',     // 浅灰褐色（页面背景和次要元素）
-      mediumBrown: '#B38A63',    // 中棕色（卡片背景和强调元素）
-      darkCoffee: '#473B29',     // 深咖啡色（分割线和次要文字）
+      cowhide_cocoa: '#442D1C',   // 深棕色 Cowhide Cocoa
+      spiced_wine: '#74301C',     // 红棕色 Spiced Wine
+      toasted_caramel: '#84592B', // 焦糖色 Toasted Caramel
+      olive_harvest: '#9D9167',   // 橄榄色 Olive Harvest
+      golden_batter: '#E8D1A7',   // 金黄色 Golden Batter
     },
     isLoading: true,
     currentOutfit: null,

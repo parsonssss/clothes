@@ -3,13 +3,13 @@ const colors = require('../../../util/colors');
 
 Page({
   data: {
-    // 使用全局颜色配置
+    // 使用秋季色系色彩配置
     colors: {
-      darkBrown: colors.darkBrown,
-      darkOlive: colors.deepOlive,
-      lightTaupe: colors.lightTaupe,
-      mediumBrown: colors.mediumBrown,
-      darkCoffee: colors.darkCoffee,
+      cowhide_cocoa: '#442D1C',   // 深棕色 Cowhide Cocoa
+      spiced_wine: '#74301C',     // 红棕色 Spiced Wine
+      toasted_caramel: '#84592B', // 焦糖色 Toasted Caramel
+      olive_harvest: '#9D9167',   // 橄榄色 Olive Harvest
+      golden_batter: '#E8D1A7',   // 金黄色 Golden Batter
     },
     weather: {
       city: '获取中...',
@@ -522,6 +522,43 @@ Page({
           isGeneratingOutfit: false
         });
       }
+    });
+  },
+  
+  // 模拟生成推荐数据
+  generateMockRecommendation: function(clothes) {
+    return new Promise((resolve, reject) => {
+      // 根据天气选择衣物
+      const temperature = parseInt(this.data.weather.temperature);
+      let targetCategories = [];
+      
+      // 根据温度选择衣物类型
+      if (temperature >= 25) {
+        // 夏季搭配：短袖、短裤/裙子
+        targetCategories = ['上衣', '裤子', '鞋子'];
+      } else if (temperature >= 15) {
+        // 春秋搭配：长袖、长裤
+        targetCategories = ['上衣', '外套', '裤子', '鞋子'];
+      } else {
+        // 冬季搭配：毛衣、外套、长裤
+        targetCategories = ['上衣', '外套', '裤子', '鞋子'];
+      }
+      
+      // 为每个目标类别选择一个衣物
+      const selectedClothes = [];
+      targetCategories.forEach(category => {
+        const categoryClothes = clothes.filter(cloth => cloth.category === category);
+        if (categoryClothes.length > 0) {
+          // 随机选择一个衣物
+          const randomIndex = Math.floor(Math.random() * categoryClothes.length);
+          selectedClothes.push(categoryClothes[randomIndex]);
+        }
+      });
+      
+      // 返回模拟数据
+      resolve({
+        mockData: selectedClothes
+      });
     });
   },
   

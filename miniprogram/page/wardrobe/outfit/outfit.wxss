@@ -1,5 +1,14 @@
 /* page/wardrobe/outfit/outfit.wxss */
 
+/* Color variables based on autumn palette */
+page {
+  --cowhide-cocoa: #442D1C;
+  --spiced-wine: #74301C;
+  --toasted-caramel: #84592B;
+  --olive-harvest: #9D9167;
+  --golden-batter: #E8D1A7;
+}
+
 /* 全局容器 */
 .container {
   display: flex;
@@ -7,8 +16,8 @@
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  padding: 32rpx;
   box-sizing: border-box;
+  padding: 32rpx;
 }
 
 /* 主要内容区域 */
@@ -17,15 +26,29 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  padding-bottom: 40rpx;
 }
 
 /* 段落标题 */
 .section-title {
   font-size: 32rpx;
   font-weight: 500;
-  margin: 20rpx 0;
+  margin: 24rpx 0 32rpx;
   letter-spacing: 2rpx;
   text-align: center;
+  position: relative;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background-color: var(--cowhide-cocoa);
+  border-radius: 2rpx;
 }
 
 /* 搭配展示区域 */
@@ -38,11 +61,11 @@
 
 /* 搭配卡片 */
 .outfit-card {
-  width: 90%;
-  border-radius: 20rpx;
+  width: 92%;
+  border-radius: 24rpx;
   padding: 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
 }
@@ -66,9 +89,10 @@
 .item-image {
   width: 120rpx;
   height: 120rpx;
-  border-radius: 10rpx;
+  border-radius: 16rpx;
   margin-bottom: 10rpx;
   object-fit: cover;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
 }
 
 /* 物品名称 */
@@ -90,18 +114,20 @@
 
 /* 预览图片 */
 .preview-image {
-  width: 300rpx;
-  height: 450rpx;
-  border-radius: 10rpx;
+  width: 320rpx;
+  height: 480rpx;
+  border-radius: 20rpx;
   object-fit: cover;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.15);
 }
 
 /* 推荐理由卡片 */
 .recommendation-reason {
-  width: 90%;
-  padding: 30rpx;
-  border-radius: 16rpx;
-  margin-bottom: 30rpx;
+  width: 92%;
+  padding: 32rpx;
+  border-radius: 24rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.08);
 }
 
 /* 理由标题 */
@@ -110,12 +136,13 @@
   margin-bottom: 16rpx;
   text-align: center;
   font-weight: 500;
+  letter-spacing: 2rpx;
 }
 
 /* 理由内容 */
 .reason-content {
   font-size: 26rpx;
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: 20rpx;
   text-align: justify;
 }
@@ -131,60 +158,76 @@
 .action-buttons {
   display: flex;
   justify-content: space-between;
-  width: 90%;
+  width: 92%;
   margin-bottom: 40rpx;
 }
 
 /* 操作按钮 */
 .action-button {
   width: 48%;
-  height: 80rpx;
-  border-radius: 40rpx;
+  height: 88rpx;
+  border-radius: 44rpx;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 28rpx;
+  font-weight: 500;
+  letter-spacing: 1rpx;
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.action-button:active {
+  opacity: 0.9;
+  transform: scale(0.98);
 }
 
 /* 保存的搭配区域 */
 .saved-outfits-section {
   width: 100%;
+  margin-bottom: 20rpx;
 }
 
 /* 保存的搭配列表 */
 .saved-outfits-list {
   width: 100%;
   white-space: nowrap;
-  margin-bottom: 20rpx;
+  padding: 8rpx 0;
 }
 
 /* 保存的搭配项 */
 .saved-outfit-item {
   display: inline-block;
-  width: 200rpx;
-  margin-right: 20rpx;
-  border-radius: 16rpx;
+  width: 220rpx;
+  margin-right: 24rpx;
+  border-radius: 20rpx;
   overflow: hidden;
   vertical-align: top;
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.saved-outfit-item:active {
+  transform: scale(0.97);
 }
 
 /* 保存的搭配图片 */
 .saved-outfit-image {
   width: 100%;
-  height: 300rpx;
+  height: 280rpx;
   object-fit: cover;
 }
 
 /* 保存的搭配日期 */
 .saved-outfit-date {
   font-size: 24rpx;
-  padding: 10rpx;
+  padding: 12rpx;
   text-align: center;
 }
 
 /* 空状态 */
 .empty-saved {
-  padding: 40rpx;
+  padding: 60rpx 0;
   text-align: center;
   font-size: 28rpx;
 }

@@ -15,7 +15,7 @@ Page({
     colors: {
       darkBrown: colors.darkBrown,
       darkOlive: colors.deepOlive,
-      lightTaupe: '#E8D1A7',
+      lightTaupe: colors.lightTaupe,
       mediumBrown: colors.mediumBrown,
       darkCoffee: colors.darkCoffee,
     },
