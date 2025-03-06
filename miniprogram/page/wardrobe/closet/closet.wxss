@@ -206,11 +206,12 @@
   flex-wrap: wrap;
   padding: 20rpx;
   box-sizing: border-box;
+  min-height: 60vh; /* 确保网格容器有最小高度，避免空状态时布局错位 */
 }
 
 .clothes-item {
   width: calc(50% - 20rpx); /* 确保每行两个项目 */
-  height: 300rpx;
+  height: 340rpx; /* 增加高度以显示更多信息 */
   margin: 10rpx;
   border-radius: 12rpx;
   overflow: hidden;
@@ -218,6 +219,8 @@
   position: relative;
   box-sizing: border-box;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .clothes-item:active {
@@ -225,35 +228,56 @@
   box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
+.clothes-image-container {
+  width: 100%;
+  height: 240rpx; /* 增加图片区域高度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
 .clothes-image {
   width: 100%;
-  height: 220rpx;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain; /* 改为contain，避免裁剪，确保整件衣服完整显示 */
 }
 
 .clothes-info {
-  padding: 10rpx;
-  height: 80rpx;
+  padding: 12rpx;
+  min-height: 100rpx; /* 设置最小高度，确保有足够空间显示信息 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1; /* 让信息区域填充剩余空间 */
   box-sizing: border-box;
 }
 
 .clothes-name {
   font-size: 24rpx;
+  line-height: 1.3;
+  margin-bottom: 6rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 最多显示两行 */
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-all; /* 允许在任意字符间断行 */
 }
 
 .clothes-category {
   font-size: 20rpx;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-top: auto; /* 推到底部 */
 }
 
 .clothes-icon {
   width: 100%;
-  height: 220rpx;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -381,22 +405,25 @@
   align-items: center;
   justify-content: center;
   padding: 100rpx 0;
+  width: 100%;
+  height: 60vh; /* 确保足够高度 */
 }
 
 .empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 30rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 120rpx;
   height: 120rpx;
-  margin-bottom: 30rpx;
-  font-size: 80rpx;
-}
-
-.empty-icon:after {
-  content: "衣";
 }
 
 .empty-text {
   font-size: 28rpx;
   text-align: center;
+  max-width: 80%;
+  line-height: 1.4;
 }
 
 /* 添加按钮 */

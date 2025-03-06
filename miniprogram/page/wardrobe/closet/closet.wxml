@@ -71,18 +71,20 @@
               data-id="{{item._id}}"
               hover-class="clothes-item-hover"
             >
-              <image 
-                wx:if="{{item.tempImageUrl}}" 
-                src="{{item.tempImageUrl}}" 
-                mode="aspectFill" 
-                lazy-load="true"
-                class="clothes-image"
-              ></image>
-              <view 
-                class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" 
-                wx:else
-                style="color: {{colors.darkOlive}};"
-              ></view>
+              <view class="clothes-image-container">
+                <image 
+                  wx:if="{{item.tempImageUrl}}" 
+                  src="{{item.tempImageUrl}}" 
+                  mode="aspectFit" 
+                  lazy-load="true"
+                  class="clothes-image"
+                ></image>
+                <view 
+                  class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" 
+                  wx:else
+                  style="color: {{colors.darkOlive}};"
+                ></view>
+              </view>
               <view class="clothes-info">
                 <view class="clothes-name" style="color: {{colors.darkOlive}};">{{item.name || ((item.color || '') + ' ' + (item.style || ''))}}</view>
                 <view class="clothes-category" style="color: {{colors.darkCoffee}};">{{item.category || '未分类'}}</view>
@@ -93,8 +95,11 @@
         
         <!-- 空状态提示 -->
         <view class="empty-state" wx:if="{{filteredClothes.length === 0 && !isLoading}}">
-          <view class="empty-icon" style="color: {{colors.darkCoffee}};">📷</view>
-          <view class="empty-text" style="color: {{colors.darkOlive}};">暂无衣物，点击"+"添加</view>
+          <view class="empty-icon" style="color: {{colors.darkCoffee}};">👕</view>
+          <view class="empty-text" style="color: {{colors.darkOlive}};">
+            暂无{{selectedCategory.category || selectedCategory.name}}类衣物
+            <block wx:if="{{selectedCategory.id !== 0}}">，点击"+"添加</block>
+          </view>
         </view>
         
         <!-- 分页控制 -->

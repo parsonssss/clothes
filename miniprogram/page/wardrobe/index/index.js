@@ -3,6 +3,8 @@ const colors = require('../../../util/colors');
 
 Page({
   data: {
+    // 风格切换设置
+    themeStyle: 'autumn', // 默认为秋季风格，可选值：'autumn'或'pinkBlue'
     // 使用秋季色系色彩配置
     colors: {
       cowhide_cocoa: '#442D1C',   // 深棕色 Cowhide Cocoa
@@ -10,6 +12,15 @@ Page({
       toasted_caramel: '#84592B', // 焦糖色 Toasted Caramel
       olive_harvest: '#9D9167',   // 橄榄色 Olive Harvest
       golden_batter: '#E8D1A7',   // 金黄色 Golden Batter
+    },
+    // 粉蓝色系配色
+    pinkBlueColors: {
+      pinkDark: '#D47C99',       // 深粉色
+      pinkMedium: '#EEA0B2',     // 中粉色
+      pinkLight: '#F9C9D6',      // 浅粉色
+      blueLight: '#CBE0F9',      // 浅蓝色
+      blueMedium: '#97C8E5',     // 中蓝色
+      blueDark: '#5EA0D0',       // 深蓝色
     },
     weather: {
       city: '获取中...',
@@ -45,6 +56,14 @@ Page({
       wx.cloud.init({
         env: 'cloud1-3gi97kso9ab01185',
         traceUser: true,
+      });
+    }
+    
+    // 获取保存的主题设置
+    const savedTheme = wx.getStorageSync('themeStyle');
+    if (savedTheme) {
+      this.setData({
+        themeStyle: savedTheme
       });
     }
     
@@ -747,6 +766,13 @@ Page({
 湿度: ${this.data.weather.humidity}
 风速: ${this.data.weather.windSpeed}`,
       showCancel: false
+    });
+  },
+  
+  // 导航到设置页面
+  navigateToSettings: function() {
+    wx.navigateTo({
+      url: '../../settings/settings'
     });
   }
 });

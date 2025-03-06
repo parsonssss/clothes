@@ -420,19 +420,26 @@ Page({
           console.log('跳过更新类别数量');
         }
         
+        // 处理空数据情况
+        const clothes = result.clothes || [];
+        const filteredClothes = clothes;
+        const currentPageClothes = clothes;
+        
         this.setData({
-          clothes: result.clothes,
-          filteredClothes: result.clothes,
-          currentPageClothes: result.clothes,
-          totalClothes: result.totalClothes,
-          totalPages: result.totalPages,
+          clothes: clothes,
+          filteredClothes: filteredClothes,
+          currentPageClothes: currentPageClothes,
+          totalClothes: result.totalClothes || 0,
+          totalPages: result.totalPages || 1,
           categories: updatedCategories,
           categoriesInitialized: true, // 标记类别数量已初始化
           isLoading: false
         });
         
         // 下载所有衣物图片
-        this.downloadClothesImages(result.clothes);
+        if (clothes.length > 0) {
+          this.downloadClothesImages(clothes);
+        }
       })
       .catch(err => {
         if (showLoading) {
