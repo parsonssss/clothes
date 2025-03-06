@@ -11,8 +11,8 @@ module.exports = function(clothes) {
     return;
   }
   
-  // 收集所有非空的fileID
-  const fileIDs = clothes.map(item => item.fileID).filter(fileID => fileID);
+  // 收集所有非空的fileID（优先使用抠图后的图片ID）
+  const fileIDs = clothes.map(item => item.processedFileID || item.fileID).filter(fileID => fileID);
   console.log('需要处理的图片数量:', fileIDs.length);
   
   if (fileIDs.length === 0) {
@@ -34,13 +34,21 @@ module.exports = function(clothes) {
   // 从本地缓存获取临时URL
   const cachedURLs = wx.getStorageSync('tempImageURLs') || {};
   
-  // 如果时间差小于10分钟且缓存中存在临时URL，则直接使用缓存
-  if (timeDiff < TEN_MINUTES && Object.keys(cachedURLs).length > 0) {
+  // 检查是否有新上传的衣服（没有临时URL的衣服）
+  const hasNewClothes = clothes.some(cloth => {
+    const fileIDToUse = cloth.processedFileID || cloth.fileID;
+    return fileIDToUse && !cachedURLs[fileIDToUse];
+  });
+  
+  // 如果时间差小于10分钟且缓存中存在临时URL，且没有新上传的衣服，则直接使用缓存
+  if (timeDiff < TEN_MINUTES && Object.keys(cachedURLs).length > 0 && !hasNewClothes) {
     console.log('使用缓存的临时URL，距离上次更新:', Math.floor(timeDiff / 1000), '秒');
     
     // 更新每个衣物对象的tempImageUrl
     const updatedClothes = clothes.map(cloth => {
-      const tempUrl = cloth.fileID && cachedURLs[cloth.fileID] ? cachedURLs[cloth.fileID] : '';
+      // 优先使用抠图后的图片
+      const fileIDToUse = cloth.processedFileID || cloth.fileID;
+      const tempUrl = fileIDToUse && cachedURLs[fileIDToUse] ? cachedURLs[fileIDToUse] : '';
       return {
         ...cloth, 
         tempImageUrl: tempUrl
@@ -57,8 +65,9 @@ module.exports = function(clothes) {
     return;
   }
   
-  // 如果时间差超过10分钟或无缓存，重新获取临时URL
-  console.log('重新获取临时URL，距离上次更新:', Math.floor(timeDiff / 1000), '秒');
+  // 如果时间差超过10分钟或无缓存或有新上传的衣服，重新获取临时URL
+  console.log('重新获取临时URL，距离上次更新:', Math.floor(timeDiff / 1000), '秒', 
+              '有新上传衣服:', hasNewClothes);
   
   // 获取临时URL
   wx.cloud.getTempFileURL({
@@ -77,8 +86,10 @@ module.exports = function(clothes) {
       // 更新每个衣物对象的tempImageUrl
       const updatedClothes = clothes.map(cloth => {
         let tempUrl = '';
-        if (cloth.fileID) {
-          tempUrl = fileIDToPath[cloth.fileID] || '';
+        // 优先使用抠图后的图片
+        const fileIDToUse = cloth.processedFileID || cloth.fileID;
+        if (fileIDToUse) {
+          tempUrl = fileIDToPath[fileIDToUse] || '';
         }
         return {
           ...cloth, 
@@ -108,7 +119,9 @@ module.exports = function(clothes) {
         console.log('使用缓存的临时URL作为备用');
         
         const updatedClothes = clothes.map(cloth => {
-          const tempUrl = cloth.fileID && cachedURLs[cloth.fileID] ? cachedURLs[cloth.fileID] : '';
+          // 优先使用抠图后的图片
+          const fileIDToUse = cloth.processedFileID || cloth.fileID;
+          const tempUrl = fileIDToUse && cachedURLs[fileIDToUse] ? cachedURLs[fileIDToUse] : '';
           return {
             ...cloth, 
             tempImageUrl: tempUrl
@@ -131,8 +144,8 @@ module.exports = function(clothes) {
 
 // 备用方式获取临时链接（通过云函数）
 function getBackupTempUrls(clothes) {
-  // 收集所有非空的fileID
-  const fileIDs = clothes.map(item => item.fileID).filter(fileID => fileID);
+  // 收集所有非空的fileID（优先使用抠图后的图片ID）
+  const fileIDs = clothes.map(item => item.processedFileID || item.fileID).filter(fileID => fileID);
   
   if (fileIDs.length === 0) {
     this.setData({
@@ -166,8 +179,10 @@ function getBackupTempUrls(clothes) {
       // 更新每个衣物对象的tempImageUrl
       const updatedClothes = clothes.map(cloth => {
         let tempUrl = '';
-        if (cloth.fileID && fileIDToPath[cloth.fileID]) {
-          tempUrl = fileIDToPath[cloth.fileID];
+        // 优先使用抠图后的图片
+        const fileIDToUse = cloth.processedFileID || cloth.fileID;
+        if (fileIDToUse && fileIDToPath[fileIDToUse]) {
+          tempUrl = fileIDToPath[fileIDToUse];
         }
         return {
           ...cloth, 

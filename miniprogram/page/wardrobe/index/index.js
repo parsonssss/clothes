@@ -793,6 +793,16 @@ Page({
         selectedColor: '#74301C'
       });
       
+      // 设置秋季主题导航栏
+      wx.setNavigationBarColor({
+        frontColor: '#000000', // 黑色文字
+        backgroundColor: '#E8D1A7', // 金黄色背景
+        animation: {
+          duration: 300,
+          timingFunc: 'easeIn'
+        }
+      });
+      
       // 更新页面样式变量
       this.setData({
         themeStyle: 'autumn'
@@ -805,6 +815,16 @@ Page({
         borderStyle: 'black',
         color: '#5EA0D0',
         selectedColor: '#D47C99'
+      });
+      
+      // 设置粉蓝主题导航栏
+      wx.setNavigationBarColor({
+        frontColor: '#000000', // 黑色文字
+        backgroundColor: '#F9C9D6', // 浅粉色背景
+        animation: {
+          duration: 300,
+          timingFunc: 'easeIn'
+        }
       });
       
       // 更新页面样式变量

@@ -70,6 +70,7 @@ function loadClothes(userOpenId, selectedCategory, currentPage, pageSize) {
                 _id: item._id,
                 name: item.name,
                 fileID: item.imageFileID || '',  // 确保fileID有值，避免undefined
+                processedFileID: item.processedImageFileID || '', // 抠图后的图片ID
                 tempImageUrl: '', // 先设置为空，后面会获取临时URL
                 category: item.category,
                 type: item.type,
@@ -104,9 +105,10 @@ function loadClothes(userOpenId, selectedCategory, currentPage, pageSize) {
  * @param {String} originalImageUrl - 原始图片URL
  * @param {Object} analysisData - 衣物分析数据
  * @param {String} userOpenId - 用户OpenID
+ * @param {Object} processedImageData - 抠图后的图片数据，包含fileID和tempImageUrl
  * @return {Promise} 保存结果
  */
-function saveClothingToDatabase(fileID, originalImageUrl, analysisData, userOpenId) {
+function saveClothingToDatabase(fileID, originalImageUrl, analysisData, userOpenId, processedImageData = {}) {
   return new Promise((resolve, reject) => {
     const db = wx.cloud.database();
     
@@ -115,6 +117,8 @@ function saveClothingToDatabase(fileID, originalImageUrl, analysisData, userOpen
       name: analysisData.name || '新衣物',
       imageFileID: fileID,
       originalImageUrl: originalImageUrl,
+      processedImageFileID: processedImageData.fileID || '', // 抠图后的图片ID
+      processedImageUrl: processedImageData.tempImageUrl || '', // 抠图后的图片URL
       category: analysisData.category || '未分类',
       type: analysisData.clothing_type || '未知',
       color: analysisData.color || '未知',

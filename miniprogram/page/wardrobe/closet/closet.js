@@ -11,7 +11,7 @@ const downloadClothesImages = require('./downloadClothesImages');
 
 Page({
   data: {
-    // 风格设置
+    // 风格切换设置
     themeStyle: 'autumn', // 默认为秋季风格，可选值：'autumn'或'pinkBlue'
     // 使用全局颜色配置
     colors: {
@@ -55,8 +55,6 @@ Page({
     currentPageClothes: [],     // 当前页显示的衣物
     showAddOptions: false,       // 是否显示添加选项
     isUploading: false,          // 是否正在上传
-    uploadProgress: 0,           // 上传进度（0-100）
-    uploadStage: '',             // 上传阶段（'uploading', 'processing', 'analyzing', 'saving'）
     isLoading: true,             // 是否正在加载
     userOpenId: '',              // 存储用户的openid
     templatePath: '',           // 抠图模板文件路径
@@ -94,6 +92,10 @@ Page({
       this.setData({
         themeStyle: savedTheme
       });
+      // 应用主题样式
+      if (typeof this.applyThemeStyle === 'function') {
+        this.applyThemeStyle(savedTheme);
+      }
     }
     
     // 初始化卡片位置
@@ -119,7 +121,12 @@ Page({
     const savedTheme = wx.getStorageSync('themeStyle');
     if (savedTheme && savedTheme !== this.data.themeStyle) {
       console.log('发现主题变化，从', this.data.themeStyle, '到', savedTheme);
-      this.setData({ themeStyle: savedTheme });
+      // 应用新主题
+      if (typeof this.applyThemeStyle === 'function') {
+        this.applyThemeStyle(savedTheme);
+      } else {
+        this.setData({ themeStyle: savedTheme });
+      }
     }
   },
   
@@ -605,11 +612,7 @@ Page({
         console.log('拍摄的图片:', tempFilePath);
         
         // 上传图片到云存储
-        this.uploadAndProcessImage(tempFilePath)
-          .catch(err => {
-            console.error('拍照上传处理失败:', err);
-            // 错误已在各个环节处理，这里不需要额外处理
-          });
+        this.uploadAndProcessImage(tempFilePath);
       },
       fail: (err) => {
         console.error('拍照失败:', err);
@@ -634,11 +637,7 @@ Page({
         console.log('选择的图片:', tempFilePath);
         
         // 上传图片到云存储
-        this.uploadAndProcessImage(tempFilePath)
-          .catch(err => {
-            console.error('相册上传处理失败:', err);
-            // 错误已在各个环节处理，这里不需要额外处理
-          });
+        this.uploadAndProcessImage(tempFilePath);
       },
       fail: (err) => {
         console.error('选择图片失败:', err);
@@ -660,11 +659,36 @@ Page({
           closetUtils.showLoading('处理中...');
           
           const imageUrl = res.content.trim();
-          // 直接使用URL进行抠图处理
-          this.processImageWithKoutu(imageUrl)
+          // 设置上传状态
+          this.setData({
+            isUploading: true
+          });
+          
+          // 添加全局超时处理
+          const globalTimeout = setTimeout(() => {
+            console.error('URL处理全局超时');
+            closetUtils.hideLoading();
+            this.setData({
+              isUploading: false
+            });
+            closetUtils.showErrorToast('处理超时，请重试');
+          }, 120000); // 2分钟全局超时
+          
+          // 使用异步方法处理图片，而不是旧的方法
+          this.processImageWithKoutuAsync(imageUrl)
+            .then(() => {
+              // 成功完成，清除全局超时
+              clearTimeout(globalTimeout);
+            })
             .catch(err => {
+              // 清除全局超时
+              clearTimeout(globalTimeout);
               console.error('URL图片处理失败:', err);
-              // 错误已在各个环节处理，这里不需要额外处理
+              closetUtils.hideLoading();
+              this.setData({
+                isUploading: false
+              });
+              closetUtils.showErrorToast('处理失败，请检查URL');
             });
         }
       }
@@ -691,144 +715,128 @@ Page({
   
   // 上传并处理图片
   uploadAndProcessImage: function(filePath) {
-    // 重置上传状态
     this.setData({
-      isUploading: true,
-      uploadProgress: 0,
-      uploadStage: 'uploading'
+      isUploading: true
     });
     
-    closetUtils.showLoading('上传中...');
+    // 添加全局超时处理
+    const globalTimeout = setTimeout(() => {
+      console.error('上传处理全局超时');
+      closetUtils.hideLoading();
+      this.setData({
+        isUploading: false
+      });
+      closetUtils.showErrorToast('上传处理超时，请重试');
+    }, 120000); // 2分钟全局超时
     
     // 上传图片到云存储
-    return imageProcessor.uploadImageToCloud(filePath)
+    imageProcessor.uploadImageToCloud(filePath)
       .then(fileID => {
-        // 更新进度
-        this.setData({
-          uploadProgress: 25,
-          uploadStage: 'processing'
-        });
-        closetUtils.showLoading('处理中...');
-        
         // 获取临时访问链接
         return imageProcessor.getTempFileURL(fileID)
           .then(tempFileURL => {
-            // 更新进度
-            this.setData({
-              uploadProgress: 50
-            });
-            
-            // 处理图片
-            return this.processImageWithKoutu(tempFileURL, fileID);
+            // 处理图片 - 异步操作
+            return {
+              fileID: fileID,
+              tempFileURL: tempFileURL
+            };
           });
       })
+      .then(imageData => {
+        // 开始抠图处理
+        console.log('开始抠图处理...');
+        return this.processImageWithKoutuAsync(imageData.tempFileURL, imageData.fileID);
+      })
+      .then(() => {
+        // 成功完成，清除全局超时
+        clearTimeout(globalTimeout);
+      })
       .catch(err => {
+        // 清除全局超时
+        clearTimeout(globalTimeout);
         console.error('上传和处理失败:', err);
         closetUtils.hideLoading();
         this.setData({
-          isUploading: false,
-          uploadProgress: 0,
-          uploadStage: ''
+          isUploading: false
         });
         closetUtils.showErrorToast('上传失败');
-        return Promise.reject(err);
       });
   },
   
-  // 调用抠图API处理图片
-  processImageWithKoutu: function(imageUrl, fileID = '') {
-    if (!this.data.templatePath) {
-      console.error('抠图模板路径为空，尝试重新获取');
-      return userManager.ensureKoutuTemplate()
-        .then(templatePath => {
-          this.setData({
-            templatePath: templatePath
-          });
-          console.log('重新获取抠图模板成功，继续处理图片');
-          return this.processImageWithKoutu(imageUrl, fileID);
-        })
-        .catch(err => {
-          console.error('重新获取抠图模板失败:', err);
-          closetUtils.hideLoading();
-          this.setData({
-            isUploading: false,
-            uploadProgress: 0,
-            uploadStage: ''
-          });
-          closetUtils.showErrorToast('处理失败，请重试');
-          return Promise.reject(err);
-        });
+  // 异步分析衣物
+  analyzeClothingAsync: function(processedImageData, originalImageUrl, fileID) {
+    console.log('开始分析衣物...');
+    
+    // 验证输入参数
+    if (!processedImageData || !processedImageData.tempImageUrl) {
+      console.error('分析衣物失败: 无效的图片数据');
+      this.handleAnalysisError();
+      return Promise.reject(new Error('无效的图片数据'));
     }
     
-    // 更新进度状态
-    this.setData({
-      uploadStage: 'processing'
+    // 添加超时处理
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('分析衣物超时'));
+      }, 30000); // 30秒超时
     });
-    closetUtils.showLoading('图片处理中...');
     
-    return imageProcessor.processImageWithKoutu(imageUrl, this.data.templatePath)
-      .then(processedImageUrl => {
-        // 更新进度
-        this.setData({
-          uploadProgress: 75,
-          uploadStage: 'analyzing'
-        });
-        closetUtils.showLoading('分析衣物中...');
-        
-        // 分析衣物
-        return this.analyzeClothing(processedImageUrl, imageUrl, fileID);
-      })
-      .catch(err => {
-        console.error('抠图处理失败:', err);
-        this.handleKoutuError();
-        return Promise.reject(err);
+    // 分析衣物，添加超时处理
+    return Promise.race([
+      imageProcessor.analyzeClothing(processedImageData.tempImageUrl)
+        .then(analysisData => {
+          if (!analysisData) {
+            throw new Error('分析结果为空');
+          }
+          console.log('衣物分析成功:', analysisData);
+          
+          // 保存到数据库
+          return dataManager.saveClothingToDatabase(
+            fileID,
+            originalImageUrl,
+            analysisData,
+            this.data.userOpenId,
+            processedImageData
+          );
+        }),
+      timeoutPromise
+    ])
+    .then(res => {
+      if (!res) {
+        throw new Error('保存到数据库失败');
+      }
+      console.log('保存衣物成功:', res);
+      closetUtils.hideLoading();
+      this.setData({
+        isUploading: false
       });
+      closetUtils.showSuccessToast('添加衣物成功');
+      
+      // 强制刷新临时URL缓存，确保能立即看到新上传的衣服
+      this.forceRefreshImageURLs();
+      
+      // 更新衣物列表，并强制更新类别数量
+      this.loadClothes(true, true);
+      return res;
+    })
+    .catch(err => {
+      console.error('分析或保存失败:', err);
+      this.handleAnalysisError();
+      return Promise.reject(err);
+    });
   },
   
-  // 分析衣物
-  analyzeClothing: function(processedImageUrl, originalImageUrl, fileID) {
-    // 更新进度状态
-    this.setData({
-      uploadStage: 'analyzing'
-    });
-    closetUtils.showLoading('分析衣物中...');
+  // 强制刷新临时URL缓存
+  forceRefreshImageURLs: function() {
+    console.log('强制刷新临时URL缓存');
     
-    return imageProcessor.analyzeClothing(processedImageUrl)
-      .then(analysisData => {
-        // 更新进度
-        this.setData({
-          uploadProgress: 90,
-          uploadStage: 'saving'
-        });
-        closetUtils.showLoading('保存衣物中...');
-        
-        // 保存到数据库
-        return dataManager.saveClothingToDatabase(
-          fileID,
-          originalImageUrl,
-          analysisData,
-          this.data.userOpenId
-        );
-      })
-      .then(res => {
-        console.log('保存衣物成功:', res);
-        closetUtils.hideLoading();
-        this.setData({
-          isUploading: false,
-          uploadProgress: 100,
-          uploadStage: 'completed'
-        });
-        closetUtils.showSuccessToast('添加衣物成功');
-        
-        // 更新衣物列表，并强制更新类别数量
-        this.loadClothes(true, true);
-        return res; // 返回结果，确保Promise链的完整性
-      })
-      .catch(err => {
-        console.error('分析或保存失败:', err);
-        this.handleAnalysisError();
-        return Promise.reject(err); // 显式返回rejected Promise
-      });
+    // 清除本地缓存的临时URL
+    wx.removeStorageSync('tempImageURLs');
+    
+    // 重置最后更新时间，确保下次加载时会重新获取临时URL
+    this.setData({
+      lastImageUrlUpdateTime: 0
+    });
   },
   
   // 处理抠图错误
@@ -847,6 +855,58 @@ Page({
       isUploading: false
     });
     closetUtils.showErrorToast('分析衣物失败');
+  },
+  
+  // 应用主题样式
+  applyThemeStyle: function(themeName) {
+    console.log('衣柜页面应用新主题：', themeName);
+    
+    // 更新页面样式变量
+    this.setData({
+      themeStyle: themeName
+    });
+    
+    // 设置导航栏样式
+    if (themeName === 'autumn') {
+      // 设置秋季主题导航栏
+      wx.setNavigationBarColor({
+        frontColor: '#000000', // 黑色文字
+        backgroundColor: '#E8D1A7', // 金黄色背景
+        animation: {
+          duration: 300,
+          timingFunc: 'easeIn'
+        }
+      });
+      
+      // 设置秋季主题TabBar
+      wx.setTabBarStyle({
+        backgroundColor: '#E8D1A7',
+        borderStyle: 'black',
+        color: '#442D1C',
+        selectedColor: '#74301C'
+      });
+    } else if (themeName === 'pinkBlue') {
+      // 设置粉蓝主题导航栏
+      wx.setNavigationBarColor({
+        frontColor: '#000000', // 黑色文字
+        backgroundColor: '#F9C9D6', // 浅粉色背景
+        animation: {
+          duration: 300,
+          timingFunc: 'easeIn'
+        }
+      });
+      
+      // 设置粉蓝主题TabBar
+      wx.setTabBarStyle({
+        backgroundColor: '#F9C9D6',
+        borderStyle: 'black',
+        color: '#5EA0D0',
+        selectedColor: '#D47C99'
+      });
+    }
+    
+    // 强制重新渲染卡片
+    this.updateCardPositions();
   },
   
   // 处理选择图片上传
@@ -875,6 +935,9 @@ Page({
           .then(res => {
             console.log('删除衣物成功:', res);
             closetUtils.showSuccessToast('删除成功');
+            
+            // 强制刷新临时URL缓存，确保衣柜显示正确
+            this.forceRefreshImageURLs();
             
             // 更新衣物列表，并强制更新类别数量
             this.loadClothes(true, true);
@@ -910,5 +973,134 @@ Page({
       clearInterval(this.templateUpdateTimer);
       this.templateUpdateTimer = null;
     }
+  },
+  
+  // 异步调用抠图API处理图片
+  processImageWithKoutuAsync: function(imageUrl, fileID = '') {
+    if (!this.data.templatePath) {
+      console.error('抠图模板路径为空，尝试重新获取');
+      return userManager.ensureKoutuTemplate()
+        .then(templatePath => {
+          this.setData({
+            templatePath: templatePath
+          });
+          console.log('重新获取抠图模板成功，继续处理图片');
+          return this.processImageWithKoutuAsync(imageUrl, fileID);
+        })
+        .catch(err => {
+          console.error('重新获取抠图模板失败:', err);
+          closetUtils.hideLoading();
+          this.setData({
+            isUploading: false
+          });
+          closetUtils.showErrorToast('处理失败，请重试');
+          return Promise.reject(err);
+        });
+    }
+    
+    console.log('开始抠图处理，使用模板:', this.data.templatePath);
+    
+    // 添加超时处理
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('抠图处理超时'));
+      }, 60000); // 60秒超时
+    });
+    
+    // 异步处理抠图，添加超时处理
+    return Promise.race([
+      imageProcessor.processImageWithKoutu(imageUrl, this.data.templatePath)
+        .then(processedImageUrl => {
+          if (!processedImageUrl) {
+            throw new Error('抠图结果为空');
+          }
+          console.log('抠图处理成功，结果URL:', processedImageUrl);
+          
+          // 保存抠图后的图片到云存储
+          return imageProcessor.saveProcessedImageToCloud(processedImageUrl)
+            .then(processedImageData => {
+              if (!processedImageData || !processedImageData.tempImageUrl) {
+                throw new Error('保存抠图结果失败');
+              }
+              console.log('抠图后图片已保存到云存储:', processedImageData);
+              
+              // 分析衣物 - 异步操作
+              return this.analyzeClothingAsync(processedImageData, imageUrl, fileID);
+            });
+        }),
+      timeoutPromise
+    ])
+    .catch(err => {
+      console.error('抠图处理失败:', err);
+      this.handleKoutuError();
+      return Promise.reject(err);
+    });
+  },
+  
+  // 调用抠图API处理图片 - 原始方法
+  processImageWithKoutu: function(imageUrl, fileID = '') {
+    if (!this.data.templatePath) {
+      console.error('抠图模板路径为空，尝试重新获取');
+      return userManager.ensureKoutuTemplate()
+        .then(templatePath => {
+          this.setData({
+            templatePath: templatePath
+          });
+          console.log('重新获取抠图模板成功，继续处理图片');
+          return this.processImageWithKoutu(imageUrl, fileID);
+        })
+        .catch(err => {
+          console.error('重新获取抠图模板失败:', err);
+          closetUtils.hideLoading();
+          this.setData({
+            isUploading: false
+          });
+          closetUtils.showErrorToast('处理失败，请重试');
+          return Promise.reject(err);
+        });
+    }
+    
+    return imageProcessor.processImageWithKoutu(imageUrl, this.data.templatePath)
+      .then(processedImageUrl => {
+        // 分析衣物
+        return this.analyzeClothing(processedImageUrl, imageUrl, fileID);
+      })
+      .catch(err => {
+        console.error('抠图处理失败:', err);
+        this.handleKoutuError();
+        return Promise.reject(err);
+      });
+  },
+  
+  // 分析衣物 - 原始方法
+  analyzeClothing: function(processedImageUrl, originalImageUrl, fileID) {
+    imageProcessor.analyzeClothing(processedImageUrl)
+      .then(analysisData => {
+        // 保存到数据库
+        return dataManager.saveClothingToDatabase(
+          fileID,
+          originalImageUrl,
+          analysisData,
+          this.data.userOpenId
+        );
+      })
+      .then(res => {
+        console.log('保存衣物成功:', res);
+        closetUtils.hideLoading();
+        this.setData({
+          isUploading: false
+        });
+        closetUtils.showSuccessToast('添加衣物成功');
+        
+        // 强制刷新临时URL缓存，确保能立即看到新上传的衣服
+        this.forceRefreshImageURLs();
+        
+        // 更新衣物列表，并强制更新类别数量
+        this.loadClothes(true, true);
+      })
+      .catch(err => {
+        console.error('分析或保存失败:', err);
+        this.handleAnalysisError();
+      });
   },
 });

@@ -191,12 +191,7 @@
   </view>
   
   <!-- 上传中状态 -->
-  <view class="upload-overlay {{themeStyle === 'pinkBlue' ? 'upload-overlay-pink-blue' : ''}}" wx:if="{{isUploading}}">
-    <view class="upload-content" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.15);' : ''}}">
-      <view class="upload-spinner" style="border-top-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}; border-color: {{themeStyle === 'autumn' ? colors.lightTaupe : pinkBlueColors.blueLight}};"></view>
-      <view class="upload-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">上传分析中...</view>
-    </view>
-  </view>
+  
   
   <!-- 添加按钮 -->
   <view class="add-btn {{themeStyle === 'pinkBlue' ? 'add-btn-pink-blue' : ''}}" bindtap="showAddOptions" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 12rpx rgba(212, 124, 153, 0.4);' : ''}}">

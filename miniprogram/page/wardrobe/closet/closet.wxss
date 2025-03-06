@@ -601,11 +601,67 @@
   font-size: 30rpx;
 }
 
+/* 点击反馈 */
+.category-card:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* 添加详情卡片打开动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50rpx); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.detail-card-container {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.detail-card {
+  animation: slideUp 0.3s ease-out;
+  width: 90%;
+  height: 85%;
+  border-radius: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 衣物项目的点击反馈 */
+.clothes-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clothes-item:active {
+  transform: scale(0.97);
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 卡片点击状态 */
+.card-hover {
+  opacity: 0.8 !important;
+  transform: scale(0.98) !important;
+  transition: all 0.1s ease-out !important;
+}
+
+/* 卡片点击冷却状态 - 防止触发点击反馈 */
+.card-cooling {
+  pointer-events: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: none !important;
+}
+
+
 /* 粉蓝风格的样式 */
 
 /* 顶部渐变区域 */
 .top-gradient {
-  height: 100vh;
+  height: 160rpx;
   width: 100%;
   position: absolute;
   top: 0;
@@ -622,6 +678,172 @@
 
 /* 标题粉蓝风格 */
 .wardrobe-title-pink-blue {
+  font-weight: 500;
+  margin-top: 15vh;
+}
+
+.wardrobe-title-pink-blue::after {
+  background-color: #D47C99; /* 深粉色下划线 */
+  width: 80rpx;
+  height: 4rpx;
+}
+
+/* 导航按钮粉蓝风格 */
+.nav-button-pink-blue {
+  font-size: 32rpx;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.nav-button-pink-blue:active {
+  opacity: 1;
+}
+
+/* 类别卡片粉蓝风格 */
+.category-card-pink-blue {
+  border-radius: 30rpx;
+  transition: all 0.4s ease;
+}
+
+.category-card-pink-blue.active {
+  transform: scale(1.02) !important;
+}
+
+/* 详情卡片容器粉蓝风格 */
+.detail-card-container-pink-blue {
+  background-color: rgba(249, 201, 214, 0.2); /* 浅粉色背景带透明度 */
+  backdrop-filter: blur(5px);
+}
+
+/* 详情卡片粉蓝风格 */
+.detail-card-pink-blue {
+  border-radius: 30rpx;
+}
+
+/* 详情头部粉蓝风格 */
+.detail-header-pink-blue {
+  border-top-left-radius: 30rpx;
+  border-top-right-radius: 30rpx;
+  border-bottom: none;
+  padding: 40rpx 32rpx;
+}
+
+/* 衣物项目粉蓝风格 */
+.clothes-item-pink-blue {
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.clothes-item-pink-blue:active {
+  transform: translateY(-2rpx) scale(0.98);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 衣物信息区域粉蓝风格 */
+.clothes-info-pink-blue {
+  padding: 16rpx;
+}
+
+/* 空状态提示粉蓝风格 */
+.empty-state-pink-blue {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 20rpx;
+  padding: 40rpx 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  margin: 20rpx;
+  width: calc(100% - 40rpx);
+}
+
+/* 分页控制粉蓝风格 */
+.pagination-pink-blue {
+  border-top: 1rpx solid rgba(203, 224, 249, 0.3);
+}
+
+.pagination-button-pink-blue {
+  border-radius: 30rpx;
+  font-weight: 400;
+  border: none;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  padding: 12rpx 24rpx;
+}
+
+.pagination-page-pink-blue {
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* 添加按钮粉蓝风格 */
+.add-btn-pink-blue {
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 124, 153, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15rpx rgba(212, 124, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 124, 153, 0);
+  }
+}
+
+.add-button-pink-blue {
+  box-shadow: 0 4rpx 12rpx rgba(212, 124, 153, 0.4);
+}
+
+/* 添加选项弹窗粉蓝风格 */
+.add-options-overlay-pink-blue {
+  background-color: rgba(203, 224, 249, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.add-options-container-pink-blue {
+  border-top-left-radius: 30rpx;
+  border-top-right-radius: 30rpx;
+}
+
+.add-option-pink-blue {
+  border-bottom: 1rpx solid rgba(151, 200, 229, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.add-option-pink-blue:active {
+  background-color: rgba(203, 224, 249, 0.2);
+}
+
+.cancel-btn-pink-blue {
+  border-radius: 30rpx;
+  margin-top: 50rpx;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn-pink-blue:active {
+  transform: scale(0.98);
+  background-color: rgba(249, 201, 214, 0.1);
+}
+
+/* 上传中状态粉蓝风格 */
+.upload-overlay-pink-blue {
+  background-color: rgba(203, 224, 249, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+/* 底部渐变 */
+.bottom-gradient {
+  height: 160rpx;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 30rpx 30rpx 0 0;
+}-pink-blue {
   font-weight: 500;
   margin-top: 15vh;
 }

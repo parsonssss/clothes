@@ -130,23 +130,52 @@ function sendKoutuRequest(koutuTemplate) {
 // 检查抠图结果
 function checkKoutuResult(promptId) {
   return new Promise((resolve, reject) => {
-    const MAX_RETRIES = 30;
+    const MAX_RETRIES = 15; // 减少重试次数，避免长时间等待
     let retryCount = 0;
     
     const checkResult = () => {
+      console.log(`检查抠图结果，第${retryCount + 1}次尝试，promptId: ${promptId}`);
+      
       wx.request({
         url: `https://wp05.unicorn.org.cn:12753/history/${promptId}`,
         method: 'GET',
         success: (res) => {
-          if (res.data && Object.keys(res.data).length > 0) {
+          // 检查响应是否有效
+          if (!res.data) {
+            console.error('抠图API返回空数据');
+            if (retryCount < MAX_RETRIES) {
+              retryCount++;
+              setTimeout(checkResult, 2000);
+            } else {
+              reject(new Error('抠图API返回空数据，已达最大重试次数'));
+            }
+            return;
+          }
+          
+          if (Object.keys(res.data).length > 0) {
             const firstKey = Object.keys(res.data)[0];
             const outputs = res.data[firstKey].outputs;
             
+            // 检查处理状态
             if (res.data[firstKey].status === 'failed') {
+              console.error('抠图处理失败，API返回失败状态');
               reject(new Error('抠图处理失败'));
               return;
             }
             
+            // 检查是否处理中
+            if (res.data[firstKey].status === 'processing') {
+              console.log('抠图处理中...');
+              if (retryCount < MAX_RETRIES) {
+                retryCount++;
+                setTimeout(checkResult, 2000);
+              } else {
+                reject(new Error('抠图处理超时，已达最大重试次数'));
+              }
+              return;
+            }
+            
+            // 检查输出结果
             if (outputs) {
               const outputKey = Object.keys(outputs).find(key => 
                 outputs[key]?.images && outputs[key].images.length > 0
@@ -159,9 +188,14 @@ function checkKoutuResult(promptId) {
                 const type = imageInfo.type || "output";
                 
                 const imageUrl = `https://wp05.unicorn.org.cn:12753/view?filename=${filename}&subfolder=${subfolder}&type=${type}`;
+                console.log('抠图处理成功，获取到结果URL:', imageUrl);
                 resolve(imageUrl);
                 return;
+              } else {
+                console.error('抠图结果中没有找到图片');
               }
+            } else {
+              console.error('抠图结果中没有outputs字段');
             }
             
             // 如果还没有结果，继续重试
@@ -169,25 +203,26 @@ function checkKoutuResult(promptId) {
               retryCount++;
               setTimeout(checkResult, 2000);
             } else {
-              reject(new Error('获取抠图结果超时'));
+              reject(new Error('获取抠图结果超时，已达最大重试次数'));
             }
           } else {
+            console.log('抠图结果尚未准备好');
             // 如果还没有结果，继续重试
             if (retryCount < MAX_RETRIES) {
               retryCount++;
               setTimeout(checkResult, 2000);
             } else {
-              reject(new Error('获取抠图结果超时'));
+              reject(new Error('获取抠图结果超时，已达最大重试次数'));
             }
           }
         },
         fail: (err) => {
-          console.error('检查抠图结果失败:', err);
+          console.error('检查抠图结果网络请求失败:', err);
           if (retryCount < MAX_RETRIES) {
             retryCount++;
             setTimeout(checkResult, 2000);
           } else {
-            reject(err);
+            reject(new Error('检查抠图结果网络请求失败，已达最大重试次数'));
           }
         }
       });
@@ -195,6 +230,97 @@ function checkKoutuResult(promptId) {
     
     // 开始检查结果
     checkResult();
+  });
+}
+
+// 将抠图后的图片保存到云存储
+function saveProcessedImageToCloud(imageUrl) {
+  return new Promise((resolve, reject) => {
+    if (!imageUrl) {
+      console.error('保存抠图图片失败: URL为空');
+      reject(new Error('抠图图片URL为空'));
+      return;
+    }
+    
+    console.log('开始保存抠图后图片:', imageUrl);
+    
+    // 添加下载超时
+    const downloadTimeout = setTimeout(() => {
+      console.error('下载抠图图片超时');
+      // 返回原始URL，确保流程可以继续
+      resolve({
+        fileID: '',
+        tempImageUrl: imageUrl,
+        error: '下载超时'
+      });
+    }, 30000); // 30秒超时
+    
+    // 先下载抠图后的图片到本地临时文件
+    wx.downloadFile({
+      url: imageUrl,
+      success: (res) => {
+        clearTimeout(downloadTimeout);
+        
+        if (res.statusCode === 200) {
+          const tempFilePath = res.tempFilePath;
+          
+          // 添加上传超时
+          const uploadTimeout = setTimeout(() => {
+            console.error('上传抠图图片到云存储超时');
+            // 返回原始URL，确保流程可以继续
+            resolve({
+              fileID: '',
+              tempImageUrl: imageUrl,
+              error: '上传超时'
+            });
+          }, 30000); // 30秒超时
+          
+          // 上传到云存储
+          const cloudPath = `processed_images/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
+          
+          wx.cloud.uploadFile({
+            cloudPath: cloudPath,
+            filePath: tempFilePath,
+            success: (uploadRes) => {
+              clearTimeout(uploadTimeout);
+              console.log('抠图后图片上传成功:', uploadRes);
+              resolve({
+                fileID: uploadRes.fileID,
+                tempImageUrl: imageUrl
+              });
+            },
+            fail: (err) => {
+              clearTimeout(uploadTimeout);
+              console.error('抠图后图片上传失败:', err);
+              // 即使上传失败，也返回原始URL，确保流程可以继续
+              resolve({
+                fileID: '',
+                tempImageUrl: imageUrl,
+                error: err.message || '上传失败'
+              });
+            }
+          });
+        } else {
+          console.error('下载抠图后图片失败, 状态码:', res.statusCode);
+          // 返回原始URL，确保流程可以继续
+          resolve({
+            fileID: '',
+            tempImageUrl: imageUrl,
+            error: `下载失败，状态码: ${res.statusCode}`
+          });
+        }
+      },
+      fail: (err) => {
+        clearTimeout(downloadTimeout);
+        console.error('下载抠图后图片失败:', err);
+        // 返回原始URL，确保流程可以继续
+        resolve({
+          fileID: '',
+          tempImageUrl: imageUrl,
+          error: err.message || '下载失败'
+        });
+      }
+    });
   });
 }
 
@@ -229,5 +355,6 @@ module.exports = {
   processImageWithKoutu,
   sendKoutuRequest,
   checkKoutuResult,
+  saveProcessedImageToCloud,
   analyzeClothing
 }; 
