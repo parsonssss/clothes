@@ -11,6 +11,8 @@ const downloadClothesImages = require('./downloadClothesImages');
 
 Page({
   data: {
+    // 风格设置
+    themeStyle: 'autumn', // 默认为秋季风格，可选值：'autumn'或'pinkBlue'
     // 使用全局颜色配置
     colors: {
       darkBrown: colors.darkBrown,
@@ -18,6 +20,15 @@ Page({
       lightTaupe: '#E8D1A7',
       mediumBrown: colors.mediumBrown,
       darkCoffee: colors.darkCoffee,
+    },
+    // 粉蓝色系配色
+    pinkBlueColors: {
+      pinkDark: '#D47C99',       // 深粉色
+      pinkMedium: '#EEA0B2',     // 中粉色
+      pinkLight: '#F9C9D6',      // 浅粉色
+      blueLight: '#CBE0F9',      // 浅蓝色
+      blueMedium: '#97C8E5',     // 中蓝色
+      blueDark: '#5EA0D0',       // 深蓝色
     },
     // 分页相关
     currentPage: 1,             // 当前页码
@@ -44,6 +55,8 @@ Page({
     currentPageClothes: [],     // 当前页显示的衣物
     showAddOptions: false,       // 是否显示添加选项
     isUploading: false,          // 是否正在上传
+    uploadProgress: 0,           // 上传进度（0-100）
+    uploadStage: '',             // 上传阶段（'uploading', 'processing', 'analyzing', 'saving'）
     isLoading: true,             // 是否正在加载
     userOpenId: '',              // 存储用户的openid
     templatePath: '',           // 抠图模板文件路径
@@ -75,6 +88,14 @@ Page({
       });
     }
     
+    // 获取保存的主题设置
+    const savedTheme = wx.getStorageSync('themeStyle');
+    if (savedTheme) {
+      this.setData({
+        themeStyle: savedTheme
+      });
+    }
+    
     // 初始化卡片位置
     this.initCardPositions();
     
@@ -92,6 +113,13 @@ Page({
     // 如果已经有OpenID，刷新衣物列表
     if (this.data.userOpenId) {
       this.loadClothes(true, true); // 强制更新类别数量，显示加载提示
+    }
+    
+    // 检查并应用主题设置
+    const savedTheme = wx.getStorageSync('themeStyle');
+    if (savedTheme && savedTheme !== this.data.themeStyle) {
+      console.log('发现主题变化，从', this.data.themeStyle, '到', savedTheme);
+      this.setData({ themeStyle: savedTheme });
     }
   },
   
@@ -577,7 +605,11 @@ Page({
         console.log('拍摄的图片:', tempFilePath);
         
         // 上传图片到云存储
-        this.uploadAndProcessImage(tempFilePath);
+        this.uploadAndProcessImage(tempFilePath)
+          .catch(err => {
+            console.error('拍照上传处理失败:', err);
+            // 错误已在各个环节处理，这里不需要额外处理
+          });
       },
       fail: (err) => {
         console.error('拍照失败:', err);
@@ -602,7 +634,11 @@ Page({
         console.log('选择的图片:', tempFilePath);
         
         // 上传图片到云存储
-        this.uploadAndProcessImage(tempFilePath);
+        this.uploadAndProcessImage(tempFilePath)
+          .catch(err => {
+            console.error('相册上传处理失败:', err);
+            // 错误已在各个环节处理，这里不需要额外处理
+          });
       },
       fail: (err) => {
         console.error('选择图片失败:', err);
@@ -625,7 +661,11 @@ Page({
           
           const imageUrl = res.content.trim();
           // 直接使用URL进行抠图处理
-          this.processImageWithKoutu(imageUrl);
+          this.processImageWithKoutu(imageUrl)
+            .catch(err => {
+              console.error('URL图片处理失败:', err);
+              // 错误已在各个环节处理，这里不需要额外处理
+            });
         }
       }
     });
@@ -651,16 +691,33 @@ Page({
   
   // 上传并处理图片
   uploadAndProcessImage: function(filePath) {
+    // 重置上传状态
     this.setData({
-      isUploading: true
+      isUploading: true,
+      uploadProgress: 0,
+      uploadStage: 'uploading'
     });
     
+    closetUtils.showLoading('上传中...');
+    
     // 上传图片到云存储
-    imageProcessor.uploadImageToCloud(filePath)
+    return imageProcessor.uploadImageToCloud(filePath)
       .then(fileID => {
+        // 更新进度
+        this.setData({
+          uploadProgress: 25,
+          uploadStage: 'processing'
+        });
+        closetUtils.showLoading('处理中...');
+        
         // 获取临时访问链接
         return imageProcessor.getTempFileURL(fileID)
           .then(tempFileURL => {
+            // 更新进度
+            this.setData({
+              uploadProgress: 50
+            });
+            
             // 处理图片
             return this.processImageWithKoutu(tempFileURL, fileID);
           });
@@ -669,9 +726,12 @@ Page({
         console.error('上传和处理失败:', err);
         closetUtils.hideLoading();
         this.setData({
-          isUploading: false
+          isUploading: false,
+          uploadProgress: 0,
+          uploadStage: ''
         });
         closetUtils.showErrorToast('上传失败');
+        return Promise.reject(err);
       });
   },
   
@@ -691,15 +751,30 @@ Page({
           console.error('重新获取抠图模板失败:', err);
           closetUtils.hideLoading();
           this.setData({
-            isUploading: false
+            isUploading: false,
+            uploadProgress: 0,
+            uploadStage: ''
           });
           closetUtils.showErrorToast('处理失败，请重试');
           return Promise.reject(err);
         });
     }
     
+    // 更新进度状态
+    this.setData({
+      uploadStage: 'processing'
+    });
+    closetUtils.showLoading('图片处理中...');
+    
     return imageProcessor.processImageWithKoutu(imageUrl, this.data.templatePath)
       .then(processedImageUrl => {
+        // 更新进度
+        this.setData({
+          uploadProgress: 75,
+          uploadStage: 'analyzing'
+        });
+        closetUtils.showLoading('分析衣物中...');
+        
         // 分析衣物
         return this.analyzeClothing(processedImageUrl, imageUrl, fileID);
       })
@@ -712,8 +787,21 @@ Page({
   
   // 分析衣物
   analyzeClothing: function(processedImageUrl, originalImageUrl, fileID) {
-    imageProcessor.analyzeClothing(processedImageUrl)
+    // 更新进度状态
+    this.setData({
+      uploadStage: 'analyzing'
+    });
+    closetUtils.showLoading('分析衣物中...');
+    
+    return imageProcessor.analyzeClothing(processedImageUrl)
       .then(analysisData => {
+        // 更新进度
+        this.setData({
+          uploadProgress: 90,
+          uploadStage: 'saving'
+        });
+        closetUtils.showLoading('保存衣物中...');
+        
         // 保存到数据库
         return dataManager.saveClothingToDatabase(
           fileID,
@@ -726,16 +814,20 @@ Page({
         console.log('保存衣物成功:', res);
         closetUtils.hideLoading();
         this.setData({
-          isUploading: false
+          isUploading: false,
+          uploadProgress: 100,
+          uploadStage: 'completed'
         });
         closetUtils.showSuccessToast('添加衣物成功');
         
         // 更新衣物列表，并强制更新类别数量
         this.loadClothes(true, true);
+        return res; // 返回结果，确保Promise链的完整性
       })
       .catch(err => {
         console.error('分析或保存失败:', err);
         this.handleAnalysisError();
+        return Promise.reject(err); // 显式返回rejected Promise
       });
   },
   

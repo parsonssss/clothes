@@ -1,19 +1,21 @@
-<view class="container" style="background-color: {{colors.lightTaupe}};">
+<view class="container" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : pinkBlueColors.pinkLight}}; background-image: {{themeStyle === 'pinkBlue' ? 'linear-gradient(to bottom, white, ' + pinkBlueColors.pinkLight + ')' : 'none'}}">
+  <!-- 粉蓝风格顶部渐变 -->
+   <view class="top-gradient" wx:if="{{themeStyle === 'pinkBlue'}}" style="background: linear-gradient(to right, {{pinkBlueColors.pinkMedium}}, {{pinkBlueColors.blueMedium}});"></view> 
   <!-- Loading state -->
   <view class="loading-container" wx:if="{{isLoading}}">
-    <view class="loading-spinner" style="border-top-color: {{colors.darkOlive}}; border-color: {{colors.lightTaupe}};"></view>
-    <view class="loading-text" style="color: {{colors.darkOlive}};">加载中...</view>
+    <view class="loading-spinner" style="border-top-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}; border-color: {{themeStyle === 'autumn' ? colors.lightTaupe : pinkBlueColors.blueLight}};"></view>
+    <view class="loading-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">加载中...</view>
   </view>
   
   <!-- 主要内容区域 -->
   <view class="main-content" wx:if="{{!isLoading}}">
     <!-- 标题 -->
-    <view class="wardrobe-title">我的衣柜</view>
+    <view class="wardrobe-title {{themeStyle === 'pinkBlue' ? 'wardrobe-title-pink-blue' : ''}}" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}">我的衣柜</view>
     
     <!-- 卡片区域 -->
     <view class="card-container">
       <!-- 滑动按钮 -->
-      <view class="nav-button prev" catchtap="slidePrev" style="color: {{colors.darkOlive}};">◀</view>
+      <view class="nav-button prev {{themeStyle === 'pinkBlue' ? 'nav-button-pink-blue' : ''}}" catchtap="slidePrev" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">◀</view>
       
       <!-- 类别卡片 -->
       <view class="card-wrapper" 
@@ -24,8 +26,8 @@
         <view 
           wx:for="{{categories}}" 
           wx:key="id"
-          class="category-card {{currentIndex === index ? 'active' : ''}} {{isSliding || slidingLocked || Date.now() - lastSlideTime < 800 ? 'no-tap' : ''}} {{Date.now() - lastSlideTime < 100 ? 'card-cooling' : ''}}" 
-          style="background-color: {{currentIndex === index ? colors.mediumBrown : colors.lightTaupe}}; z-index: {{cards[index].zIndex}}; transform: translateX({{cards[index].translateX}}rpx) scale({{cards[index].scale}}); opacity: {{cards[index].opacity}};"
+          class="category-card {{currentIndex === index ? 'active' : ''}} {{themeStyle === 'pinkBlue' ? 'category-card-pink-blue' : ''}} {{isSliding || slidingLocked || Date.now() - lastSlideTime < 800 ? 'no-tap' : ''}} {{Date.now() - lastSlideTime < 100 ? 'card-cooling' : ''}}" 
+          style="background-color: {{themeStyle === 'autumn' ? (currentIndex === index ? colors.mediumBrown : colors.lightTaupe) : (currentIndex === index ? pinkBlueColors.blueMedium : pinkBlueColors.blueLight)}}; z-index: {{cards[index].zIndex}}; transform: translateX({{cards[index].translateX}}rpx) scale({{cards[index].scale}}); opacity: {{cards[index].opacity}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.1);' : ''}}"
           catchtap="onCardTap"
           data-index="{{index}}"
           hover-class="{{!isSliding && !slidingLocked && Date.now() - lastSlideTime >= 800 ? 'card-hover' : ''}}"
@@ -33,31 +35,31 @@
           hover-start-time="50"
           hidden="{{!cards[index].visible}}"
         >
-          <view class="category-icon" style="background-color: {{colors.darkOlive}}; color: {{colors.lightTaupe}};">
+          <view class="category-icon" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}; color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 8rpx rgba(0,0,0,0.1);' : ''}}">
             {{item.icon}}
           </view>
-          <text class="category-name" style="color: {{colors.darkOlive}};">{{item.name}}</text>
-          <text class="category-en-name" style="color: {{colors.darkCoffee}};">{{item.enName}}</text>
-          <text class="category-count" style="color: {{colors.darkCoffee}};">{{item.count}} 件</text>
+          <text class="category-name" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">{{item.name}}</text>
+          <text class="category-en-name" style="color: {{themeStyle === 'autumn' ? colors.darkCoffee : pinkBlueColors.blueDark}};">{{item.enName}}</text>
+          <text class="category-count" style="color: {{themeStyle === 'autumn' ? colors.darkCoffee : pinkBlueColors.blueDark}};">{{item.count}} 件</text>
         </view>
       </view>
       
       <!-- 滑动按钮 -->
-      <view class="nav-button next" catchtap="slideNext" style="color: {{colors.darkOlive}};">▶</view>
+      <view class="nav-button next {{themeStyle === 'pinkBlue' ? 'nav-button-pink-blue' : ''}}" catchtap="slideNext" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">▶</view>
     </view>
   </view>
   
   <!-- 详情大卡片 -->
-  <view class="detail-card-container" wx:if="{{selectedCategory}}" bindtap="onDetailBackgroundTap">
+  <view class="detail-card-container {{themeStyle === 'pinkBlue' ? 'detail-card-container-pink-blue' : ''}}" wx:if="{{selectedCategory}}" bindtap="onDetailBackgroundTap">
     <view 
-      class="detail-card" 
-      style="background-color: {{colors.mediumBrown}};"
+      class="detail-card {{themeStyle === 'pinkBlue' ? 'detail-card-pink-blue' : ''}}" 
+      style="background-color: {{themeStyle === 'autumn' ? colors.mediumBrown : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 10rpx 25rpx rgba(0,0,0,0.15);' : ''}}"
       catchtap="preventBubble"
     >
       <!-- 卡片顶部 -->
-      <view class="detail-header">
-        <text class="detail-title" style="color: {{colors.darkOlive}};">{{selectedCategory.name}}</text>
-        <view class="close-button" bindtap="closeDetail" style="color: {{colors.darkOlive}};">×</view>
+      <view class="detail-header {{themeStyle === 'pinkBlue' ? 'detail-header-pink-blue' : ''}}" style="{{themeStyle === 'pinkBlue' ? 'background: linear-gradient(to right, ' + pinkBlueColors.pinkMedium + ', ' + pinkBlueColors.blueMedium + ');' : ''}}">
+        <text class="detail-title" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : 'white'}};">{{selectedCategory.name}}</text>
+        <view class="close-button" bindtap="closeDetail" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : 'white'}};">×</view>
       </view>
 
       <!-- 衣物网格 -->
@@ -65,8 +67,8 @@
         <view class="grid-container">
           <block wx:for="{{currentPageClothes}}" wx:key="_id">
             <view 
-              class="clothes-item" 
-              style="background-color: {{colors.lightTaupe}};"
+              class="clothes-item {{themeStyle === 'pinkBlue' ? 'clothes-item-pink-blue' : ''}}" 
+              style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.1);' : ''}}"
               catchtap="viewClothesDetail"
               data-id="{{item._id}}"
               hover-class="clothes-item-hover"
@@ -82,43 +84,43 @@
                 <view 
                   class="clothes-icon {{item.category === '上衣' ? 'tops' : (item.category === '裤子' ? 'pants' : (item.category === '外套' ? 'coat' : (item.category === '裙子' ? 'skirt' : 'accessories')))}}" 
                   wx:else
-                  style="color: {{colors.darkOlive}};"
+                  style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};"
                 ></view>
               </view>
-              <view class="clothes-info">
-                <view class="clothes-name" style="color: {{colors.darkOlive}};">{{item.name || ((item.color || '') + ' ' + (item.style || ''))}}</view>
-                <view class="clothes-category" style="color: {{colors.darkCoffee}};">{{item.category || '未分类'}}</view>
+              <view class="clothes-info {{themeStyle === 'pinkBlue' ? 'clothes-info-pink-blue' : ''}}">
+                <view class="clothes-name" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">{{item.name || ((item.color || '') + ' ' + (item.style || ''))}}</view>
+                <view class="clothes-category" style="color: {{themeStyle === 'autumn' ? colors.darkCoffee : pinkBlueColors.blueDark}};">{{item.category || '未分类'}}</view>
               </view>
             </view>
           </block>
         </view>
         
         <!-- 空状态提示 -->
-        <view class="empty-state" wx:if="{{filteredClothes.length === 0 && !isLoading}}">
-          <view class="empty-icon" style="color: {{colors.darkCoffee}};">👕</view>
-          <view class="empty-text" style="color: {{colors.darkOlive}};">
+        <view class="empty-state {{themeStyle === 'pinkBlue' ? 'empty-state-pink-blue' : ''}}" wx:if="{{filteredClothes.length === 0 && !isLoading}}">
+          <view class="empty-icon" style="color: {{themeStyle === 'autumn' ? colors.darkCoffee : pinkBlueColors.blueMedium}};">👕</view>
+          <view class="empty-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">
             暂无{{selectedCategory.category || selectedCategory.name}}类衣物
             <block wx:if="{{selectedCategory.id !== 0}}">，点击"+"添加</block>
           </view>
         </view>
         
         <!-- 分页控制 -->
-        <view class="pagination" wx:if="{{totalClothes > pageSize}}">
-          <view class="pagination-info" style="color: {{colors.darkCoffee}};">{{currentPage}}/{{totalPages}} 页</view>
+        <view class="pagination {{themeStyle === 'pinkBlue' ? 'pagination-pink-blue' : ''}}" wx:if="{{totalClothes > pageSize}}" style="{{themeStyle === 'pinkBlue' ? 'border-top: 1rpx solid ' + pinkBlueColors.pinkLight + ';' : ''}}">
+          <view class="pagination-info" style="color: {{themeStyle === 'autumn' ? colors.darkCoffee : pinkBlueColors.blueDark}};">{{currentPage}}/{{totalPages}} 页</view>
           <view class="pagination-controls">
             <view 
-              class="pagination-button prev {{currentPage <= 1 ? 'disabled' : ''}}" 
+              class="pagination-button prev {{currentPage <= 1 ? 'disabled' : ''}} {{themeStyle === 'pinkBlue' ? 'pagination-button-pink-blue' : ''}}" 
               bindtap="prevPage"
-              style="color: {{colors.darkOlive}}; background-color: {{colors.lightTaupe}};"
+              style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}}; background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}};"
             >上一页</view>
             
             <!-- 页码按钮 -->
             <block wx:for="{{totalPages}}" wx:key="*this" wx:if="{{totalPages <= 5}}">
               <view 
-                class="pagination-page {{currentPage === index+1 ? 'active' : ''}}" 
+                class="pagination-page {{currentPage === index+1 ? 'active' : ''}} {{themeStyle === 'pinkBlue' ? 'pagination-page-pink-blue' : ''}}" 
                 data-page="{{index+1}}" 
                 bindtap="goToPage"
-                style="color: {{currentPage === index+1 ? colors.lightTaupe : colors.darkOlive}}; background-color: {{currentPage === index+1 ? colors.darkOlive : colors.lightTaupe}};"
+                style="color: {{currentPage === index+1 ? (themeStyle === 'autumn' ? colors.lightTaupe : 'white') : (themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark)}}; background-color: {{currentPage === index+1 ? (themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium) : (themeStyle === 'autumn' ? colors.lightTaupe : 'white')}};"
               >{{index+1}}</view>
             </block>
             
@@ -173,9 +175,9 @@
             </block>
             
             <view 
-              class="pagination-button next {{currentPage >= totalPages ? 'disabled' : ''}}" 
+              class="pagination-button next {{currentPage >= totalPages ? 'disabled' : ''}} {{themeStyle === 'pinkBlue' ? 'pagination-button-pink-blue' : ''}}" 
               bindtap="nextPage"
-              style="color: {{colors.darkOlive}}; background-color: {{colors.lightTaupe}};"
+              style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}}; background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}};"
             >下一页</view>
           </view>
         </view>
@@ -183,41 +185,43 @@
       
       <!-- 添加按钮 -->
       <view class="add-button-container">
-        <view class="add-button" style="background-color: {{colors.darkOlive}}; color: {{colors.lightTaupe}};" bindtap="showAddOptions">+</view>
+        <view class="add-button {{themeStyle === 'pinkBlue' ? 'add-button-pink-blue' : ''}}" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}}; color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 12rpx rgba(212, 124, 153, 0.4);' : ''}}" bindtap="showAddOptions">+</view>
       </view>
     </view>
   </view>
   
   <!-- 上传中状态 -->
-  <view class="upload-overlay" wx:if="{{isUploading}}">
-    <view class="upload-content" style="background-color: {{colors.lightTaupe}};">
-      <view class="upload-spinner" style="border-top-color: {{colors.darkOlive}}; border-color: {{colors.lightTaupe}};"></view>
-      <view class="upload-text" style="color: {{colors.darkOlive}};">上传分析中...</view>
+  <view class="upload-overlay {{themeStyle === 'pinkBlue' ? 'upload-overlay-pink-blue' : ''}}" wx:if="{{isUploading}}">
+    <view class="upload-content" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.15);' : ''}}">
+      <view class="upload-spinner" style="border-top-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}; border-color: {{themeStyle === 'autumn' ? colors.lightTaupe : pinkBlueColors.blueLight}};"></view>
+      <view class="upload-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">上传分析中...</view>
     </view>
   </view>
   
   <!-- 添加按钮 -->
-  <view class="add-btn" bindtap="showAddOptions" style="background-color: {{colors.darkOlive}};">
-    <view class="add-icon"></view>
+  <view class="add-btn {{themeStyle === 'pinkBlue' ? 'add-btn-pink-blue' : ''}}" bindtap="showAddOptions" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 12rpx rgba(212, 124, 153, 0.4);' : ''}}">
+    <view class="add-icon" style="{{themeStyle === 'pinkBlue' ? 'background-color: ' + pinkBlueColors.pinkMedium + ';' : ''}}"></view>
   </view>
   
   <!-- 添加选项弹窗 -->
-  <view class="add-options-overlay {{showAddOptions ? 'show' : ''}}" bindtap="hideAddOptions">
-    <view class="add-options-container" style="background-color: {{colors.lightTaupe}};" catchtap="preventBubble">
-      <view class="add-option-title" style="color: {{colors.darkOlive}};">添加衣物</view>
-      <view class="add-option" bindtap="addByCamera">
-        <view class="add-option-icon camera-icon"></view>
-        <view class="add-option-text" style="color: {{colors.darkOlive}};">使用相机拍照（AI识别）</view>
+  <view class="add-options-overlay {{showAddOptions ? 'show' : ''}} {{themeStyle === 'pinkBlue' ? 'add-options-overlay-pink-blue' : ''}}" bindtap="hideAddOptions">
+    <view class="add-options-container {{themeStyle === 'pinkBlue' ? 'add-options-container-pink-blue' : ''}}" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.1);' : ''}}" catchtap="preventBubble">
+      <view class="add-option-title" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">添加衣物</view>
+      <view class="add-option {{themeStyle === 'pinkBlue' ? 'add-option-pink-blue' : ''}}" bindtap="addByCamera">
+        <view class="add-option-icon camera-icon" style="{{themeStyle === 'pinkBlue' ? 'color: ' + pinkBlueColors.pinkDark + ';' : ''}}"></view>
+        <view class="add-option-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">使用相机拍照（AI识别）</view>
       </view>
-      <view class="add-option" bindtap="addByAlbum">
-        <view class="add-option-icon album-icon"></view>
-        <view class="add-option-text" style="color: {{colors.darkOlive}};">从相册选择（AI识别）</view>
+      <view class="add-option {{themeStyle === 'pinkBlue' ? 'add-option-pink-blue' : ''}}" bindtap="addByAlbum">
+        <view class="add-option-icon album-icon" style="{{themeStyle === 'pinkBlue' ? 'color: ' + pinkBlueColors.pinkDark + ';' : ''}}"></view>
+        <view class="add-option-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">从相册选择（AI识别）</view>
       </view>
-      <view class="add-option" bindtap="addByUrl">
-        <view class="add-option-icon url-icon"></view>
-        <view class="add-option-text" style="color: {{colors.darkOlive}};">手动添加（填写详情）</view>
+      <view class="add-option {{themeStyle === 'pinkBlue' ? 'add-option-pink-blue' : ''}}" bindtap="addByUrl">
+        <view class="add-option-icon url-icon" style="{{themeStyle === 'pinkBlue' ? 'color: ' + pinkBlueColors.pinkDark + ';' : ''}}"></view>
+        <view class="add-option-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">手动添加（填写详情）</view>
       </view>
-      <view class="cancel-btn" bindtap="hideAddOptions" style="background-color: {{colors.lightTaupe}}; color: {{colors.darkOlive}}; border: 1rpx solid {{colors.darkOlive}};">取消</view>
+      <view class="cancel-btn {{themeStyle === 'pinkBlue' ? 'cancel-btn-pink-blue' : ''}}" bindtap="hideAddOptions" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}; border: 1rpx solid {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}};">取消</view>
     </view>
   </view>
-</view> 
+  <!-- 粉蓝风格底部渐变 -->
+  <!-- <view class="bottom-gradient" wx:if="{{themeStyle === 'pinkBlue'}}" style="background: linear-gradient(to right, {{pinkBlueColors.blueMedium}}, {{pinkBlueColors.pinkMedium}});"></view> -->
+</view>

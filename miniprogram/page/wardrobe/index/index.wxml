@@ -2,8 +2,7 @@
   <!-- Loading state -->
   <!-- 删除设置按钮 -->
   
-  <!-- 粉蓝风格顶部的样式调整，不显示标题 -->
-  <view class="top-gradient" wx:if="{{themeStyle === 'pinkBlue'}}"></view>
+
 
   <view class="loading-overlay" wx:if="{{isLoading}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkLight}};">
     <view class="loading-spinner" style="border-top-color: {{colors.cowhide_cocoa}}; border-color: {{colors.golden_batter}};"></view>

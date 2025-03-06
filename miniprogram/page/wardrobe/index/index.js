@@ -65,6 +65,8 @@ Page({
       this.setData({
         themeStyle: savedTheme
       });
+      // 应用主题样式
+      this.applyThemeStyle(savedTheme);
     }
     
     // 获取默认模特图片
@@ -77,6 +79,14 @@ Page({
   onShow: function() {
     // 每次页面显示时检查是否需要刷新数据
     this.checkAndRefreshData();
+    
+    // 检查并应用主题设置
+    const savedTheme = wx.getStorageSync('themeStyle');
+    if (savedTheme && savedTheme !== this.data.themeStyle) {
+      console.log('发现主题变化，从', this.data.themeStyle, '到', savedTheme);
+      this.setData({ themeStyle: savedTheme });
+      this.applyThemeStyle(savedTheme);
+    }
   },
   
   // 检查并刷新数据
@@ -767,6 +777,41 @@ Page({
 风速: ${this.data.weather.windSpeed}`,
       showCancel: false
     });
+  },
+  
+  // 应用主题样式
+  applyThemeStyle: function(themeName) {
+    console.log('应用新主题：', themeName);
+    
+    // 更新全局主题样式
+    if (themeName === 'autumn') {
+      // 设置秋季主题颜色
+      wx.setTabBarStyle({
+        backgroundColor: '#E8D1A7',
+        borderStyle: 'black',
+        color: '#442D1C',
+        selectedColor: '#74301C'
+      });
+      
+      // 更新页面样式变量
+      this.setData({
+        themeStyle: 'autumn'
+      });
+      
+    } else if (themeName === 'pinkBlue') {
+      // 设置粉蓝主题颜色
+      wx.setTabBarStyle({
+        backgroundColor: '#F9C9D6',
+        borderStyle: 'black',
+        color: '#5EA0D0',
+        selectedColor: '#D47C99'
+      });
+      
+      // 更新页面样式变量
+      this.setData({
+        themeStyle: 'pinkBlue'
+      });
+    }
   },
   
   // 导航到设置页面
