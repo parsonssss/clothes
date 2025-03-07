@@ -43,18 +43,15 @@ function loadClothes(userOpenId, selectedCategory, currentPage, pageSize) {
         
         const totalPages = Math.ceil(totalClothes / pageSize) || 1; // 计算总页数，确保至少有1页
         
-        // 查询是否需要获取所有衣物用于计算分类数量
-        let needTotalClothes = selectedCategory ? selectedCategory.id === 0 : true;
-        
-        let totalClothesPromise = Promise.resolve(null);
-        if (needTotalClothes) {
-          // 如果是查询所有衣物或需要更新计数，获取所有衣物用于分类统计
-          totalClothesPromise = db.collection('clothes')
-            .where({ _openid: userOpenId })
-            .field({ category: true }) // 只获取category字段以减小数据量
-            .get()
-            .then(totalRes => totalRes.data);
-        }
+        // 始终获取所有衣物用于计算分类数量，确保类别数量统计准确
+        const totalClothesPromise = db.collection('clothes')
+          .where({ _openid: userOpenId })
+          .field({ category: true }) // 只获取category字段以减小数据量
+          .get()
+          .then(totalRes => {
+            console.log('获取到所有衣物数据用于类别统计，数量:', totalRes.data.length);
+            return totalRes.data;
+          });
         
         // 获取当前页数据
         return db.collection('clothes')

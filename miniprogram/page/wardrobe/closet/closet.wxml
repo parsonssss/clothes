@@ -236,7 +236,12 @@
         
         <view class="form-group">
           <view class="form-label" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">类别</view>
-          <input class="form-input" value="{{editingClothing.category}}" data-field="category" bindinput="handleEditInput" style="border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};" />
+          <view class="picker-container" bindtap="showCategoryPicker" style="border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};">
+            <view class="picker-value" style="color: {{editingClothing.category ? (themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark) : '#999'}};">
+              {{editingClothing.category || '请选择类别'}}
+            </view>
+            <view class="picker-arrow" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};">▼</view>
+          </view>
         </view>
         
         <view class="form-group">
@@ -261,6 +266,30 @@
       </view>
     </view>
   </view>
+  
+  <!-- 添加类别选择器弹窗 -->
+  <view class="weui-picker-modal {{showCategoryPicker ? 'show' : ''}}" catchtap="hideCategoryPicker">
+    <view class="weui-picker-container" catchtap="preventBubble" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}};">
+      <view class="weui-picker-header" style="background-color: {{themeStyle === 'autumn' ? colors.mediumBrown : pinkBlueColors.pinkLight}};">
+        <view class="weui-picker-action cancel" bindtap="hideCategoryPicker" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">取消</view>
+        <view class="weui-picker-title" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">选择类别</view>
+        <view class="weui-picker-action confirm" bindtap="confirmCategoryPicker" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">确定</view>
+      </view>
+      <view class="weui-picker-content">
+        <view class="weui-picker-item {{tempSelectedCategory === category ? 'selected' : ''}}" 
+              wx:for="{{validCategories}}" 
+              wx:key="*this" 
+              wx:for-item="category"
+              data-category="{{category}}"
+              bindtap="selectCategory"
+              style="{{tempSelectedCategory === category ? 'background-color: ' + (themeStyle === 'autumn' ? colors.mediumBrown : pinkBlueColors.pinkLight) + ';' : ''}}">
+          <view class="weui-picker-item-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">{{category}}</view>
+          <view class="weui-picker-item-check" wx:if="{{tempSelectedCategory === category}}" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">✓</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  
   <!-- 粉蓝风格底部渐变 -->
   <!-- <view class="bottom-gradient" wx:if="{{themeStyle === 'pinkBlue'}}" style="background: linear-gradient(to right, {{pinkBlueColors.blueMedium}}, {{pinkBlueColors.pinkMedium}});"></view> -->
 </view>

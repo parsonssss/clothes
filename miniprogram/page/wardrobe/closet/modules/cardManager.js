@@ -94,6 +94,19 @@ function updateCardPositions(currentIndex, cards, categoriesLength) {
  * @return {Array} 更新后的类别数组，包含各类别的衣物数量
  */
 function calculateCategoryCounts(clothes, categories) {
+  // 检查输入数据
+  if (!clothes || !Array.isArray(clothes)) {
+    console.error('计算类别数量失败：衣物数据无效', clothes);
+    return categories; // 返回原始类别数据，避免出错
+  }
+  
+  if (!categories || !Array.isArray(categories) || categories.length === 0) {
+    console.error('计算类别数量失败：类别数据无效', categories);
+    return categories; // 返回原始类别数据，避免出错
+  }
+  
+  console.log('开始计算类别数量，衣物数量:', clothes.length, '类别数量:', categories.length);
+  
   // 复制一份类别数组，以便更新数量
   const updatedCategories = categories.map(cat => {
     return { ...cat, count: 0 };
@@ -104,13 +117,30 @@ function calculateCategoryCounts(clothes, categories) {
   
   // 计算各个类别的数量
   clothes.forEach(item => {
+    if (!item.category) {
+      console.warn('发现没有类别的衣物:', item._id || '未知ID');
+      return; // 跳过没有类别的衣物
+    }
+    
+    let found = false;
     for (let i = 1; i < updatedCategories.length; i++) {
       if (item.category === updatedCategories[i].category) {
         updatedCategories[i].count++;
+        found = true;
         break;
       }
     }
+    
+    if (!found) {
+      console.warn('发现未知类别的衣物:', item.category, item._id || '未知ID');
+    }
   });
+  
+  // 验证总数是否正确
+  const sumOfCategories = updatedCategories.slice(1).reduce((sum, cat) => sum + cat.count, 0);
+  if (sumOfCategories !== updatedCategories[0].count) {
+    console.warn('类别数量总和与总数不匹配，可能有未分类的衣物。总和:', sumOfCategories, '总数:', updatedCategories[0].count);
+  }
   
   return updatedCategories;
 }

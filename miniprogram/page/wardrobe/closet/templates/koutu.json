@@ -106,7 +106,7 @@
       "black_point": 0.15,
       "white_point": 0.99,
       "process_detail": false,
-      "prompt": "clothes",
+      "prompt": "subject",
       "device": "cuda",
       "max_megapixels": 2,
       "cache_model": false,

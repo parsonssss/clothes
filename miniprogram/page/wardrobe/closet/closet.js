@@ -74,6 +74,10 @@ Page({
     categoriesInitialized: false, // 标记类别数量已初始化
     editingClothing: null,      // 当前编辑的衣物数据
     showEditModal: false,       // 是否显示编辑衣物弹窗
+    originalClothing: null,     // 原始衣物数据用于比较
+    validCategories: ['上衣', '裤子', '裙子', '外套', '鞋子', '配饰'], // 有效的衣物类别
+    showCategoryPicker: false,  // 是否显示类别选择器
+    tempSelectedCategory: '',   // 临时选中的类别
   },
   
   // 页面加载
@@ -366,8 +370,8 @@ Page({
   },
   
   // 阻止冒泡
-  preventBubble: function(e) {
-    // 阻止事件冒泡，防止点击详情卡片时关闭详情
+  preventBubble: function() {
+    // 阻止事件冒泡
     return;
   },
   
@@ -445,14 +449,24 @@ Page({
           closetUtils.hideLoading();
         }
         
-        // 仅在首次加载或添加衣物后更新类别数量
+        // 检查是否有totalClothesData用于计算类别数量
+        if (!result.totalClothesData || result.totalClothesData.length === 0) {
+          console.warn('未获取到用于计算类别数量的数据，可能导致类别数量统计不准确');
+        }
+        
+        // 更新类别数量
         let updatedCategories = this.data.categories;
         if (forceUpdateCounts || !this.data.categoriesInitialized) {
-          console.log('更新类别数量');
+          console.log('更新类别数量，数据源长度:', (result.totalClothesData || []).length);
           updatedCategories = cardManager.calculateCategoryCounts(
             result.totalClothesData || result.clothes,
             this.data.categories
           );
+          
+          // 输出更新后的类别数量，便于调试
+          updatedCategories.forEach(cat => {
+            console.log(`类别 ${cat.name} (${cat.category || '全部'}) 数量: ${cat.count}`);
+          });
         } else {
           console.log('跳过更新类别数量');
         }
@@ -514,6 +528,34 @@ Page({
     
     // 重新加载服务器数据，不更新类别数量，也不显示加载提示
     this.loadClothes(false, false);
+  },
+  
+  // 更新当前页面显示的衣物列表
+  updateCurrentPageClothes: function() {
+    console.log('更新当前页面显示的衣物列表');
+    
+    // 计算当前页应该显示的衣物
+    const startIndex = (this.data.currentPage - 1) * this.data.pageSize;
+    const endIndex = Math.min(startIndex + this.data.pageSize, this.data.filteredClothes.length);
+    const currentPageClothes = this.data.filteredClothes.slice(startIndex, endIndex);
+    
+    // 更新总页数
+    const totalPages = Math.max(1, Math.ceil(this.data.filteredClothes.length / this.data.pageSize));
+    
+    // 如果当前页超出了总页数，调整到最后一页
+    let currentPage = this.data.currentPage;
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+    
+    console.log('分页信息 - 当前页:', currentPage, '总页数:', totalPages, '每页数量:', this.data.pageSize, '总衣物数:', this.data.filteredClothes.length);
+    
+    this.setData({
+      currentPageClothes: currentPageClothes,
+      totalPages: totalPages,
+      currentPage: currentPage,
+      totalClothes: this.data.filteredClothes.length
+    });
   },
   
   // 下载衣物图片
@@ -578,87 +620,349 @@ Page({
     // 查找当前衣物数据
     const clothing = this.data.currentPageClothes.find(item => item._id === id);
     if (!clothing) {
+      console.error('未找到衣物数据:', id);
       closetUtils.showErrorToast('未找到衣物数据');
       return;
     }
     
+    console.log('找到衣物数据:', clothing);
     // 显示编辑弹窗
     this.showEditClothingModal(clothing);
   },
   
   // 显示编辑衣物弹窗
   showEditClothingModal: function(clothing) {
-    // 设置当前编辑的衣物数据
+    console.log('显示编辑弹窗，衣物数据:', clothing);
+    // 创建深拷贝，避免直接修改原始数据
+    const editingClothing = JSON.parse(JSON.stringify(clothing));
+    const originalClothing = JSON.parse(JSON.stringify(clothing));
+    
+    // 确保价格字段为字符串类型
+    if (editingClothing.price !== undefined && editingClothing.price !== null) {
+      editingClothing.price = String(editingClothing.price);
+    }
+    
     this.setData({
-      editingClothing: clothing,
+      editingClothing: editingClothing,
+      originalClothing: originalClothing,
       showEditModal: true
     });
   },
   
   // 隐藏编辑衣物弹窗
   hideEditClothingModal: function() {
-    this.setData({
-      showEditModal: false,
-      editingClothing: null
-    });
+    console.log('尝试关闭编辑弹窗');
+    // 如果数据已修改，显示确认提示
+    if (this.hasDataChanged()) {
+      console.log('数据已修改，显示确认提示');
+      wx.showModal({
+        title: '确认关闭',
+        content: '您有未保存的修改，确定要关闭吗？',
+        success: (res) => {
+          if (res.confirm) {
+            console.log('用户确认关闭');
+            this.setData({
+              showEditModal: false,
+              editingClothing: null,
+              originalClothing: null
+            });
+          } else {
+            console.log('用户取消关闭');
+          }
+        }
+      });
+    } else {
+      console.log('无修改，直接关闭');
+      this.setData({
+        showEditModal: false,
+        editingClothing: null,
+        originalClothing: null
+      });
+    }
   },
   
-  // 处理编辑衣物表单输入
+  // 检查数据是否已修改
+  hasDataChanged: function() {
+    const original = this.data.originalClothing;
+    const current = this.data.editingClothing;
+    if (!original || !current) return false;
+    
+    // 比较关键字段
+    const fieldsToCompare = ['name', 'category', 'type', 'color', 'style', 'warmthLevel', 'scenes', 'price'];
+    for (const field of fieldsToCompare) {
+      // 特殊处理价格字段，转换为相同类型后比较
+      if (field === 'price') {
+        const originalPrice = original[field] !== undefined && original[field] !== null ? String(original[field]) : '';
+        const currentPrice = current[field] !== undefined && current[field] !== null ? String(current[field]) : '';
+        if (originalPrice !== currentPrice) {
+          console.log(`字段 ${field} 已修改:`, originalPrice, '=>', currentPrice);
+          return true;
+        }
+        continue;
+      }
+      
+      // 其他字段直接比较
+      if ((original[field] || '') !== (current[field] || '')) {
+        console.log(`字段 ${field} 已修改:`, original[field], '=>', current[field]);
+        return true;
+      }
+    }
+    return false;
+  },
+  
+  // 处理编辑表单输入变化
   handleEditInput: function(e) {
     const field = e.currentTarget.dataset.field;
     const value = e.detail.value;
-    
-    // 更新编辑中的衣物数据
+    console.log('处理输入变化:', field, value);
+
+    // 特殊处理价格字段
+    if (field === 'price') {
+      // 只允许输入数字和小数点
+      const newValue = value.replace(/[^\d.]/g, '');
+      // 确保只有一个小数点
+      const parts = newValue.split('.');
+      if (parts.length > 2) {
+        console.log('价格格式无效：多个小数点');
+        return;
+      }
+      // 限制小数位数为2位
+      if (parts[1] && parts[1].length > 2) {
+        console.log('价格格式无效：小数位数过多');
+        return;
+      }
+      this.setData({
+        [`editingClothing.${field}`]: newValue
+      });
+      return;
+    }
+
+    // 类别字段验证
+    if (field === 'category' && value && !this.data.validCategories.includes(value)) {
+      console.log('无效的类别:', value);
+      closetUtils.showErrorToast('请选择有效的类别');
+      return;
+    }
+
+    // 其他字段的处理
     this.setData({
       [`editingClothing.${field}`]: value
+    }, () => {
+      console.log('更新后的编辑数据:', this.data.editingClothing);
     });
+  },
+  
+  // 显示类别选择器
+  showCategoryPicker: function() {
+    console.log('显示类别选择器');
+    this.setData({
+      showCategoryPicker: true,
+      tempSelectedCategory: this.data.editingClothing.category || ''
+    });
+  },
+  
+  // 隐藏类别选择器
+  hideCategoryPicker: function() {
+    console.log('隐藏类别选择器');
+    this.setData({
+      showCategoryPicker: false
+    });
+  },
+  
+  // 选择类别
+  selectCategory: function(e) {
+    const category = e.currentTarget.dataset.category;
+    console.log('选择类别:', category);
+    this.setData({
+      tempSelectedCategory: category
+    });
+  },
+  
+  // 确认类别选择
+  confirmCategoryPicker: function() {
+    console.log('确认类别选择:', this.data.tempSelectedCategory);
+    
+    // 记录原始类别，用于判断是否发生变更
+    const originalCategory = this.data.editingClothing.category;
+    const newCategory = this.data.tempSelectedCategory;
+    
+    this.setData({
+      'editingClothing.category': newCategory,
+      showCategoryPicker: false
+    });
+    
+    // 如果类别发生变更，在控制台输出提示
+    if (originalCategory !== newCategory) {
+      console.log('类别已变更:', originalCategory, '=>', newCategory);
+    }
   },
   
   // 保存编辑后的衣物信息
   saveClothingEdit: function() {
     const clothing = this.data.editingClothing;
+    console.log('准备保存衣物信息:', clothing);
     
     if (!clothing || !clothing._id) {
+      console.error('无效的衣物数据');
       closetUtils.showErrorToast('无效的衣物数据');
       return;
     }
-    
+
+    // 数据验证
+    if (!clothing.name?.trim()) {
+      console.log('名称为空');
+      closetUtils.showErrorToast('请输入衣物名称');
+      return;
+    }
+
+    if (!clothing.category?.trim()) {
+      console.log('类别为空');
+      closetUtils.showErrorToast('请选择衣物类别');
+      return;
+    }
+
+    if (!this.data.validCategories.includes(clothing.category)) {
+      console.log('无效的类别:', clothing.category);
+      closetUtils.showErrorToast('请选择有效的类别');
+      return;
+    }
+
+    // 价格验证和转换
+    let price = undefined;
+    if (clothing.price) {
+      if (isNaN(Number(clothing.price))) {
+        console.log('无效的价格:', clothing.price);
+        closetUtils.showErrorToast('请输入有效的价格');
+        return;
+      }
+      price = Number(clothing.price);
+    }
+
+    console.log('开始调用云函数更新衣物信息');
     closetUtils.showLoading('保存中...');
+    
+    // 记录原始类别，用于判断是否需要更新类别数量
+    const originalCategory = this.data.originalClothing.category;
+    const newCategory = clothing.category;
+    const categoryChanged = originalCategory !== newCategory;
+    
+    console.log('类别是否变更:', categoryChanged, '原类别:', originalCategory, '新类别:', newCategory);
+    
+    // 准备要更新的数据
+    const updateData = {
+      clothingId: clothing._id,
+      name: clothing.name,
+      category: clothing.category
+    };
+    
+    // 只包含有值的字段
+    if (clothing.type) updateData.type = clothing.type;
+    if (clothing.color) updateData.color = clothing.color;
+    if (clothing.style) updateData.style = clothing.style;
+    if (clothing.warmthLevel) updateData.warmthLevel = clothing.warmthLevel;
+    if (clothing.scenes) updateData.scenes = clothing.scenes;
+    if (price !== undefined) updateData.price = price;
+    
+    console.log('发送到云函数的数据:', updateData);
     
     // 调用云函数更新衣物信息
     wx.cloud.callFunction({
       name: 'updateClothing',
-      data: {
-        clothingId: clothing._id,
-        name: clothing.name,
-        category: clothing.category,
-        type: clothing.type,
-        color: clothing.color,
-        style: clothing.style,
-        warmthLevel: clothing.warmthLevel,
-        scenes: clothing.scenes,
-        price: clothing.price
-      }
+      data: updateData
     })
     .then(res => {
+      console.log('云函数调用结果:', res);
       if (res.result && res.result.success) {
         closetUtils.hideLoading();
         closetUtils.showSuccessToast('保存成功');
         
-        // 关闭编辑弹窗
-        this.hideEditClothingModal();
+        // 更新本地数据
+        this.updateLocalClothingData(clothing._id, updateData, categoryChanged);
         
-        // 刷新衣物列表
-        this.loadClothes(true, false);
+        // 关闭编辑弹窗
+        this.setData({
+          showEditModal: false,
+          editingClothing: null,
+          originalClothing: null
+        });
       } else {
-        throw new Error(res.result.message || '保存失败');
+        throw new Error(res.result?.message || '保存失败');
       }
     })
     .catch(err => {
       console.error('保存衣物信息失败:', err);
       closetUtils.hideLoading();
-      closetUtils.showErrorToast('保存失败: ' + err.message);
+      closetUtils.showErrorToast('保存失败: ' + (err.message || '未知错误'));
     });
+  },
+  
+  // 更新本地衣物数据，避免重新加载
+  updateLocalClothingData: function(clothingId, updateData, categoryChanged = false) {
+    // 更新当前页面的衣物数据
+    const currentPageClothes = [...this.data.currentPageClothes];
+    const index = currentPageClothes.findIndex(item => item._id === clothingId);
+    
+    if (index !== -1) {
+      // 更新找到的衣物数据
+      const updatedClothing = {...currentPageClothes[index]};
+      
+      // 更新各个字段
+      if (updateData.name) updatedClothing.name = updateData.name;
+      if (updateData.category) updatedClothing.category = updateData.category;
+      if (updateData.type) updatedClothing.type = updateData.type;
+      if (updateData.color) updatedClothing.color = updateData.color;
+      if (updateData.style) updatedClothing.style = updateData.style;
+      if (updateData.warmthLevel) updatedClothing.warmthLevel = updateData.warmthLevel;
+      if (updateData.scenes) updatedClothing.scenes = updateData.scenes;
+      if (updateData.price !== undefined) updatedClothing.price = updateData.price;
+      
+      // 更新时间
+      updatedClothing.updateTime = new Date();
+      
+      // 更新数组
+      currentPageClothes[index] = updatedClothing;
+      
+      // 更新页面数据
+      this.setData({
+        currentPageClothes: currentPageClothes
+      });
+      
+      console.log('本地衣物数据已更新');
+      
+      // 如果类别发生变化，需要更新类别数量和重新过滤列表
+      if (categoryChanged) {
+        console.log('类别已变更，更新类别数量和过滤列表');
+        
+        // 强制更新类别数量
+        this.loadClothes(true, true);
+        
+        // 如果当前显示的是"全部"类别，只需要更新列表，不需要切换类别
+        if (this.data.currentCategoryFilter === 0) {
+          console.log('当前显示全部类别，只需更新列表');
+          this.filterClothesByCategory(0);
+        } 
+        // 如果当前显示的是衣物原来的类别，需要从列表中移除该衣物
+        else if (this.data.selectedCategory && 
+                 this.data.selectedCategory.category === this.data.originalClothing.category) {
+          console.log('当前显示的是衣物原类别，从列表中移除该衣物');
+          const filteredClothes = this.data.filteredClothes.filter(item => item._id !== clothingId);
+          this.setData({
+            filteredClothes: filteredClothes
+          });
+          this.updateCurrentPageClothes();
+        }
+        // 如果当前显示的是衣物新的类别，需要添加该衣物到列表中
+        else if (this.data.selectedCategory && 
+                 this.data.selectedCategory.category === updateData.category) {
+          console.log('当前显示的是衣物新类别，添加该衣物到列表中');
+          this.filterClothesByCategory(this.data.currentCategoryFilter);
+        }
+      }
+    } else {
+      console.log('未找到本地衣物数据，将重新加载');
+      // 如果找不到，重新加载数据
+      this.loadClothes(true, true);
+    }
   },
   
   // 显示添加选项
