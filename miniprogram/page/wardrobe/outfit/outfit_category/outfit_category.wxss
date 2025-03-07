@@ -1,13 +1,4 @@
-/* page/wardrobe/outfit/outfit.wxss */
-
-/* Color variables based on autumn palette */
-page {
-  --cowhide-cocoa: #442D1C;
-  --spiced-wine: #74301C;
-  --toasted-caramel: #84592B;
-  --olive-harvest: #9D9167;
-  --golden-batter: #E8D1A7;
-}
+/* page/wardrobe/outfit/outfit_category/outfit_category.wxss */
 
 /* 全局容器 */
 .container {
@@ -63,7 +54,31 @@ page {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30rpx;
-  padding: 0 20rpx;
+  padding: 0 10rpx;
+}
+
+/* 返回按钮 */
+.back-button {
+  display: flex;
+  align-items: center;
+  padding: 10rpx;
+}
+
+.back-icon {
+  width: 0;
+  height: 0;
+  border-top: 15rpx solid transparent;
+  border-bottom: 15rpx solid transparent;
+  border-right: 24rpx solid;
+  transform: rotate(180deg);
+  margin-right: 10rpx;
+}
+
+/* 类别标题 */
+.category-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
 }
 
 /* 创建搭配按钮 */
@@ -89,22 +104,15 @@ page {
   margin-right: 8rpx;
 }
 
-/* 段落标题 */
-.section-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  letter-spacing: 2rpx;
-}
-
-/* 搭配类别滚动区域 */
-.outfit-categories-scroll {
+/* 搭配列表滚动区域 */
+.outfits-scroll {
   flex: 1;
   overflow-y: auto;
   padding: 0 10rpx;
 }
 
-/* 搭配类别卡片 */
-.outfit-category-card {
+/* 搭配卡片 */
+.outfit-card {
   width: 100%;
   border-radius: 24rpx;
   padding: 30rpx;
@@ -115,100 +123,92 @@ page {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.outfit-category-card:active {
+.outfit-card:active {
   transform: scale(0.98);
   box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
-/* 类别信息区域 */
-.category-info {
+/* 搭配信息区域 */
+.outfit-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding-right: 20rpx;
 }
 
-.category-title {
+.outfit-name {
   font-size: 32rpx;
   font-weight: 600;
   margin-bottom: 10rpx;
 }
 
-.category-description {
+.outfit-date {
   font-size: 24rpx;
-  opacity: 0.9;
-  margin-bottom: 16rpx;
-}
-
-.category-count {
-  font-size: 22rpx;
   opacity: 0.8;
   margin-bottom: 20rpx;
 }
 
-/* 衣物预览滚动区域 */
-.outfit-items-preview {
-  white-space: nowrap;
-  margin-bottom: 20rpx;
-  height: 120rpx;
+/* 衣物列表 */
+.outfit-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15rpx;
 }
 
-.preview-item {
-  display: inline-block;
-  width: 100rpx;
-  height: 100rpx;
-  margin-right: 15rpx;
+.outfit-item {
+  display: flex;
+  align-items: center;
+}
+
+.item-image {
+  width: 80rpx;
+  height: 80rpx;
   border-radius: 12rpx;
-  overflow: hidden;
-}
-
-.preview-item-image {
-  width: 100%;
-  height: 100%;
+  margin-right: 15rpx;
   object-fit: contain;
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* 查看更多按钮 */
-.view-more {
+.item-name {
   font-size: 24rpx;
-  display: flex;
-  align-items: center;
-  margin-top: auto;
 }
 
-.arrow {
-  margin-left: 8rpx;
-  font-weight: bold;
-  transition: transform 0.2s ease;
-}
-
-.outfit-category-card:active .arrow {
-  transform: translateX(5rpx);
-}
-
-/* 类别预览图区域 */
-.category-preview {
-  width: 200rpx;
-  height: 260rpx;
+/* 搭配预览图区域 */
+.outfit-preview {
+  width: 180rpx;
+  height: 240rpx;
   border-radius: 16rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
 }
 
-.category-preview-image {
+.preview-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.empty-preview {
-  width: 100%;
-  height: 100%;
+/* 空状态 */
+.empty-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 24rpx;
-  text-align: center;
-  background-color: rgba(0, 0, 0, 0.1);
+  padding: 100rpx 0;
 }
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 30rpx;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  font-weight: 500;
+  margin-bottom: 15rpx;
+}
+
+.empty-subtext {
+  font-size: 26rpx;
+  opacity: 0.8;
+} 

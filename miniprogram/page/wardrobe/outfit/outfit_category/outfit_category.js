@@ -1,4 +1,4 @@
-// page/wardrobe/outfit/outfit.js
+// page/wardrobe/outfit/outfit_category/outfit_category.js
 Page({
   data: {
     // 定义颜色常量 - 秋季色彩方案
@@ -23,12 +23,10 @@ Page({
     isLoading: true,
     userOpenId: '',
     
-    // 各类别搭配数据
-    dailyOutfits: [],    // 日常穿搭
-    workOutfits: [],     // 职业穿搭
-    partyOutfits: [],    // 派对穿搭
-    sportOutfits: [],    // 运动穿搭
-    seasonalOutfits: [], // 季节穿搭
+    // 类别信息
+    category: '',         // 类别ID
+    categoryName: '',     // 类别名称
+    outfits: [],          // 该类别的搭配列表
   },
 
   onLoad: function(options) {
@@ -50,13 +48,42 @@ Page({
       });
     }
     
-    // 获取用户OpenID
-    this.getUserOpenId();
+    // 获取类别参数
+    if (options && options.category) {
+      const category = options.category;
+      
+      // 设置类别名称
+      const categoryNames = {
+        'daily': '日常穿搭',
+        'work': '职业穿搭',
+        'party': '派对穿搭',
+        'sport': '运动穿搭',
+        'seasonal': '季节穿搭'
+      };
+      
+      this.setData({
+        category: category,
+        categoryName: categoryNames[category] || '穿搭'
+      });
+      
+      // 获取用户OpenID
+      this.getUserOpenId();
+    } else {
+      wx.showToast({
+        title: '缺少类别参数',
+        icon: 'none'
+      });
+      
+      // 延迟返回
+      setTimeout(() => {
+        wx.navigateBack();
+      }, 1500);
+    }
   },
   
   onShow: function() {
-    // 如果已经有OpenID，获取衣物和搭配数据
-    if (this.data.userOpenId) {
+    // 如果已经有OpenID和类别，获取搭配数据
+    if (this.data.userOpenId && this.data.category) {
       this.getOutfitsByCategory();
     }
   },
@@ -116,7 +143,7 @@ Page({
     });
   },
   
-  // 按类别获取搭配数据
+  // 获取指定类别的搭配数据
   getOutfitsByCategory: function() {
     const that = this;
     wx.showLoading({
@@ -126,39 +153,27 @@ Page({
     const db = wx.cloud.database();
     const _ = db.command;
     
-    // 查询条件：用户的搭配
+    // 查询条件：用户的指定类别搭配
     const query = {
-      _openid: that.data.userOpenId
+      _openid: that.data.userOpenId,
+      category: that.data.category
     };
     
-    // 获取所有搭配
+    // 获取搭配
     db.collection('outfits')
       .where(query)
+      .orderBy('createTime', 'desc')
       .get()
       .then(res => {
         console.log('获取搭配成功:', res.data);
         
-        // 按类别分类搭配
-        const outfits = res.data || [];
-        
-        // 初始化各类别搭配数组
-        const dailyOutfits = outfits.filter(outfit => outfit.category === 'daily');
-        const workOutfits = outfits.filter(outfit => outfit.category === 'work');
-        const partyOutfits = outfits.filter(outfit => outfit.category === 'party');
-        const sportOutfits = outfits.filter(outfit => outfit.category === 'sport');
-        const seasonalOutfits = outfits.filter(outfit => outfit.category === 'seasonal');
-        
         // 更新数据
         that.setData({
-          dailyOutfits,
-          workOutfits,
-          partyOutfits,
-          sportOutfits,
-          seasonalOutfits,
+          outfits: res.data || [],
           isLoading: false
         });
         
-        console.log('搭配数据已分类完成');
+        console.log('搭配数据加载完成');
       })
       .catch(err => {
         console.error('获取搭配失败:', err);
@@ -176,20 +191,12 @@ Page({
     // 生成模拟搭配数据
     const simulatedOutfits = this.generateSimulatedOutfits();
     
-    // 按类别分类搭配
-    const dailyOutfits = simulatedOutfits.filter(outfit => outfit.category === 'daily');
-    const workOutfits = simulatedOutfits.filter(outfit => outfit.category === 'work');
-    const partyOutfits = simulatedOutfits.filter(outfit => outfit.category === 'party');
-    const sportOutfits = simulatedOutfits.filter(outfit => outfit.category === 'sport');
-    const seasonalOutfits = simulatedOutfits.filter(outfit => outfit.category === 'seasonal');
+    // 筛选当前类别的搭配
+    const outfits = simulatedOutfits.filter(outfit => outfit.category === this.data.category);
     
     // 更新数据
     this.setData({
-      dailyOutfits,
-      workOutfits,
-      partyOutfits,
-      sportOutfits,
-      seasonalOutfits,
+      outfits,
       isLoading: false
     });
     
@@ -286,21 +293,38 @@ Page({
     ];
   },
   
+  // 格式化日期
+  formatDate: function(timestamp) {
+    if (!timestamp) return '';
+    
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    
+    return `${year}.${month}.${day}`;
+  },
+  
+  // 返回上一页
+  goBack: function() {
+    wx.navigateBack();
+  },
+  
   // 跳转到创建搭配页面
   goToCreateOutfit: function() {
     wx.navigateTo({
-      url: './outfit_create/outfit_create'
+      url: '../outfit_create/outfit_create?category=' + this.data.category
     });
   },
   
-  // 跳转到类别详情页面
-  navigateToCategory: function(e) {
-    const category = e.currentTarget.dataset.category;
-    console.log('跳转到类别:', category);
+  // 查看搭配详情
+  viewOutfitDetail: function(e) {
+    const id = e.currentTarget.dataset.id;
+    console.log('查看搭配详情:', id);
     
-    // 跳转到类别详情页面
+    // 跳转到搭配详情页面
     wx.navigateTo({
-      url: `./outfit_category/outfit_category?category=${category}`
+      url: `../outfit_detail/outfit_detail?id=${id}`
     });
   }
-});
+}); 

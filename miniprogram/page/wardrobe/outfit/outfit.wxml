@@ -1,4 +1,4 @@
-<view class="container" style="background-color: {{colors.golden_batter}};">
+<view class="container" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkLight}};">
   <!-- Loading state -->
   <view class="loading-container" wx:if="{{isLoading}}">
     <view class="loading-spinner" style="border-top-color: {{colors.cowhide_cocoa}}; border-color: {{colors.golden_batter}};"></view>
@@ -7,74 +7,223 @@
 
   <!-- 主要内容区域 -->
   <view class="main-content" wx:if="{{!isLoading}}">
-    <!-- 今日搭配标题 -->
-    <view class="section-title" style="color: {{colors.cowhide_cocoa}};">今日搭配</view>
+    <!-- 顶部区域 -->
+    <view class="top-section">
+      <view class="section-title" style="color: {{colors.cowhide_cocoa}};">我的穿搭</view>
+      
+      <!-- 创建搭配按钮 -->
+      <view class="create-outfit-button" bindtap="goToCreateOutfit" style="background-color: {{colors.spiced_wine}}; color: {{colors.golden_batter}};">
+        <view class="plus-icon">+</view>
+        <text>创建搭配</text>
+      </view>
+    </view>
     
-    <!-- 搭配展示区域 -->
-    <view class="outfit-display">
-      <view class="outfit-card" style="background-color: {{colors.toasted_caramel}};">
-        <view class="outfit-items">
-          <view wx:for="{{currentOutfit.items}}" wx:key="id" class="outfit-item">
-            <image 
-              src="{{item.imageUrl}}" 
-              mode="aspectFill" 
-              class="item-image"
-              style="border: 2rpx solid {{colors.golden_batter}};"
-            ></image>
-            <view class="item-name" style="color: {{colors.golden_batter}};">{{item.name}}</view>
+    <!-- 搭配类别卡片区域 -->
+    <scroll-view scroll-y="true" class="outfit-categories-scroll">
+      <!-- 日常穿搭卡片 -->
+      <view class="outfit-category-card" bindtap="navigateToCategory" data-category="daily" style="background-color: {{colors.toasted_caramel}};">
+        <view class="category-info">
+          <view class="category-title" style="color: {{colors.golden_batter}};">日常穿搭</view>
+          <view class="category-description" style="color: {{colors.golden_batter}};">适合日常休闲场合的舒适搭配</view>
+          <view class="category-count" style="color: {{colors.golden_batter}};">{{dailyOutfits.length || 0}}套搭配</view>
+          
+          <!-- 衣物预览 -->
+          <scroll-view scroll-x="true" class="outfit-items-preview">
+            <block wx:for="{{dailyOutfits[0].items}}" wx:key="id" wx:if="{{dailyOutfits.length > 0}}">
+              <view class="preview-item">
+                <image 
+                  src="{{item.imageUrl}}" 
+                  mode="aspectFit" 
+                  class="preview-item-image"
+                  style="border: 2rpx solid {{colors.golden_batter}};"
+                ></image>
+              </view>
+            </block>
+          </scroll-view>
+          
+          <view class="view-more" style="color: {{colors.golden_batter}};">
+            查看更多 <text class="arrow">→</text>
           </view>
         </view>
         
         <!-- 搭配预览图 -->
-        <view class="outfit-preview">
+        <view class="category-preview">
           <image 
-            src="{{currentOutfit.previewImage}}" 
+            wx:if="{{dailyOutfits.length > 0}}"
+            src="{{dailyOutfits[0].previewImage}}" 
             mode="aspectFill" 
-            class="preview-image"
+            class="category-preview-image"
             style="border: 2rpx solid {{colors.golden_batter}};"
           ></image>
+          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
+            暂无搭配
+          </view>
         </view>
       </view>
       
-      <!-- 推荐理由 -->
-      <view class="recommendation-reason" style="background-color: {{colors.olive_harvest}}; border: 1rpx solid {{colors.olive_harvest}};">
-        <view class="reason-title" style="color: {{colors.golden_batter}};">推荐理由</view>
-        <view class="reason-content" style="color: {{colors.golden_batter}};">
-          <text>{{currentOutfit.reason}}</text>
+      <!-- 职业穿搭卡片 -->
+      <view class="outfit-category-card" bindtap="navigateToCategory" data-category="work" style="background-color: {{colors.olive_harvest}};">
+        <view class="category-info">
+          <view class="category-title" style="color: {{colors.golden_batter}};">职业穿搭</view>
+          <view class="category-description" style="color: {{colors.golden_batter}};">适合工作场合的专业搭配</view>
+          <view class="category-count" style="color: {{colors.golden_batter}};">{{workOutfits.length || 0}}套搭配</view>
+          
+          <!-- 衣物预览 -->
+          <scroll-view scroll-x="true" class="outfit-items-preview">
+            <block wx:for="{{workOutfits[0].items}}" wx:key="id" wx:if="{{workOutfits.length > 0}}">
+              <view class="preview-item">
+                <image 
+                  src="{{item.imageUrl}}" 
+                  mode="aspectFit" 
+                  class="preview-item-image"
+                  style="border: 2rpx solid {{colors.golden_batter}};"
+                ></image>
+              </view>
+            </block>
+          </scroll-view>
+          
+          <view class="view-more" style="color: {{colors.golden_batter}};">
+            查看更多 <text class="arrow">→</text>
+          </view>
         </view>
-        <view class="reason-source" style="color: {{colors.golden_batter}};">— Deepseek AI 推荐</view>
+        
+        <!-- 搭配预览图 -->
+        <view class="category-preview">
+          <image 
+            wx:if="{{workOutfits.length > 0}}"
+            src="{{workOutfits[0].previewImage}}" 
+            mode="aspectFill" 
+            class="category-preview-image"
+            style="border: 2rpx solid {{colors.golden_batter}};"
+          ></image>
+          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
+            暂无搭配
+          </view>
+        </view>
       </view>
       
-      <!-- 操作按钮 -->
-      <view class="action-buttons">
-        <view class="action-button" bindtap="refreshOutfit" style="background-color: {{colors.cowhide_cocoa}}; color: {{colors.golden_batter}};">
-          刷新搭配
+      <!-- 派对穿搭卡片 -->
+      <view class="outfit-category-card" bindtap="navigateToCategory" data-category="party" style="background-color: {{colors.spiced_wine}};">
+        <view class="category-info">
+          <view class="category-title" style="color: {{colors.golden_batter}};">派对穿搭</view>
+          <view class="category-description" style="color: {{colors.golden_batter}};">适合聚会场合的时尚搭配</view>
+          <view class="category-count" style="color: {{colors.golden_batter}};">{{partyOutfits.length || 0}}套搭配</view>
+          
+          <!-- 衣物预览 -->
+          <scroll-view scroll-x="true" class="outfit-items-preview">
+            <block wx:for="{{partyOutfits[0].items}}" wx:key="id" wx:if="{{partyOutfits.length > 0}}">
+              <view class="preview-item">
+                <image 
+                  src="{{item.imageUrl}}" 
+                  mode="aspectFit" 
+                  class="preview-item-image"
+                  style="border: 2rpx solid {{colors.golden_batter}};"
+                ></image>
+              </view>
+            </block>
+          </scroll-view>
+          
+          <view class="view-more" style="color: {{colors.golden_batter}};">
+            查看更多 <text class="arrow">→</text>
+          </view>
         </view>
-        <view class="action-button" bindtap="saveOutfit" style="background-color: {{colors.spiced_wine}}; color: {{colors.golden_batter}};">
-          保存搭配
+        
+        <!-- 搭配预览图 -->
+        <view class="category-preview">
+          <image 
+            wx:if="{{partyOutfits.length > 0}}"
+            src="{{partyOutfits[0].previewImage}}" 
+            mode="aspectFill" 
+            class="category-preview-image"
+            style="border: 2rpx solid {{colors.golden_batter}};"
+          ></image>
+          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
+            暂无搭配
+          </view>
         </view>
       </view>
-    </view>
-    
-    <!-- 历史搭配 -->
-    <view class="saved-outfits-section">
-      <view class="section-title" style="color: {{colors.cowhide_cocoa}};">保存的搭配</view>
-      <scroll-view class="saved-outfits-list" scroll-x="true">
-        <view 
-          wx:for="{{savedOutfits}}" 
-          wx:key="id"
-          class="saved-outfit-item"
-          bindtap="selectSavedOutfit"
-          data-id="{{item.id}}"
-          style="background-color: {{colors.olive_harvest}};"
-        >
-          <image src="{{item.previewImage}}" mode="aspectFill" class="saved-outfit-image"></image>
-          <view class="saved-outfit-date" style="color: {{colors.golden_batter}};">{{item.date}}</view>
+      
+      <!-- 运动穿搭卡片 -->
+      <view class="outfit-category-card" bindtap="navigateToCategory" data-category="sport" style="background-color: {{colors.cowhide_cocoa}};">
+        <view class="category-info">
+          <view class="category-title" style="color: {{colors.golden_batter}};">运动穿搭</view>
+          <view class="category-description" style="color: {{colors.golden_batter}};">适合运动场合的功能性搭配</view>
+          <view class="category-count" style="color: {{colors.golden_batter}};">{{sportOutfits.length || 0}}套搭配</view>
+          
+          <!-- 衣物预览 -->
+          <scroll-view scroll-x="true" class="outfit-items-preview">
+            <block wx:for="{{sportOutfits[0].items}}" wx:key="id" wx:if="{{sportOutfits.length > 0}}">
+              <view class="preview-item">
+                <image 
+                  src="{{item.imageUrl}}" 
+                  mode="aspectFit" 
+                  class="preview-item-image"
+                  style="border: 2rpx solid {{colors.golden_batter}};"
+                ></image>
+              </view>
+            </block>
+          </scroll-view>
+          
+          <view class="view-more" style="color: {{colors.golden_batter}};">
+            查看更多 <text class="arrow">→</text>
+          </view>
         </view>
-        <view wx:if="{{savedOutfits.length === 0}}" class="empty-saved" style="color: {{colors.cowhide_cocoa}};">
-          暂无保存的搭配
+        
+        <!-- 搭配预览图 -->
+        <view class="category-preview">
+          <image 
+            wx:if="{{sportOutfits.length > 0}}"
+            src="{{sportOutfits[0].previewImage}}" 
+            mode="aspectFill" 
+            class="category-preview-image"
+            style="border: 2rpx solid {{colors.golden_batter}};"
+          ></image>
+          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
+            暂无搭配
+          </view>
         </view>
-      </scroll-view>
-    </view>
+      </view>
+      
+      <!-- 季节穿搭卡片 -->
+      <view class="outfit-category-card" bindtap="navigateToCategory" data-category="seasonal" style="background-color: {{colors.toasted_caramel}};">
+        <view class="category-info">
+          <view class="category-title" style="color: {{colors.golden_batter}};">季节穿搭</view>
+          <view class="category-description" style="color: {{colors.golden_batter}};">适合当前季节的应季搭配</view>
+          <view class="category-count" style="color: {{colors.golden_batter}};">{{seasonalOutfits.length || 0}}套搭配</view>
+          
+          <!-- 衣物预览 -->
+          <scroll-view scroll-x="true" class="outfit-items-preview">
+            <block wx:for="{{seasonalOutfits[0].items}}" wx:key="id" wx:if="{{seasonalOutfits.length > 0}}">
+              <view class="preview-item">
+                <image 
+                  src="{{item.imageUrl}}" 
+                  mode="aspectFit" 
+                  class="preview-item-image"
+                  style="border: 2rpx solid {{colors.golden_batter}};"
+                ></image>
+              </view>
+            </block>
+          </scroll-view>
+          
+          <view class="view-more" style="color: {{colors.golden_batter}};">
+            查看更多 <text class="arrow">→</text>
+          </view>
+        </view>
+        
+        <!-- 搭配预览图 -->
+        <view class="category-preview">
+          <image 
+            wx:if="{{seasonalOutfits.length > 0}}"
+            src="{{seasonalOutfits[0].previewImage}}" 
+            mode="aspectFill" 
+            class="category-preview-image"
+            style="border: 2rpx solid {{colors.golden_batter}};"
+          ></image>
+          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
+            暂无搭配
+          </view>
+        </view>
+      </view>
+    </scroll-view>
   </view>
 </view>

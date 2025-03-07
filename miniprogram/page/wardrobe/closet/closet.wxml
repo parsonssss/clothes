@@ -190,7 +190,7 @@
       
       <!-- 添加按钮 -->
       <view class="add-button-container">
-        <view class="add-button {{themeStyle === 'pinkBlue' ? 'add-button-pink-blue' : ''}}" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}}; color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 12rpx rgba(212, 124, 153, 0.4);' : ''}}" bindtap="showAddOptions">+</view>
+        <!-- <view class="add-button {{themeStyle === 'pinkBlue' ? 'add-button-pink-blue' : ''}}" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}}; color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 12rpx rgba(212, 124, 153, 0.4);' : ''}}" bindtap="showAddOptions">+</view> -->
       </view>
     </view>
   </view>

@@ -1,0 +1,452 @@
+/* page/wardrobe/outfit/outfit_create/outfit_create.wxss */
+
+/* 全局容器 */
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 5rpx solid;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  letter-spacing: 1rpx;
+}
+
+/* 主内容区域 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* 顶部工具栏 */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  border-radius: 0 0 30rpx 30rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+/* 返回按钮 */
+.back-button {
+  display: flex;
+  align-items: center;
+  padding: 10rpx;
+}
+
+.back-icon {
+  width: 0;
+  height: 0;
+  border-top: 15rpx solid transparent;
+  border-bottom: 15rpx solid transparent;
+  border-right: 24rpx solid;
+  transform: rotate(180deg);
+  margin-right: 10rpx;
+}
+
+/* 搭配名称输入框 */
+.outfit-name-input {
+  flex: 1;
+  height: 60rpx;
+  border-bottom: 2rpx solid;
+  padding: 0 20rpx;
+  margin: 0 20rpx;
+  font-size: 28rpx;
+  background-color: transparent;
+}
+
+/* 穿搭类型选择器 */
+.category-selector {
+  display: flex;
+  align-items: center;
+  height: 60rpx;
+  border: 2rpx solid;
+  border-radius: 30rpx;
+  padding: 0 20rpx;
+  margin: 0 20rpx;
+  font-size: 26rpx;
+  position: relative;
+}
+
+.selected-category {
+  display: flex;
+  align-items: center;
+}
+
+.category-icon {
+  margin-right: 10rpx;
+  font-size: 28rpx;
+}
+
+.dropdown-arrow {
+  width: 0;
+  height: 0;
+  border-left: 8rpx solid transparent;
+  border-right: 8rpx solid transparent;
+  border-top: 8rpx solid;
+  margin-left: 10rpx;
+}
+
+/* 类型选择下拉菜单 */
+.category-dropdown {
+  position: absolute;
+  top: 100rpx;
+  right: 120rpx;
+  width: 240rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.category-option {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  transition: background-color 0.2s ease;
+}
+
+.category-option.active {
+  font-weight: bold;
+}
+
+.option-icon {
+  margin-right: 16rpx;
+  font-size: 28rpx;
+}
+
+/* 保存按钮 */
+.save-button {
+  padding: 12rpx 30rpx;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 中间内容区域 */
+.content-section {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 左侧衣柜面板 */
+.closet-panel {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 类别筛选 */
+.category-filter {
+  padding: 20rpx 10rpx;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.categories-scroll {
+  white-space: nowrap;
+  width: 100%;
+  padding: 5rpx 0;
+}
+
+.category-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15rpx 10rpx;
+  margin: 0 8rpx;
+  border-radius: 16rpx;
+  font-size: 24rpx;
+  transition: all 0.3s ease;
+  position: relative;
+  width: 80rpx;
+  height: 100rpx;
+  box-sizing: border-box;
+}
+
+.category-item:first-child {
+  margin-left: 15rpx;
+}
+
+.category-item:last-child {
+  margin-right: 15rpx;
+}
+
+.category-item.active {
+  font-weight: 500;
+  transform: scale(1.05);
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
+}
+
+.category-text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-count {
+  margin-left: 5rpx;
+  font-size: 20rpx;
+  opacity: 0.8;
+}
+
+/* 衣物列表 */
+.clothes-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.clothes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10rpx;
+}
+
+.clothes-item {
+  width: calc(50% - 20rpx);
+  margin: 10rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.clothes-item-hover {
+  transform: scale(0.97);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+}
+
+.clothes-image {
+  width: 90%;
+  height: 160rpx;
+  object-fit: contain;
+  margin: 15rpx 0;
+}
+
+.clothes-name {
+  font-size: 24rpx;
+  padding: 10rpx;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.empty-hint {
+  width: 100%;
+  padding: 60rpx 0;
+  text-align: center;
+  font-size: 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 右侧画布面板 */
+.canvas-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+.canvas-container {
+  position: relative;
+  box-shadow: 0 10rpx 20rpx rgba(0, 0, 0, 0.1);
+  margin-bottom: 30rpx;
+  overflow: hidden;
+}
+
+/* 画布项目 */
+.canvas-item {
+  position: absolute;
+  cursor: move;
+  border: 1px solid transparent;
+  transition: border-color 0.2s ease;
+  touch-action: none;
+  box-sizing: border-box;
+}
+
+.canvas-item.active {
+  border: 2px dashed #007aff;
+  box-shadow: 0 0 10rpx rgba(0, 122, 255, 0.5);
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none; /* 防止图片干扰触摸事件 */
+}
+
+/* 控制按钮 */
+.control-btn {
+  position: absolute;
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  z-index: 2000; /* 确保按钮在最上层，高于画布项目 */
+  transition: all 0.2s ease;
+  /* 转换rpx到px，确保位置计算正确 */
+  transform: translate(-50%, -50%);
+}
+
+.control-btn:active {
+  transform: translate(-50%, -50%) scale(0.9);
+  opacity: 0.8;
+}
+
+.delete-btn {
+  color: #ff3b30;
+  font-size: 36rpx;
+  background-color: #fff0f0;
+  border: 2rpx solid #ffcccc;
+}
+
+.size-increase-btn {
+  color: #007aff;
+  background-color: #f0f8ff;
+  border: 2rpx solid #ccddff;
+}
+
+.size-decrease-btn {
+  color: #007aff;
+  background-color: #f0f8ff;
+  border: 2rpx solid #ccddff;
+}
+
+.rotate-cw-btn {
+  color: #007aff;
+  background-color: #f0f8ff;
+  border: 2rpx solid #ccddff;
+}
+
+.rotate-ccw-btn {
+  color: #007aff;
+  background-color: #f0f8ff;
+  border: 2rpx solid #ccddff;
+}
+
+.layer-up-btn {
+  color: #34c759;
+  background-color: #f0fff0;
+  border: 2rpx solid #ccffcc;
+  font-size: 36rpx;
+}
+
+.layer-down-btn {
+  color: #34c759;
+  background-color: #f0fff0;
+  border: 2rpx solid #ccffcc;
+  font-size: 36rpx;
+}
+
+/* 画布提示 */
+.canvas-hint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 28rpx;
+  text-align: center;
+  line-height: 1.6;
+  opacity: 0.6;
+}
+
+/* 画布操作按钮 */
+.canvas-action-button {
+  padding: 16rpx 60rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.canvas-action-button:active {
+  opacity: 0.9;
+  transform: scale(0.97);
+}
+
+/* 图层信息 */
+.layer-info {
+  position: absolute;
+  top: 10rpx;
+  left: 10rpx;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4rpx 10rpx;
+  border-radius: 10rpx;
+  font-size: 20rpx;
+  z-index: 10;
+}
+
+/* 遮罩层 */
+.mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 90;
+}

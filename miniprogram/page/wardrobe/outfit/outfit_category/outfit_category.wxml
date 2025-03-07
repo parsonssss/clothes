@@ -1,0 +1,71 @@
+<view class="container" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkLight}};">
+  <!-- Loading state -->
+  <view class="loading-container" wx:if="{{isLoading}}">
+    <view class="loading-spinner" style="border-top-color: {{colors.cowhide_cocoa}}; border-color: {{colors.golden_batter}};"></view>
+    <view class="loading-text" style="color: {{colors.cowhide_cocoa}};">加载中...</view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content" wx:if="{{!isLoading}}">
+    <!-- 顶部区域 -->
+    <view class="top-section">
+      <view class="back-button" bindtap="goBack">
+        <view class="back-icon" style="border-right-color: {{colors.cowhide_cocoa}};"></view>
+        <text style="color: {{colors.cowhide_cocoa}};">返回</text>
+      </view>
+      
+      <view class="category-title" style="color: {{colors.cowhide_cocoa}};">{{categoryName}}</view>
+      
+      <!-- 创建搭配按钮 -->
+      <view class="create-outfit-button" bindtap="goToCreateOutfit" style="background-color: {{colors.spiced_wine}}; color: {{colors.golden_batter}};">
+        <view class="plus-icon">+</view>
+        <text>创建</text>
+      </view>
+    </view>
+    
+    <!-- 搭配列表 -->
+    <scroll-view scroll-y="true" class="outfits-scroll">
+      <block wx:for="{{outfits}}" wx:key="id">
+        <view class="outfit-card" bindtap="viewOutfitDetail" data-id="{{item.id}}" style="background-color: {{index % 2 === 0 ? colors.toasted_caramel : colors.olive_harvest}};">
+          <!-- 搭配信息 -->
+          <view class="outfit-info">
+            <view class="outfit-name" style="color: {{colors.golden_batter}};">{{item.name || '未命名搭配'}}</view>
+            <view class="outfit-date" style="color: {{colors.golden_batter}};">{{item.createTime ? formatDate(item.createTime) : '未知日期'}}</view>
+            
+            <!-- 衣物列表 -->
+            <view class="outfit-items">
+              <block wx:for="{{item.items}}" wx:for-item="clothingItem" wx:key="id">
+                <view class="outfit-item">
+                  <image 
+                    src="{{clothingItem.imageUrl}}" 
+                    mode="aspectFit" 
+                    class="item-image"
+                    style="border: 2rpx solid {{colors.golden_batter}};"
+                  ></image>
+                  <view class="item-name" style="color: {{colors.golden_batter}};">{{clothingItem.name}}</view>
+                </view>
+              </block>
+            </view>
+          </view>
+          
+          <!-- 搭配预览图 -->
+          <view class="outfit-preview">
+            <image 
+              src="{{item.previewImage}}" 
+              mode="aspectFill" 
+              class="preview-image"
+              style="border: 2rpx solid {{colors.golden_batter}};"
+            ></image>
+          </view>
+        </view>
+      </block>
+      
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{outfits.length === 0}}">
+        <view class="empty-icon">🧥</view>
+        <view class="empty-text" style="color: {{colors.cowhide_cocoa}};">暂无{{categoryName}}搭配</view>
+        <view class="empty-subtext" style="color: {{colors.cowhide_cocoa}};">点击右上角"创建"按钮添加新搭配</view>
+      </view>
+    </scroll-view>
+  </view>
+</view> 

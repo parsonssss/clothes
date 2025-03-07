@@ -4,6 +4,8 @@
     "page/wardrobe/closet/closet",
     "page/wardrobe/detail/detail",
     "page/wardrobe/add/add",
+    "page/wardrobe/outfit/outfit",
+    "page/wardrobe/outfit/outfit_create/outfit_create",
     "page/settings/settings"
   ],
   "subpackages": [
@@ -208,6 +210,12 @@
         "iconPath": "image/wardrobe-icon.png",
         "selectedIconPath": "image/wardrobe-icon-HL.png",
         "text": "衣柜"
+      },
+      {
+        "pagePath": "page/wardrobe/outfit/outfit",
+        "iconPath": "image/outfit-icon.png",
+        "selectedIconPath": "image/outfit-icon-HL.png",
+        "text": "穿搭"
       },
       {
         "pagePath": "page/settings/settings",
