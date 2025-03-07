@@ -17,11 +17,25 @@ function addByCamera(onSuccess, onError) {
     count: 1,
     mediaType: ['image'],
     sourceType: ['camera'],
+    sizeType: ['compressed'], // 优先使用压缩图片，减小文件大小
     success: (res) => {
       closetUtils.showLoading('处理中...');
       
-      const tempFilePath = res.tempFiles[0].tempFilePath;
-      console.log('拍摄的图片:', tempFilePath);
+      const tempFile = res.tempFiles[0];
+      const tempFilePath = tempFile.tempFilePath;
+      const fileSize = tempFile.size; // 获取文件大小（单位：字节）
+      
+      console.log('拍摄的图片:', tempFilePath, '大小:', fileSize, '字节');
+      
+      // 设置最大文件大小限制（10MB）
+      const MAX_FILE_SIZE = 10 * 1024 * 1024;
+      
+      if (fileSize > MAX_FILE_SIZE) {
+        closetUtils.hideLoading();
+        closetUtils.showErrorToast('图片过大，请控制在10MB以内');
+        if (onError) onError(new Error('图片过大，请控制在10MB以内'));
+        return;
+      }
       
       // 上传图片到云存储
       onSuccess(tempFilePath);
@@ -44,11 +58,25 @@ function addByAlbum(onSuccess, onError) {
     count: 1,
     mediaType: ['image'],
     sourceType: ['album'],
+    sizeType: ['compressed'], // 优先使用压缩图片，减小文件大小
     success: (res) => {
       closetUtils.showLoading('处理中...');
       
-      const tempFilePath = res.tempFiles[0].tempFilePath;
-      console.log('选择的图片:', tempFilePath);
+      const tempFile = res.tempFiles[0];
+      const tempFilePath = tempFile.tempFilePath;
+      const fileSize = tempFile.size; // 获取文件大小（单位：字节）
+      
+      console.log('选择的图片:', tempFilePath, '大小:', fileSize, '字节');
+      
+      // 设置最大文件大小限制（10MB）
+      const MAX_FILE_SIZE = 10 * 1024 * 1024;
+      
+      if (fileSize > MAX_FILE_SIZE) {
+        closetUtils.hideLoading();
+        closetUtils.showErrorToast('图片过大，请控制在10MB以内');
+        if (onError) onError(new Error('图片过大，请控制在10MB以内'));
+        return;
+      }
       
       // 上传图片到云存储
       onSuccess(tempFilePath);

@@ -29,7 +29,7 @@ exports.main = async (event, context) => {
         content: [
           {
             type: "text",
-            text: "识别图片中的衣物，将衣服的信息以json格式返回(仅仅输出json结果即可，不要输出任何解释，key为clothing_type，color，style，warmth_level，sceneApplicability） 要求识别衣服的信息：\n** **\n1. 衣服类型（上衣，下衣，外套，饰品，鞋子）\n2. 衣服颜色\n3. 衣服风格\n4. 衣服的保暖程度（等级为1-5，根据衣服类型打分）\n5. 场景适用性（工作，休闲等）。当识别到不是衣服时，用诙谐的方式对其进行分类，比如上传的是狗，可以说是狗皮大衣，猫皮包包等等，可以发挥你的想象力"
+            text: "识别图片中的衣物，将衣服的信息以json格式返回(仅仅输出json结果即可，不要输出任何解释，key为clothing_type，color，style，warmth_level，sceneApplicability） 要求识别衣服的信息：\n** **\n1. 衣服类型（上衣，下衣，外套，饰品，鞋子）\n2. 衣服颜色\n3. 衣服风格\n4. 衣服的保暖程度（等级为1-5，根据衣服类型打分）\n5. 场景适用性（工作，休闲等）。当识别到不是衣服时，用诙谐的方式对其进行分类，比如上传的是狗，可以把名字（name）设置为狗皮大衣，猫皮包包等等，可以发挥你的想象力"
           },
           {
             type: "image_url",

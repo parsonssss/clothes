@@ -651,34 +651,12 @@ Page({
   
   // 隐藏编辑衣物弹窗
   hideEditClothingModal: function() {
-    console.log('尝试关闭编辑弹窗');
-    // 如果数据已修改，显示确认提示
-    if (this.hasDataChanged()) {
-      console.log('数据已修改，显示确认提示');
-      wx.showModal({
-        title: '确认关闭',
-        content: '您有未保存的修改，确定要关闭吗？',
-        success: (res) => {
-          if (res.confirm) {
-            console.log('用户确认关闭');
-            this.setData({
-              showEditModal: false,
-              editingClothing: null,
-              originalClothing: null
-            });
-          } else {
-            console.log('用户取消关闭');
-          }
-        }
-      });
-    } else {
-      console.log('无修改，直接关闭');
-      this.setData({
-        showEditModal: false,
-        editingClothing: null,
-        originalClothing: null
-      });
-    }
+    console.log('关闭编辑弹窗');
+    this.setData({
+      showEditModal: false,
+      editingClothing: null,
+      originalClothing: null
+    });
   },
   
   // 检查数据是否已修改
@@ -896,6 +874,29 @@ Page({
     });
   },
   
+  // 删除当前正在编辑的衣物
+  deleteCurrentClothing: function() {
+    const clothing = this.data.editingClothing;
+    
+    if (!clothing || !clothing._id) {
+      console.error('无效的衣物数据，无法删除');
+      closetUtils.showErrorToast('无法删除：无效的衣物数据');
+      return;
+    }
+    
+    console.log('准备删除当前编辑的衣物:', clothing._id);
+    
+    // 关闭编辑弹窗
+    this.setData({
+      showEditModal: false,
+      editingClothing: null,
+      originalClothing: null
+    });
+    
+    // 调用删除函数
+    this.deleteClothing(clothing._id);
+  },
+  
   // 更新本地衣物数据，避免重新加载
   updateLocalClothingData: function(clothingId, updateData, categoryChanged = false) {
     // 更新当前页面的衣物数据
@@ -979,23 +980,36 @@ Page({
     });
   },
   
-  // 通过拍照添加衣物
+  // 通过相机添加衣物
   addByCamera: function() {
     this.hideAddOptions();
     
-    // 调用相机API拍照
+    // 拍照
     wx.chooseMedia({
       count: 1,
       mediaType: ['image'],
       sourceType: ['camera'],
+      sizeType: ['compressed'], // 优先使用压缩图片，减小文件大小
       success: (res) => {
         closetUtils.showLoading('处理中...');
         
-        const tempFilePath = res.tempFiles[0].tempFilePath;
-        console.log('拍摄的图片:', tempFilePath);
+        const tempFile = res.tempFiles[0];
+        const tempFilePath = tempFile.tempFilePath;
+        const fileSize = tempFile.size; // 获取文件大小（单位：字节）
         
-        // 上传图片到云存储
-        this.uploadAndProcessImage(tempFilePath);
+        console.log('拍摄的图片:', tempFilePath, '大小:', fileSize, '字节');
+        
+        // 设置最大文件大小限制（10MB）
+        const MAX_FILE_SIZE = 10 * 1024 * 1024;
+        
+        if (fileSize > MAX_FILE_SIZE) {
+          closetUtils.hideLoading();
+          closetUtils.showErrorToast('图片过大，请控制在10MB以内');
+          return;
+        }
+        
+        // 上传图片到云存储（不进行抠图）
+        this.uploadAndAnalyzeImage(tempFilePath);
       },
       fail: (err) => {
         console.error('拍照失败:', err);
@@ -1013,14 +1027,27 @@ Page({
       count: 1,
       mediaType: ['image'],
       sourceType: ['album'],
+      sizeType: ['compressed'], // 优先使用压缩图片，减小文件大小
       success: (res) => {
         closetUtils.showLoading('处理中...');
         
-        const tempFilePath = res.tempFiles[0].tempFilePath;
-        console.log('选择的图片:', tempFilePath);
+        const tempFile = res.tempFiles[0];
+        const tempFilePath = tempFile.tempFilePath;
+        const fileSize = tempFile.size; // 获取文件大小（单位：字节）
         
-        // 上传图片到云存储
-        this.uploadAndProcessImage(tempFilePath);
+        console.log('选择的图片:', tempFilePath, '大小:', fileSize, '字节');
+        
+        // 设置最大文件大小限制（10MB）
+        const MAX_FILE_SIZE = 10 * 1024 * 1024;
+        
+        if (fileSize > MAX_FILE_SIZE) {
+          closetUtils.hideLoading();
+          closetUtils.showErrorToast('图片过大，请控制在10MB以内');
+          return;
+        }
+        
+        // 上传图片到云存储（不进行抠图）
+        this.uploadAndAnalyzeImage(tempFilePath);
       },
       fail: (err) => {
         console.error('选择图片失败:', err);
@@ -1057,8 +1084,8 @@ Page({
             closetUtils.showErrorToast('处理超时，请重试');
           }, 3600000); // 1小时全局超时
           
-          // 使用异步方法处理图片，而不是旧的方法
-          this.processImageWithKoutuAsync(imageUrl)
+          // 直接分析URL图片，不进行抠图
+          this.analyzeUrlImageAsync(imageUrl)
             .then(() => {
               // 成功完成，清除全局超时
               clearTimeout(globalTimeout);
@@ -1075,6 +1102,68 @@ Page({
             });
         }
       }
+    });
+  },
+  
+  // 直接分析URL图片（不进行抠图）
+  analyzeUrlImageAsync: function(imageUrl) {
+    console.log('开始分析URL图片...');
+    
+    // 添加超时处理
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('分析URL图片超时'));
+      }, 3600000); // 1小时超时
+    });
+    
+    // 分析图片，添加超时处理
+    return Promise.race([
+      imageProcessor.analyzeClothing(imageUrl)
+        .then(analysisData => {
+          if (!analysisData) {
+            throw new Error('分析结果为空');
+          }
+          console.log('URL衣物分析成功:', analysisData);
+          
+          // 创建一个简单的处理后图片数据对象，使用原始图片URL
+          const processedImageData = {
+            fileID: '',  // 不保存处理后的图片
+            tempImageUrl: imageUrl  // 使用原始图片URL
+          };
+          
+          // 保存到数据库
+          return dataManager.saveClothingToDatabase(
+            '',  // URL图片没有fileID
+            imageUrl,
+            analysisData,
+            this.data.userOpenId,
+            processedImageData
+          );
+        }),
+      timeoutPromise
+    ])
+    .then(res => {
+      if (!res) {
+        throw new Error('保存到数据库失败');
+      }
+      console.log('保存URL衣物成功:', res);
+      closetUtils.hideLoading();
+      this.setData({
+        isUploading: false
+      });
+      closetUtils.showSuccessToast('添加衣物成功');
+      
+      // 强制刷新临时URL缓存，确保能立即看到新上传的衣服
+      this.forceRefreshImageURLs();
+      
+      // 更新衣物列表，并强制更新类别数量
+      this.loadClothes(true, true);
+      return res;
+    })
+    .catch(err => {
+      console.error('分析或保存URL衣物失败:', err);
+      this.handleAnalysisError();
+      return Promise.reject(err);
     });
   },
   
@@ -1304,34 +1393,71 @@ Page({
   
   // 删除衣物
   deleteClothing: function(id) {
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这件衣物吗？',
-      success: res => {
-        if (res.confirm) {
-          wx.cloud.callFunction({
-            name: 'deleteClothing',
-            data: {
-              clothingId: id
-            }
-          })
-          .then(res => {
-            console.log('删除衣物成功:', res);
-            closetUtils.showSuccessToast('删除成功');
-            
-            // 强制刷新临时URL缓存，确保衣柜显示正确
-            this.forceRefreshImageURLs();
-            
-            // 更新衣物列表，并强制更新类别数量
-            this.loadClothes(true, true);
-          })
-          .catch(err => {
-            console.error('删除衣物失败:', err);
-            closetUtils.showErrorToast('删除失败');
-          });
+    // 如果已经显示了确认对话框，则直接执行删除操作
+    if (this.data.isLoading) {
+      wx.cloud.callFunction({
+        name: 'deleteClothing',
+        data: {
+          clothingId: id
         }
-      }
-    });
+      })
+      .then(res => {
+        console.log('删除衣物成功:', res);
+        closetUtils.hideLoading();
+        closetUtils.showSuccessToast('删除成功');
+        
+        // 重置加载状态
+        this.setData({
+          isLoading: false
+        });
+        
+        // 如果当前正在显示详情视图，关闭它
+        if (this.data.selectedCategory) {
+          // 从当前列表中移除已删除的衣物
+          const filteredClothes = this.data.filteredClothes.filter(item => item._id !== id);
+          this.setData({
+            filteredClothes: filteredClothes
+          });
+          
+          // 更新当前页面显示的衣物
+          this.updateCurrentPageClothes();
+        }
+        
+        // 强制刷新临时URL缓存，确保衣柜显示正确
+        this.forceRefreshImageURLs();
+        
+        // 更新衣物列表，并强制更新类别数量
+        this.loadClothes(true, true);
+      })
+      .catch(err => {
+        console.error('删除衣物失败:', err);
+        closetUtils.hideLoading();
+        closetUtils.showErrorToast('删除失败: ' + (err.message || '未知错误'));
+        
+        // 重置加载状态
+        this.setData({
+          isLoading: false
+        });
+      });
+    } else {
+      // 显示确认对话框
+      wx.showModal({
+        title: '确认删除',
+        content: '确定要删除这件衣物吗？',
+        confirmColor: '#e74c3c',
+        success: res => {
+          if (res.confirm) {
+            closetUtils.showLoading('删除中...');
+            this.setData({
+              isLoading: true
+            });
+            
+            // 递归调用自身，执行实际删除操作
+            this.deleteClothing(id);
+          }
+        }
+      });
+    }
   },
   
   // 设置模板更新定时器
@@ -1485,5 +1611,119 @@ Page({
         console.error('分析或保存失败:', err);
         this.handleAnalysisError();
       });
+  },
+  
+  // 上传并处理图片（不进行抠图）
+  uploadAndAnalyzeImage: function(filePath) {
+    this.setData({
+      isUploading: true
+    });
+    
+    // 添加全局超时处理
+    const globalTimeout = setTimeout(() => {
+      console.error('上传处理全局超时');
+      closetUtils.hideLoading();
+      this.setData({
+        isUploading: false
+      });
+      closetUtils.showErrorToast('上传处理超时，请重试');
+    }, 3600000); // 1小时全局超时
+    
+    console.log('开始上传图片（不进行抠图）...');
+    
+    // 上传图片到云存储
+    imageProcessor.uploadImageToCloud(filePath)
+      .then(fileID => {
+        // 获取临时访问链接
+        return imageProcessor.getTempFileURL(fileID)
+          .then(tempFileURL => {
+            return {
+              fileID: fileID,
+              tempFileURL: tempFileURL
+            };
+          });
+      })
+      .then(imageData => {
+        console.log('图片上传成功，开始分析...');
+        
+        // 直接分析原始图片，跳过抠图步骤
+        return this.analyzeOriginalImageAsync(imageData.tempFileURL, imageData.fileID);
+      })
+      .then(() => {
+        // 成功完成，清除全局超时
+        clearTimeout(globalTimeout);
+      })
+      .catch(err => {
+        // 清除全局超时
+        clearTimeout(globalTimeout);
+        console.error('上传或分析失败:', err);
+        closetUtils.hideLoading();
+        this.setData({
+          isUploading: false
+        });
+        closetUtils.showErrorToast('处理失败: ' + (err.message || '未知错误'));
+      });
+  },
+  
+  // 直接分析原始图片（不进行抠图）
+  analyzeOriginalImageAsync: function(imageUrl, fileID) {
+    console.log('开始分析原始图片...');
+    
+    // 添加超时处理
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('分析图片超时'));
+      }, 3600000); // 1小时超时
+    });
+    
+    // 分析图片，添加超时处理
+    return Promise.race([
+      imageProcessor.analyzeClothing(imageUrl)
+        .then(analysisData => {
+          if (!analysisData) {
+            throw new Error('分析结果为空');
+          }
+          console.log('衣物分析成功:', analysisData);
+          
+          // 创建一个简单的处理后图片数据对象，使用原始图片URL
+          const processedImageData = {
+            fileID: '',  // 不保存处理后的图片
+            tempImageUrl: imageUrl  // 使用原始图片URL
+          };
+          
+          // 保存到数据库
+          return dataManager.saveClothingToDatabase(
+            fileID,
+            imageUrl,
+            analysisData,
+            this.data.userOpenId,
+            processedImageData
+          );
+        }),
+      timeoutPromise
+    ])
+    .then(res => {
+      if (!res) {
+        throw new Error('保存到数据库失败');
+      }
+      console.log('保存衣物成功:', res);
+      closetUtils.hideLoading();
+      this.setData({
+        isUploading: false
+      });
+      closetUtils.showSuccessToast('添加衣物成功');
+      
+      // 强制刷新临时URL缓存，确保能立即看到新上传的衣服
+      this.forceRefreshImageURLs();
+      
+      // 更新衣物列表，并强制更新类别数量
+      this.loadClothes(true, true);
+      return res;
+    })
+    .catch(err => {
+      console.error('分析或保存失败:', err);
+      this.handleAnalysisError();
+      return Promise.reject(err);
+    });
   },
 });

@@ -6,18 +6,42 @@
 // 上传图片到云存储
 function uploadImageToCloud(filePath) {
   return new Promise((resolve, reject) => {
-    const cloudPath = `clothing_images/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
-    
-    wx.cloud.uploadFile({
-      cloudPath: cloudPath,
+    // 获取文件信息，检查文件大小
+    wx.getFileInfo({
       filePath: filePath,
-      success: (res) => {
-        console.log('上传成功:', res);
-        resolve(res.fileID);
+      success: (fileInfo) => {
+        const fileSize = fileInfo.size;
+        console.log('上传的图片大小:', fileSize, '字节');
+        
+        // 设置最大文件大小限制（10MB）
+        const MAX_FILE_SIZE = 10 * 1024 * 1024;
+        
+        if (fileSize > MAX_FILE_SIZE) {
+          console.error('图片过大，超过10MB限制');
+          reject(new Error('图片过大，请控制在10MB以内'));
+          return;
+        }
+        
+        // 生成随机文件名
+        const cloudPath = `clothing_images/${Date.now()}_${Math.random().toString(36).substring(2, 10)}.png`;
+        
+        // 上传到云存储
+        wx.cloud.uploadFile({
+          cloudPath: cloudPath,
+          filePath: filePath,
+          success: (res) => {
+            console.log('上传成功:', res);
+            resolve(res.fileID);
+          },
+          fail: (err) => {
+            console.error('上传失败:', err);
+            reject(err);
+          }
+        });
       },
       fail: (err) => {
-        console.error('上传失败:', err);
-        reject(err);
+        console.error('获取文件信息失败:', err);
+        reject(new Error('获取文件信息失败: ' + err.errMsg));
       }
     });
   });
@@ -233,17 +257,13 @@ function checkKoutuResult(promptId) {
   });
 }
 
-// 将抠图后的图片保存到云存储
+/**
+ * 将处理后的图片保存到云存储
+ * @param {String} imageUrl - 图片URL
+ * @return {Promise} 包含fileID和tempImageUrl的Promise
+ */
 function saveProcessedImageToCloud(imageUrl) {
   return new Promise((resolve, reject) => {
-    if (!imageUrl) {
-      console.error('保存抠图图片失败: URL为空');
-      reject(new Error('抠图图片URL为空'));
-      return;
-    }
-    
-    console.log('开始保存抠图后图片:', imageUrl);
-    
     // 添加下载超时
     const downloadTimeout = setTimeout(() => {
       console.error('下载抠图图片超时');
@@ -264,60 +284,152 @@ function saveProcessedImageToCloud(imageUrl) {
         if (res.statusCode === 200) {
           const tempFilePath = res.tempFilePath;
           
-          // 添加上传超时
-          const uploadTimeout = setTimeout(() => {
-            console.error('上传抠图图片到云存储超时');
-            // 返回原始URL，确保流程可以继续
-            resolve({
-              fileID: '',
-              tempImageUrl: imageUrl,
-              error: '上传超时'
-            });
-          }, 3600000); // 1小时超时
-          
-          // 上传到云存储
-          const cloudPath = `processed_images/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;
-          
-          wx.cloud.uploadFile({
-            cloudPath: cloudPath,
+          // 获取文件信息，检查文件大小
+          wx.getFileInfo({
             filePath: tempFilePath,
-            success: (uploadRes) => {
-              clearTimeout(uploadTimeout);
-              console.log('抠图后图片上传成功:', uploadRes);
-              resolve({
-                fileID: uploadRes.fileID,
-                tempImageUrl: imageUrl
+            success: (fileInfo) => {
+              const fileSize = fileInfo.size;
+              console.log('下载的图片大小:', fileSize, '字节');
+              
+              // 设置最大文件大小限制（10MB）
+              const MAX_FILE_SIZE = 10 * 1024 * 1024;
+              
+              if (fileSize > MAX_FILE_SIZE) {
+                console.error('图片过大，超过10MB限制');
+                resolve({
+                  fileID: '',
+                  tempImageUrl: imageUrl,
+                  error: '图片过大，请控制在10MB以内'
+                });
+                return;
+              }
+              
+              // 添加上传超时
+              const uploadTimeout = setTimeout(() => {
+                console.error('上传抠图图片到云存储超时');
+                // 返回原始URL，确保流程可以继续
+                resolve({
+                  fileID: '',
+                  tempImageUrl: imageUrl,
+                  error: '上传超时'
+                });
+              }, 3600000); // 1小时超时
+              
+              // 上传到云存储
+              const cloudPath = `processed_images/${Date.now()}_${Math.random().toString(36).substring(2, 10)}.png`;
+              
+              wx.cloud.uploadFile({
+                cloudPath: cloudPath,
+                filePath: tempFilePath,
+                success: res => {
+                  clearTimeout(uploadTimeout);
+                  const fileID = res.fileID;
+                  console.log('上传抠图图片到云存储成功:', fileID);
+                  
+                  // 获取临时访问URL
+                  getTempFileURL(fileID)
+                    .then(tempImageUrl => {
+                      resolve({
+                        fileID: fileID,
+                        tempImageUrl: tempImageUrl
+                      });
+                    })
+                    .catch(err => {
+                      console.error('获取抠图图片临时URL失败:', err);
+                      // 如果获取临时URL失败，仍然返回fileID，但使用原始URL作为临时URL
+                      resolve({
+                        fileID: fileID,
+                        tempImageUrl: imageUrl,
+                        error: '获取临时URL失败'
+                      });
+                    });
+                },
+                fail: err => {
+                  clearTimeout(uploadTimeout);
+                  console.error('上传抠图图片到云存储失败:', err);
+                  // 返回原始URL，确保流程可以继续
+                  resolve({
+                    fileID: '',
+                    tempImageUrl: imageUrl,
+                    error: '上传失败'
+                  });
+                }
               });
             },
             fail: (err) => {
-              clearTimeout(uploadTimeout);
-              console.error('抠图后图片上传失败:', err);
-              // 即使上传失败，也返回原始URL，确保流程可以继续
-              resolve({
-                fileID: '',
-                tempImageUrl: imageUrl,
-                error: err.message || '上传失败'
+              console.error('获取文件信息失败:', err);
+              // 如果获取文件信息失败，继续上传流程
+              // 添加上传超时
+              const uploadTimeout = setTimeout(() => {
+                console.error('上传抠图图片到云存储超时');
+                // 返回原始URL，确保流程可以继续
+                resolve({
+                  fileID: '',
+                  tempImageUrl: imageUrl,
+                  error: '上传超时'
+                });
+              }, 3600000); // 1小时超时
+              
+              // 上传到云存储
+              const cloudPath = `processed_images/${Date.now()}_${Math.random().toString(36).substring(2, 10)}.png`;
+              
+              wx.cloud.uploadFile({
+                cloudPath: cloudPath,
+                filePath: tempFilePath,
+                success: res => {
+                  clearTimeout(uploadTimeout);
+                  const fileID = res.fileID;
+                  console.log('上传抠图图片到云存储成功:', fileID);
+                  
+                  // 获取临时访问URL
+                  getTempFileURL(fileID)
+                    .then(tempImageUrl => {
+                      resolve({
+                        fileID: fileID,
+                        tempImageUrl: tempImageUrl
+                      });
+                    })
+                    .catch(err => {
+                      console.error('获取抠图图片临时URL失败:', err);
+                      // 如果获取临时URL失败，仍然返回fileID，但使用原始URL作为临时URL
+                      resolve({
+                        fileID: fileID,
+                        tempImageUrl: imageUrl,
+                        error: '获取临时URL失败'
+                      });
+                    });
+                },
+                fail: err => {
+                  clearTimeout(uploadTimeout);
+                  console.error('上传抠图图片到云存储失败:', err);
+                  // 返回原始URL，确保流程可以继续
+                  resolve({
+                    fileID: '',
+                    tempImageUrl: imageUrl,
+                    error: '上传失败'
+                  });
+                }
               });
             }
           });
         } else {
-          console.error('下载抠图后图片失败, 状态码:', res.statusCode);
+          console.error('下载抠图图片失败，状态码:', res.statusCode);
           // 返回原始URL，确保流程可以继续
           resolve({
             fileID: '',
             tempImageUrl: imageUrl,
-            error: `下载失败，状态码: ${res.statusCode}`
+            error: '下载失败'
           });
         }
       },
-      fail: (err) => {
+      fail: err => {
         clearTimeout(downloadTimeout);
-        console.error('下载抠图后图片失败:', err);
+        console.error('下载抠图图片失败:', err);
         // 返回原始URL，确保流程可以继续
         resolve({
           fileID: '',
           tempImageUrl: imageUrl,
-          error: err.message || '下载失败'
+          error: '下载失败'
         });
       }
     });

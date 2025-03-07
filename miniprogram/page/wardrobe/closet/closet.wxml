@@ -264,6 +264,14 @@
         <view class="edit-modal-button cancel" bindtap="hideEditClothingModal" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}}; border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};">取消</view>
         <view class="edit-modal-button save" bindtap="saveClothingEdit" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}}; color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}};">保存</view>
       </view>
+      
+      <!-- 删除按钮 -->
+      <view class="delete-button-container">
+        <view class="delete-button" bindtap="deleteCurrentClothing" style="color: {{themeStyle === 'autumn' ? '#e74c3c' : '#ff6b81'}};">
+          <view class="delete-icon" style="background-color: {{themeStyle === 'autumn' ? '#e74c3c' : '#ff6b81'}};"></view>
+          <text>删除衣物</text>
+        </view>
+      </view>
     </view>
   </view>
   
