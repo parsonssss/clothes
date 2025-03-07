@@ -1,104 +1,98 @@
 <view class="container" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkLight}}; background-image: {{themeStyle === 'pinkBlue' ? 'linear-gradient(to bottom, white, ' + pinkBlueColors.pinkLight + ')' : 'none'}}">
   <!-- Loading state -->
-  <!-- 删除设置按钮 -->
-  
-
-
   <view class="loading-overlay" wx:if="{{isLoading}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkLight}};">
     <view class="loading-spinner" style="border-top-color: {{colors.cowhide_cocoa}}; border-color: {{colors.golden_batter}};"></view>
     <view class="loading-text" style="color: {{colors.cowhide_cocoa}};">加载中...</view>
   </view>
   
-  <!-- Weather widget -->
-  <view class="{{themeStyle === 'autumn' ? 'weather-widget' : 'weather-card'}}" bindtap="viewWeatherDetail" style="background-color: {{themeStyle === 'autumn' ? colors.toasted_caramel : 'rgba(255, 255, 255, 0.9)'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);' : ''}}">
-    <view class="weather-info">
-      <view class="weather-location" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">{{weather.city}}，{{weather.day}}</view>
-      <view class="weather-temp" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};">{{weather.temperature}}</view>
-      <view class="weather-condition" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">{{weather.condition}}</view>
-    </view>
-    <view class="weather-icon" style="{{themeStyle === 'pinkBlue' ? 'background-color: ' + pinkBlueColors.blueLight + '; border-radius: 50%;' : ''}}">
-      <view class="weather-icon-img">
-        <image wx:if="{{weather.iconUrl}}" src="{{weather.iconUrl}}" mode="aspectFit" class="weather-icon-image"></image>
-        <view class="icon-sun" wx:elif="{{weather.icon == 'sun'}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};"></view>
-        <view class="icon-cloud" wx:elif="{{weather.icon == 'cloud'}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};"></view>
-        <view class="icon-rain" wx:elif="{{weather.icon == 'rain'}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};"></view>
-      </view>
-    </view>
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <view class="page-title" style="color: {{themeStyle === 'autumn' ? colors.cowhide_cocoa : pinkBlueColors.pinkDark}};">我的衣橱</view>
   </view>
   
-  <!-- OOTD and outfit area -->
-  <view class="ootd-container">
-    <!-- Model display -->
-    <view class="section">
-      <view class="section-header">
-        <view class="section-title" style="color: {{themeStyle === 'autumn' ? colors.cowhide_cocoa : pinkBlueColors.pinkDark}};">今日造型</view>
+  <!-- 卡片区域 -->
+  <view class="cards-container">
+    <!-- 天气卡片 -->
+    <view class="info-card weather-card" bindtap="viewWeatherDetail" style="background-color: {{themeStyle === 'autumn' ? colors.toasted_caramel : 'rgba(255, 255, 255, 0.9)'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);' : ''}}">
+      <view class="card-header">
+        <view class="card-title" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">今日天气</view>
       </view>
-      
-      <view class="model-container" bindtap="uploadPersonalPhoto" style="border: 1px solid {{themeStyle === 'autumn' ? colors.olive_harvest : pinkBlueColors.pinkLight}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 10rpx 20rpx rgba(0,0,0,0.1);' : ''}}">
-        <image 
-          wx:if="{{modelImageUrl}}"
-          src="{{modelImageUrl}}"
-          mode="aspectFill"
-          class="model-image"
-        ></image>
-        <image 
-          wx:else
-          src="{{defaultModelUrl || '/image/default-model.png'}}"
-          mode="aspectFill"
-          class="model-image"
-        ></image>
-        <view class="model-upload-overlay" style="background-color: {{themeStyle === 'autumn' ? 'rgba(68, 45, 28, 0.7)' : 'rgba(212, 124, 153, 0.7)'}};">
-          <view class="model-upload-text" style="color: {{colors.golden_batter}};">点击上传照片生成AI形象</view>
+      <view class="weather-content">
+        <view class="weather-info">
+          <view class="weather-location" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">{{weather.city}}，{{weather.day}}</view>
+          <view class="weather-temp" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};">{{weather.temperature}}</view>
+          <view class="weather-condition" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">{{weather.condition}}</view>
+          <view class="weather-extra" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">
+            <text>湿度: {{weather.humidity || 'N/A'}}</text>
+            <text>风速: {{weather.windSpeed || 'N/A'}}</text>
+          </view>
         </view>
+        <view class="weather-icon" style="{{themeStyle === 'pinkBlue' ? 'background-color: ' + pinkBlueColors.blueLight + '; border-radius: 50%;' : ''}}">
+          <view class="weather-icon-img">
+            <image wx:if="{{weather.iconUrl}}" src="{{weather.iconUrl}}" mode="aspectFit" class="weather-icon-image"></image>
+            <view class="icon-sun" wx:elif="{{weather.icon == 'sun'}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};"></view>
+            <view class="icon-cloud" wx:elif="{{weather.icon == 'cloud'}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};"></view>
+            <view class="icon-rain" wx:elif="{{weather.icon == 'rain'}}" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};"></view>
+          </view>
+        </view>
+      </view>
+      <view class="card-footer" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">
+        <text>点击查看详细天气预报</text>
+        <text class="arrow-icon">→</text>
       </view>
     </view>
     
-    <!-- Recommended outfits -->
-    <view class="section">
-      <view class="section-header">
-        <view class="section-title" style="color: {{themeStyle === 'autumn' ? colors.cowhide_cocoa : pinkBlueColors.pinkDark}};">搭配推荐</view>
-        <view class="recommend-button" bindtap="getOutfitRecommendation" wx:if="{{!isGeneratingOutfit && recommendedOutfit.length === 0}}" style="background-color: {{themeStyle === 'autumn' ? colors.spiced_wine : pinkBlueColors.blueDark}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 6rpx 16rpx rgba(94,160,208,0.3);' : ''}}">
-          <text class="recommend-button-text" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};">获取推荐</text>
+    <!-- 衣柜概括卡片 -->
+    <view class="info-card wardrobe-summary-card" bindtap="navigateToCloset" style="background-color: {{themeStyle === 'autumn' ? colors.olive_harvest : pinkBlueColors.blueLight}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);' : ''}}">
+      <view class="card-header">
+        <view class="card-title" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">衣柜概览</view>
+      </view>
+      <view class="wardrobe-content">
+        <view class="wardrobe-stats">
+          <view class="stat-item" style="background-color: {{themeStyle === 'autumn' ? 'rgba(232, 209, 167, 0.2)' : 'rgba(255, 255, 255, 0.5)'}};">
+            <view class="stat-value" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};">{{wardrobeSummary.totalClothes || 0}}</view>
+            <view class="stat-label" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">衣物总数</view>
+          </view>
+          <view class="stat-item" style="background-color: {{themeStyle === 'autumn' ? 'rgba(232, 209, 167, 0.2)' : 'rgba(255, 255, 255, 0.5)'}};">
+            <view class="stat-value" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};">{{wardrobeSummary.totalOutfits || 0}}</view>
+            <view class="stat-label" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">搭配总数</view>
+          </view>
+        </view>
+        <view class="category-stats">
+          <view class="category-row" wx:for="{{wardrobeSummary.categories}}" wx:key="id" wx:if="{{item.id !== 0 && item.count > 0}}">
+            <view class="category-icon" style="background-color: {{themeStyle === 'autumn' ? colors.spiced_wine : pinkBlueColors.pinkMedium}}; color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};">{{item.icon}}</view>
+            <view class="category-name" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">{{item.name}}</view>
+            <view class="category-count" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};">{{item.count}}</view>
+          </view>
         </view>
       </view>
-      
-      <view class="outfit-cards">
-        <block wx:if="{{recommendedOutfit.length > 0}}">
-          <view class="outfit-card" wx:for="{{recommendedOutfit}}" wx:key="_id" bindtap="viewClothesDetail" data-id="{{item._id}}" style="background-color: {{themeStyle === 'autumn' ? colors.olive_harvest : pinkBlueColors.blueLight}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.1);' : ''}}">
-            <image 
-              wx:if="{{item.tempImageUrl}}"
-              src="{{item.tempImageUrl}}"
-              mode="aspectFill"
-              class="outfit-card-image"
-            ></image>
-            <view class="outfit-card-icon {{item.category == '上衣' ? 'tops' : (item.category == '裤子' ? 'pants' : (item.category == '外套' ? 'coat' : (item.category == '裙子' ? 'skirt' : 'jacket')))}}" wx:else style="color: {{colors.golden_batter}};"></view>
-            <view class="outfit-card-info" style="background-color: {{themeStyle === 'autumn' ? 'rgba(132, 89, 43, 0.85)' : 'rgba(151, 200, 229, 0.85)'}};">
-              <view class="outfit-card-name" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};">{{item.name || item.category}}</view>
-              <view class="outfit-card-type" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : 'white'}};">{{item.clothingType || item.category}}</view>
-            </view>
-          </view>
-        </block>
-        
-        <view class="thinking-container" wx:elif="{{isGeneratingOutfit}}" style="background-color: {{themeStyle === 'autumn' ? colors.olive_harvest : pinkBlueColors.blueLight}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.1);' : ''}}">
-          <view class="thinking-animation">
-            <view class="thinking-dot" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};"></view>
-            <view class="thinking-dot" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};"></view>
-            <view class="thinking-dot" style="background-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};"></view>
-          </view>
-          <view class="thinking-text" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">DeepSeek正在思考适合今天天气的搭配...</view>
-        </view>
-        
-        <view class="empty-outfit" wx:else style="background-color: {{themeStyle === 'autumn' ? colors.olive_harvest : pinkBlueColors.blueLight}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.1);' : ''}}">
-          <view class="empty-outfit-text" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">点击"获取推荐"按钮，基于天气获取最适合今天的穿搭建议</view>
-        </view>
+      <view class="card-footer" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">
+        <text>查看我的衣柜</text>
+        <text class="arrow-icon">→</text>
       </view>
     </view>
-  </view>
-  
-  <!-- Generation status indicator -->
-  <view class="generating-status" wx:if="{{isGeneratingModel}}" style="background-color: {{themeStyle === 'autumn' ? 'rgba(68, 45, 28, 0.85)' : 'rgba(249, 201, 214, 0.8)'}}; backdrop-filter: blur(5px);">
-    <view class="generating-spinner" style="border-top-color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}}; border-color: {{themeStyle === 'autumn' ? 'rgba(232, 209, 167, 0.3)' : 'rgba(203, 224, 233, 0.3)'}}"></view>
-    <view class="generating-text" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};">AI造型生成中...</view>
+    
+    <!-- 搭配概括卡片 -->
+    <view class="info-card outfit-summary-card" bindtap="navigateToOutfit" style="background-color: {{themeStyle === 'autumn' ? colors.spiced_wine : pinkBlueColors.pinkLight}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);' : ''}}">
+      <view class="card-header">
+        <view class="card-title" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">搭配概览</view>
+      </view>
+      <view class="outfit-content">
+        <view class="outfit-stats">
+          <view class="outfit-category-stat" wx:for="{{outfitSummary}}" wx:key="category">
+            <view class="outfit-category-icon" style="background-color: {{themeStyle === 'autumn' ? 'rgba(232, 209, 167, 0.2)' : 'rgba(255, 255, 255, 0.5)'}};">{{item.icon}}</view>
+            <view class="outfit-category-info">
+              <view class="outfit-category-name" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">{{item.name}}</view>
+              <view class="outfit-category-count" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.pinkDark}};">{{item.count}}套搭配</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="card-footer" style="color: {{themeStyle === 'autumn' ? colors.golden_batter : pinkBlueColors.blueDark}};">
+        <text>查看我的搭配</text>
+        <text class="arrow-icon">→</text>
+      </view>
+    </view>
   </view>
   
   <!-- 粉蓝风格底部区域 (条件渲染) -->

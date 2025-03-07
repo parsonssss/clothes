@@ -146,6 +146,14 @@ page {
   margin-bottom: 20rpx;
 }
 
+/* 搭配预览区域 */
+.outfit-preview-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 140rpx;
+}
+
 /* 衣物预览滚动区域 */
 .outfit-items-preview {
   white-space: nowrap;
@@ -169,6 +177,16 @@ page {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* 空搭配提示 */
+.empty-outfit-area {
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  font-size: 26rpx;
+  opacity: 0.8;
+  margin-bottom: 20rpx;
+}
+
 /* 查看更多按钮 */
 .view-more {
   font-size: 24rpx;
@@ -187,10 +205,19 @@ page {
   transform: translateX(5rpx);
 }
 
-/* 类别预览图区域 */
-.category-preview {
+/* 类别预览图容器 */
+.category-preview-container {
   width: 200rpx;
   height: 260rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 类别预览图区域 */
+.category-preview {
+  width: 100%;
+  height: 100%;
   border-radius: 16rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
@@ -211,4 +238,5 @@ page {
   font-size: 24rpx;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 16rpx;
 }

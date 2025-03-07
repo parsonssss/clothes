@@ -6,6 +6,8 @@
     "page/wardrobe/add/add",
     "page/wardrobe/outfit/outfit",
     "page/wardrobe/outfit/outfit_create/outfit_create",
+    "page/wardrobe/outfit/outfit_category/outfit_category",
+    "page/wardrobe/outfit/outfit_detail/outfit_detail",
     "page/settings/settings"
   ],
   "subpackages": [

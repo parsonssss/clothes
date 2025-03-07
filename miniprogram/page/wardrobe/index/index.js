@@ -32,6 +32,28 @@ Page({
       humidity: '',
       windSpeed: ''
     },
+    // 衣柜概括数据
+    wardrobeSummary: {
+      totalClothes: 0,
+      totalOutfits: 0,
+      categories: [
+        { id: 0, name: '全部', icon: '全', count: 0 },
+        { id: 1, name: '上衣', icon: '上', count: 0, category: '上衣' },
+        { id: 2, name: '裤子', icon: '裤', count: 0, category: '裤子' },
+        { id: 3, name: '裙子', icon: '裙', count: 0, category: '裙子' },
+        { id: 4, name: '外套', icon: '外', count: 0, category: '外套' },
+        { id: 5, name: '鞋子', icon: '鞋', count: 0, category: '鞋子' },
+        { id: 6, name: '配饰', icon: '饰', count: 0, category: '配饰' }
+      ]
+    },
+    // 搭配概括数据
+    outfitSummary: [
+      { category: 'daily', name: '日常穿搭', icon: '👕', count: 0 },
+      { category: 'work', name: '职业穿搭', icon: '👔', count: 0 },
+      { category: 'party', name: '派对穿搭', icon: '👗', count: 0 },
+      { category: 'sport', name: '运动穿搭', icon: '🏃', count: 0 },
+      { category: 'seasonal', name: '季节穿搭', icon: '🍂', count: 0 }
+    ],
     modelImageUrl: '', // AI模特图片URL
     defaultModelUrl: '', // 默认模特图片URL
     isGeneratingModel: false, // 是否正在生成AI模特
@@ -39,7 +61,8 @@ Page({
     recommendedOutfit: [], // 推荐的衣物列表
     isLoading: true,
     lastUrlRefreshTime: 0, // 最后一次图片URL刷新时间
-    lastWeatherUpdateTime: 0 // 最后一次天气更新时间
+    lastWeatherUpdateTime: 0, // 最后一次天气更新时间
+    userOpenId: '' // 用户OpenID
   },
   
   // OpenWeather API配置
@@ -98,27 +121,331 @@ Page({
     // 如果距离上次刷新图片超过10分钟，则刷新
     if (now - this.data.lastUrlRefreshTime > tenMinutesInMs) {
       console.log('超过10分钟未刷新图片，重新加载图片');
-      this.refreshModelImages();
+      this.refreshImageUrls();
     }
     
-    // 如果距离上次刷新天气超过1小时，则刷新
+    // 如果距离上次更新天气超过1小时，则更新
     if (now - this.data.lastWeatherUpdateTime > oneHourInMs) {
-      console.log('超过1小时未刷新天气，重新获取天气');
+      console.log('超过1小时未更新天气，重新获取天气');
       this.getWeatherData();
     }
+    
+    // 刷新衣柜和搭配数据
+    this.getWardrobeSummary();
+    this.getOutfitSummary();
   },
   
   // 加载页面数据
   loadPageData: function() {
+    this.setData({ isLoading: true });
+    
+    // 获取用户OpenID
+    this.getUserOpenId()
+      .then(() => {
+        // 获取天气数据
+        return this.getWeatherData();
+      })
+      .then(() => {
+        // 获取衣柜概括数据
+        return this.getWardrobeSummary();
+      })
+      .then(() => {
+        // 获取搭配概括数据
+        return this.getOutfitSummary();
+      })
+      .catch(err => {
+        console.error('加载页面数据失败:', err);
+      })
+      .finally(() => {
+        this.setData({ isLoading: false });
+      });
+  },
+  
+  // 获取用户OpenID
+  getUserOpenId: function() {
+    return new Promise((resolve, reject) => {
+      // 尝试从本地存储获取
+      const cachedOpenId = wx.getStorageSync('userOpenId');
+      if (cachedOpenId) {
+        this.setData({ userOpenId: cachedOpenId });
+        console.log('从缓存获取用户OpenID:', cachedOpenId);
+        resolve(cachedOpenId);
+        return;
+      }
+      
+      // 如果本地没有，则从云函数获取
+      wx.cloud.callFunction({
+        name: 'login',
+      })
+        .then(res => {
+          const openid = res.result.openid;
+          console.log('获取用户OpenID成功:', openid);
+          
+          // 保存到本地存储和数据中
+          wx.setStorageSync('userOpenId', openid);
+          this.setData({ userOpenId: openid });
+          
+          resolve(openid);
+        })
+        .catch(err => {
+          console.error('获取用户OpenID失败:', err);
+          reject(err);
+        });
+    });
+  },
+  
+  // 刷新图片URL
+  refreshImageUrls: function() {
+    console.log('刷新图片URL');
+    
+    // 更新最后刷新时间
     this.setData({
-      isLoading: true
+      lastUrlRefreshTime: Date.now()
     });
     
-    // 获取天气数据
-    this.getWeatherData();
+    // 获取默认模特图片
+    this.getDefaultModelImage();
     
-    // 获取保存的AI模特图片（如果有）
-    this.getModelImage();
+    // 刷新衣柜和搭配数据中的图片URL
+    this.refreshWardrobeImages();
+  },
+  
+  // 刷新衣柜图片
+  refreshWardrobeImages: function() {
+    // 这里可以添加刷新衣柜图片的逻辑
+    console.log('刷新衣柜图片');
+    
+    // 如果有需要，可以在这里添加刷新衣柜图片的代码
+  },
+  
+  // 获取用户模特图片
+  getUserModelImage: function() {
+    return new Promise((resolve, reject) => {
+      // 尝试从本地存储读取
+      const modelImageUrl = wx.getStorageSync('modelImageUrl');
+      if (modelImageUrl) {
+        this.setData({
+          modelImageUrl: modelImageUrl
+        });
+        resolve(modelImageUrl);
+      } else {
+        // 如果没有保存的模特图片，使用默认图片
+        resolve(this.data.defaultModelUrl);
+      }
+    });
+  },
+  
+  // 获取衣柜概括数据
+  getWardrobeSummary: function() {
+    return new Promise((resolve, reject) => {
+      if (!this.data.userOpenId) {
+        console.warn('未获取到用户OpenID，无法获取衣柜数据');
+        resolve();
+        return;
+      }
+      
+      const db = wx.cloud.database();
+      const _ = db.command;
+      
+      // 查询条件：用户的衣物
+      const query = {
+        _openid: this.data.userOpenId
+      };
+      
+      // 获取衣物总数
+      db.collection('clothes')
+        .where(query)
+        .count()
+        .then(res => {
+          const totalClothes = res.total;
+          console.log('衣物总数:', totalClothes);
+          
+          // 更新衣物总数
+          const wardrobeSummary = this.data.wardrobeSummary;
+          wardrobeSummary.totalClothes = totalClothes;
+          
+          // 获取各类别衣物数量
+          return db.collection('clothes')
+            .where(query)
+            .field({ category: true })
+            .get();
+        })
+        .then(res => {
+          const clothes = res.data || [];
+          console.log('获取到衣物类别数据，数量:', clothes.length);
+          
+          // 更新各类别数量
+          const wardrobeSummary = this.data.wardrobeSummary;
+          
+          // 重置类别计数
+          wardrobeSummary.categories.forEach(cat => {
+            if (cat.id !== 0) {
+              cat.count = 0;
+            }
+          });
+          
+          // 计算各类别数量
+          clothes.forEach(item => {
+            if (item.category) {
+              const categoryItem = wardrobeSummary.categories.find(cat => 
+                cat.category === item.category
+              );
+              
+              if (categoryItem) {
+                categoryItem.count++;
+              }
+            }
+          });
+          
+          // 获取搭配总数
+          return db.collection('outfits')
+            .where(query)
+            .count();
+        })
+        .then(res => {
+          const totalOutfits = res.total;
+          console.log('搭配总数:', totalOutfits);
+          
+          // 更新搭配总数
+          const wardrobeSummary = this.data.wardrobeSummary;
+          wardrobeSummary.totalOutfits = totalOutfits;
+          
+          // 更新数据
+          this.setData({ wardrobeSummary });
+          
+          resolve();
+        })
+        .catch(err => {
+          console.error('获取衣柜概括数据失败:', err);
+          
+          // 使用模拟数据
+          this.useSimulatedWardrobeData();
+          
+          reject(err);
+        });
+    });
+  },
+  
+  // 获取搭配概括数据
+  getOutfitSummary: function() {
+    return new Promise((resolve, reject) => {
+      if (!this.data.userOpenId) {
+        console.warn('未获取到用户OpenID，无法获取搭配数据');
+        resolve();
+        return;
+      }
+      
+      const db = wx.cloud.database();
+      const _ = db.command;
+      
+      // 查询条件：用户的搭配
+      const query = {
+        _openid: this.data.userOpenId
+      };
+      
+      // 获取所有搭配
+      db.collection('outfits')
+        .where(query)
+        .field({ category: true })
+        .get()
+        .then(res => {
+          const outfits = res.data || [];
+          console.log('获取到搭配类别数据，数量:', outfits.length);
+          
+          // 更新各类别数量
+          const outfitSummary = this.data.outfitSummary;
+          
+          // 重置类别计数
+          outfitSummary.forEach(item => {
+            item.count = 0;
+          });
+          
+          // 计算各类别数量
+          outfits.forEach(outfit => {
+            if (outfit.category) {
+              const categoryItem = outfitSummary.find(item => 
+                item.category === outfit.category
+              );
+              
+              if (categoryItem) {
+                categoryItem.count++;
+              }
+            }
+          });
+          
+          // 更新数据
+          this.setData({ outfitSummary });
+          
+          resolve();
+        })
+        .catch(err => {
+          console.error('获取搭配概括数据失败:', err);
+          
+          // 使用模拟数据
+          this.useSimulatedOutfitData();
+          
+          reject(err);
+        });
+    });
+  },
+  
+  // 使用模拟衣柜数据
+  useSimulatedWardrobeData: function() {
+    console.log('使用模拟衣柜数据');
+    
+    const wardrobeSummary = {
+      totalClothes: 28,
+      totalOutfits: 12,
+      categories: [
+        { id: 0, name: '全部', icon: '全', count: 28 },
+        { id: 1, name: '上衣', icon: '上', count: 10, category: '上衣' },
+        { id: 2, name: '裤子', icon: '裤', count: 6, category: '裤子' },
+        { id: 3, name: '裙子', icon: '裙', count: 3, category: '裙子' },
+        { id: 4, name: '外套', icon: '外', count: 4, category: '外套' },
+        { id: 5, name: '鞋子', icon: '鞋', count: 3, category: '鞋子' },
+        { id: 6, name: '配饰', icon: '饰', count: 2, category: '配饰' }
+      ]
+    };
+    
+    this.setData({ wardrobeSummary });
+  },
+  
+  // 使用模拟搭配数据
+  useSimulatedOutfitData: function() {
+    console.log('使用模拟搭配数据');
+    
+    const outfitSummary = [
+      { category: 'daily', name: '日常穿搭', icon: '👕', count: 5 },
+      { category: 'work', name: '职业穿搭', icon: '👔', count: 3 },
+      { category: 'party', name: '派对穿搭', icon: '👗', count: 2 },
+      { category: 'sport', name: '运动穿搭', icon: '🏃', count: 1 },
+      { category: 'seasonal', name: '季节穿搭', icon: '🍂', count: 1 }
+    ];
+    
+    this.setData({ outfitSummary });
+  },
+  
+  // 导航到衣柜页面
+  navigateToCloset: function() {
+    wx.switchTab({
+      url: '/page/wardrobe/closet/closet'
+    });
+  },
+  
+  // 导航到搭配页面
+  navigateToOutfit: function() {
+    wx.switchTab({
+      url: '/page/wardrobe/outfit/outfit'
+    });
+  },
+  
+  // 查看天气详情
+  viewWeatherDetail: function() {
+    // 可以在这里添加查看详细天气的逻辑
+    wx.showToast({
+      title: '查看天气详情',
+      icon: 'none'
+    });
   },
   
   // 获取默认模特图片
@@ -147,27 +474,6 @@ Page({
         });
       }
     });
-  },
-  
-  // 获取保存的AI模特图片
-  getModelImage: function() {
-    // 尝试从本地存储读取
-    const modelImageUrl = wx.getStorageSync('modelImageUrl');
-    if (modelImageUrl) {
-      this.setData({
-        modelImageUrl: modelImageUrl
-      });
-    }
-  },
-  
-  // 刷新图片URL
-  refreshModelImages: function() {
-    this.setData({
-      lastUrlRefreshTime: Date.now()
-    });
-    
-    // 刷新模特图片URL可能会在以后实现
-    // 这里可能需要重新获取云存储的临时URL
   },
   
   // 获取天气数据
@@ -763,19 +1069,6 @@ Page({
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({
       url: '../detail/detail?id=' + id
-    });
-  },
-  
-  // 查看天气详情
-  viewWeatherDetail: function() {
-    // 显示更详细的天气信息
-    wx.showModal({
-      title: this.data.weather.city + '天气',
-      content: `温度: ${this.data.weather.temperature}
-天气: ${this.data.weather.condition}
-湿度: ${this.data.weather.humidity}
-风速: ${this.data.weather.windSpeed}`,
-      showCancel: false
     });
   },
   

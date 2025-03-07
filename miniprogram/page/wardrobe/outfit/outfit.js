@@ -302,5 +302,22 @@ Page({
     wx.navigateTo({
       url: `./outfit_category/outfit_category?category=${category}`
     });
+  },
+  
+  // 查看搭配详情
+  viewOutfitDetail: function(e) {
+    const id = e.currentTarget.dataset.id;
+    console.log('查看搭配详情:', id);
+    
+    // 跳转到搭配详情页面
+    wx.navigateTo({
+      url: `./outfit_detail/outfit_detail?id=${id}`
+    });
+  },
+  
+  // 阻止事件冒泡
+  stopPropagation: function(e) {
+    // 阻止事件冒泡
+    return;
   }
 });

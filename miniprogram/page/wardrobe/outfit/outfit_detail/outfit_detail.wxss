@@ -1,0 +1,266 @@
+/* page/wardrobe/outfit/outfit_detail/outfit_detail.wxss */
+
+/* Color variables based on autumn palette */
+page {
+  --cowhide-cocoa: #442D1C;
+  --spiced-wine: #74301C;
+  --toasted-caramel: #84592B;
+  --olive-harvest: #9D9167;
+  --golden-batter: #E8D1A7;
+}
+
+/* 全局容器 */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 32rpx;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 5rpx solid;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 28rpx;
+  letter-spacing: 1rpx;
+}
+
+/* 主要内容区域 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-bottom: 40rpx;
+}
+
+/* 顶部区域 */
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding: 0 10rpx;
+}
+
+/* 返回按钮 */
+.back-button {
+  display: flex;
+  align-items: center;
+  padding: 10rpx;
+}
+
+.back-icon {
+  width: 20rpx;
+  height: 20rpx;
+  border-top: 3rpx solid;
+  border-right: 3rpx solid;
+  transform: rotate(-135deg);
+  margin-right: 10rpx;
+}
+
+/* 搭配标题 */
+.outfit-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  margin: 0 20rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+}
+
+.edit-button, .delete-button {
+  padding: 10rpx 20rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  margin-left: 15rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 搭配详情卡片 */
+.outfit-detail-card {
+  width: 100%;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 搭配预览图 */
+.outfit-preview {
+  width: 100%;
+  height: 400rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 搭配信息 */
+.outfit-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 15rpx;
+}
+
+.info-label {
+  font-size: 26rpx;
+  font-weight: 500;
+  min-width: 140rpx;
+}
+
+.info-value {
+  font-size: 26rpx;
+  flex: 1;
+}
+
+/* 标签 */
+.tags-container {
+  display: flex;
+  margin-top: 10rpx;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  margin-right: 15rpx;
+  margin-bottom: 10rpx;
+}
+
+/* 段落标题 */
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+  padding: 0 10rpx;
+}
+
+/* 搭配组成部分 */
+.outfit-items-section {
+  margin-bottom: 30rpx;
+}
+
+.outfit-items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  padding: 0 10rpx;
+}
+
+.outfit-item-card {
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.item-image {
+  width: 100%;
+  height: 240rpx;
+  object-fit: contain;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.item-info {
+  padding: 15rpx;
+}
+
+.item-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  margin-bottom: 5rpx;
+}
+
+.item-type {
+  font-size: 22rpx;
+  opacity: 0.9;
+}
+
+/* 相似搭配推荐 */
+.similar-outfits-section {
+  margin-bottom: 30rpx;
+}
+
+.similar-outfits-scroll {
+  white-space: nowrap;
+  padding: 10rpx;
+}
+
+.similar-outfit-card {
+  display: inline-block;
+  width: 220rpx;
+  margin-right: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.similar-outfit-image {
+  width: 100%;
+  height: 280rpx;
+  object-fit: cover;
+}
+
+.similar-outfit-name {
+  font-size: 24rpx;
+  font-weight: 500;
+  padding: 10rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.similar-outfit-date {
+  font-size: 20rpx;
+  padding: 0 10rpx 10rpx 10rpx;
+  opacity: 0.9;
+} 
