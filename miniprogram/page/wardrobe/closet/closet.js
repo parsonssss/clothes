@@ -72,6 +72,8 @@ Page({
     tapCoolingEndTime: 0,     // 记录点击冷却结束时间
     currentCategoryFilter: null,  // 使用新的数据属性来记录当前类别过滤条件
     categoriesInitialized: false, // 标记类别数量已初始化
+    editingClothing: null,      // 当前编辑的衣物数据
+    showEditModal: false,       // 是否显示编辑衣物弹窗
   },
   
   // 页面加载
@@ -573,13 +575,90 @@ Page({
     const id = e.currentTarget.dataset.id;
     console.log('查看衣物详情:', id);
     
-    // 由于当前环境可能无法跳转页面，所以先给出提示
-    closetUtils.showSuccessToast('查看衣物详情: ' + id);
+    // 查找当前衣物数据
+    const clothing = this.data.currentPageClothes.find(item => item._id === id);
+    if (!clothing) {
+      closetUtils.showErrorToast('未找到衣物数据');
+      return;
+    }
     
-    // 实际代码中应该跳转到详情页
-    // wx.navigateTo({
-    //   url: '../detail/detail?id=' + id
-    // });
+    // 显示编辑弹窗
+    this.showEditClothingModal(clothing);
+  },
+  
+  // 显示编辑衣物弹窗
+  showEditClothingModal: function(clothing) {
+    // 设置当前编辑的衣物数据
+    this.setData({
+      editingClothing: clothing,
+      showEditModal: true
+    });
+  },
+  
+  // 隐藏编辑衣物弹窗
+  hideEditClothingModal: function() {
+    this.setData({
+      showEditModal: false,
+      editingClothing: null
+    });
+  },
+  
+  // 处理编辑衣物表单输入
+  handleEditInput: function(e) {
+    const field = e.currentTarget.dataset.field;
+    const value = e.detail.value;
+    
+    // 更新编辑中的衣物数据
+    this.setData({
+      [`editingClothing.${field}`]: value
+    });
+  },
+  
+  // 保存编辑后的衣物信息
+  saveClothingEdit: function() {
+    const clothing = this.data.editingClothing;
+    
+    if (!clothing || !clothing._id) {
+      closetUtils.showErrorToast('无效的衣物数据');
+      return;
+    }
+    
+    closetUtils.showLoading('保存中...');
+    
+    // 调用云函数更新衣物信息
+    wx.cloud.callFunction({
+      name: 'updateClothing',
+      data: {
+        clothingId: clothing._id,
+        name: clothing.name,
+        category: clothing.category,
+        type: clothing.type,
+        color: clothing.color,
+        style: clothing.style,
+        warmthLevel: clothing.warmthLevel,
+        scenes: clothing.scenes,
+        price: clothing.price
+      }
+    })
+    .then(res => {
+      if (res.result && res.result.success) {
+        closetUtils.hideLoading();
+        closetUtils.showSuccessToast('保存成功');
+        
+        // 关闭编辑弹窗
+        this.hideEditClothingModal();
+        
+        // 刷新衣物列表
+        this.loadClothes(true, false);
+      } else {
+        throw new Error(res.result.message || '保存失败');
+      }
+    })
+    .catch(err => {
+      console.error('保存衣物信息失败:', err);
+      closetUtils.hideLoading();
+      closetUtils.showErrorToast('保存失败: ' + err.message);
+    });
   },
   
   // 显示添加选项
@@ -672,7 +751,7 @@ Page({
               isUploading: false
             });
             closetUtils.showErrorToast('处理超时，请重试');
-          }, 120000); // 2分钟全局超时
+          }, 3600000); // 1小时全局超时
           
           // 使用异步方法处理图片，而不是旧的方法
           this.processImageWithKoutuAsync(imageUrl)
@@ -727,7 +806,7 @@ Page({
         isUploading: false
       });
       closetUtils.showErrorToast('上传处理超时，请重试');
-    }, 120000); // 2分钟全局超时
+    }, 3600000); // 1小时全局超时
     
     // 上传图片到云存储
     imageProcessor.uploadImageToCloud(filePath)
@@ -778,7 +857,7 @@ Page({
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(new Error('分析衣物超时'));
-      }, 30000); // 30秒超时
+      }, 3600000); // 1小时超时
     });
     
     // 分析衣物，添加超时处理
@@ -1004,7 +1083,7 @@ Page({
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(new Error('抠图处理超时'));
-      }, 60000); // 60秒超时
+      }, 3600000); // 1小时超时
     });
     
     // 异步处理抠图，添加超时处理

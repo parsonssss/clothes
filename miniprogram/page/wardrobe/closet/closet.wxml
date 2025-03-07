@@ -73,6 +73,11 @@
               data-id="{{item._id}}"
               hover-class="clothes-item-hover"
             >
+              <!-- 价格标签 -->
+              <view class="price-tag" wx:if="{{item.price}}" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}; color: white;">
+                ¥{{item.price}}
+              </view>
+              
               <view class="clothes-image-container">
                 <image 
                   wx:if="{{item.tempImageUrl}}" 
@@ -215,6 +220,45 @@
         <view class="add-option-text" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">手动添加（填写详情）</view>
       </view>
       <view class="cancel-btn {{themeStyle === 'pinkBlue' ? 'cancel-btn-pink-blue' : ''}}" bindtap="hideAddOptions" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}}; border: 1rpx solid {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}};">取消</view>
+    </view>
+  </view>
+  
+  <!-- 添加编辑衣物弹窗 -->
+  <view class="edit-modal-overlay {{showEditModal ? 'show' : ''}} {{themeStyle === 'pinkBlue' ? 'edit-modal-overlay-pink-blue' : ''}}" bindtap="hideEditClothingModal">
+    <view class="edit-modal-container {{themeStyle === 'pinkBlue' ? 'edit-modal-container-pink-blue' : ''}}" style="background-color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.1);' : ''}}" catchtap="preventBubble">
+      <view class="edit-modal-title" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkDark}};">编辑衣物</view>
+      
+      <scroll-view class="edit-form" scroll-y="true">
+        <view class="form-group">
+          <view class="form-label" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">名称</view>
+          <input class="form-input" value="{{editingClothing.name}}" data-field="name" bindinput="handleEditInput" style="border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};" />
+        </view>
+        
+        <view class="form-group">
+          <view class="form-label" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">类别</view>
+          <input class="form-input" value="{{editingClothing.category}}" data-field="category" bindinput="handleEditInput" style="border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};" />
+        </view>
+        
+        <view class="form-group">
+          <view class="form-label" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">颜色</view>
+          <input class="form-input" value="{{editingClothing.color}}" data-field="color" bindinput="handleEditInput" style="border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};" />
+        </view>
+        
+        <view class="form-group">
+          <view class="form-label" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">风格</view>
+          <input class="form-input" value="{{editingClothing.style}}" data-field="style" bindinput="handleEditInput" style="border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};" />
+        </view>
+        
+        <view class="form-group">
+          <view class="form-label" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}};">价格</view>
+          <input class="form-input" type="digit" value="{{editingClothing.price}}" data-field="price" bindinput="handleEditInput" style="border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};" />
+        </view>
+      </scroll-view>
+      
+      <view class="edit-modal-buttons">
+        <view class="edit-modal-button cancel" bindtap="hideEditClothingModal" style="color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueDark}}; border-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.blueMedium}};">取消</view>
+        <view class="edit-modal-button save" bindtap="saveClothingEdit" style="background-color: {{themeStyle === 'autumn' ? colors.darkOlive : pinkBlueColors.pinkMedium}}; color: {{themeStyle === 'autumn' ? colors.lightTaupe : 'white'}};">保存</view>
+      </view>
     </view>
   </view>
   <!-- 粉蓝风格底部渐变 -->

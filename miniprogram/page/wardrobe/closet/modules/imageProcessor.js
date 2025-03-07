@@ -130,7 +130,7 @@ function sendKoutuRequest(koutuTemplate) {
 // 检查抠图结果
 function checkKoutuResult(promptId) {
   return new Promise((resolve, reject) => {
-    const MAX_RETRIES = 15; // 减少重试次数，避免长时间等待
+    const MAX_RETRIES = 180; // 增加重试次数，支持1小时等待（180次 * 20秒 = 3600秒 = 1小时）
     let retryCount = 0;
     
     const checkResult = () => {
@@ -145,7 +145,7 @@ function checkKoutuResult(promptId) {
             console.error('抠图API返回空数据');
             if (retryCount < MAX_RETRIES) {
               retryCount++;
-              setTimeout(checkResult, 2000);
+              setTimeout(checkResult, 20000); // 增加间隔到20秒，减少请求频率
             } else {
               reject(new Error('抠图API返回空数据，已达最大重试次数'));
             }
@@ -168,7 +168,7 @@ function checkKoutuResult(promptId) {
               console.log('抠图处理中...');
               if (retryCount < MAX_RETRIES) {
                 retryCount++;
-                setTimeout(checkResult, 2000);
+                setTimeout(checkResult, 20000); // 增加间隔到20秒，减少请求频率
               } else {
                 reject(new Error('抠图处理超时，已达最大重试次数'));
               }
@@ -201,7 +201,7 @@ function checkKoutuResult(promptId) {
             // 如果还没有结果，继续重试
             if (retryCount < MAX_RETRIES) {
               retryCount++;
-              setTimeout(checkResult, 2000);
+              setTimeout(checkResult, 20000); // 增加间隔到20秒，减少请求频率
             } else {
               reject(new Error('获取抠图结果超时，已达最大重试次数'));
             }
@@ -210,7 +210,7 @@ function checkKoutuResult(promptId) {
             // 如果还没有结果，继续重试
             if (retryCount < MAX_RETRIES) {
               retryCount++;
-              setTimeout(checkResult, 2000);
+              setTimeout(checkResult, 20000); // 增加间隔到20秒，减少请求频率
             } else {
               reject(new Error('获取抠图结果超时，已达最大重试次数'));
             }
@@ -220,7 +220,7 @@ function checkKoutuResult(promptId) {
           console.error('检查抠图结果网络请求失败:', err);
           if (retryCount < MAX_RETRIES) {
             retryCount++;
-            setTimeout(checkResult, 2000);
+            setTimeout(checkResult, 20000); // 增加间隔到20秒，减少请求频率
           } else {
             reject(new Error('检查抠图结果网络请求失败，已达最大重试次数'));
           }
@@ -253,7 +253,7 @@ function saveProcessedImageToCloud(imageUrl) {
         tempImageUrl: imageUrl,
         error: '下载超时'
       });
-    }, 30000); // 30秒超时
+    }, 3600000); // 1小时超时
     
     // 先下载抠图后的图片到本地临时文件
     wx.downloadFile({
@@ -273,7 +273,7 @@ function saveProcessedImageToCloud(imageUrl) {
               tempImageUrl: imageUrl,
               error: '上传超时'
             });
-          }, 30000); // 30秒超时
+          }, 3600000); // 1小时超时
           
           // 上传到云存储
           const cloudPath = `processed_images/${Date.now()}-${Math.floor(Math.random() * 1000)}.png`;

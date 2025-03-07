@@ -3,7 +3,8 @@
     "page/wardrobe/index/index",
     "page/wardrobe/closet/closet",
     "page/wardrobe/detail/detail",
-    "page/wardrobe/add/add"
+    "page/wardrobe/add/add",
+    "page/settings/settings"
   ],
   "subpackages": [
     {
@@ -207,6 +208,12 @@
         "iconPath": "image/wardrobe-icon.png",
         "selectedIconPath": "image/wardrobe-icon-HL.png",
         "text": "衣柜"
+      },
+      {
+        "pagePath": "page/settings/settings",
+        "iconPath": "image/setting.png",
+        "selectedIconPath": "image/setting-HL.png",
+        "text": "设置"
       }
     ]
   },

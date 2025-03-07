@@ -1,0 +1,75 @@
+<view class="page" data-weui-theme="{{theme}}">
+  <view class="weui-cells__title">主题设置</view>
+  <view class="weui-cells weui-cells_after-title">
+    <view class="weui-cell weui-cell_active">
+      <view class="weui-cell__bd">外观风格</view>
+      <view class="weui-cell__ft theme-preview-container">
+        <view class="theme-preview {{themeStyle === 'autumn' ? 'theme-preview-active' : ''}}" 
+              bindtap="selectTheme" data-theme="autumn">
+          <view class="theme-preview-color" style="background-color: {{colors.golden_batter}}"></view>
+          <view class="theme-preview-color" style="background-color: {{colors.spiced_wine}}"></view>
+          <view class="theme-preview-color" style="background-color: {{colors.olive_harvest}}"></view>
+        </view>
+        <view class="theme-preview {{themeStyle === 'pinkBlue' ? 'theme-preview-active' : ''}}" 
+              bindtap="selectTheme" data-theme="pinkBlue">
+          <view class="theme-preview-color" style="background-color: {{pinkBlueColors.pinkLight}}"></view>
+          <view class="theme-preview-color" style="background-color: {{pinkBlueColors.pinkDark}}"></view>
+          <view class="theme-preview-color" style="background-color: {{pinkBlueColors.blueMedium}}"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能设置 -->
+  <view class="weui-cells__title">功能设置</view>
+  <view class="weui-cells weui-cells_after-title">
+    <view class="weui-cell weui-cell_switch">
+      <view class="weui-cell__bd">天气提醒</view>
+      <view class="weui-cell__ft">
+        <switch checked="{{weatherAlert}}" bindchange="toggleWeatherAlert" color="#07c160"/>
+      </view>
+    </view>
+    <view class="weui-cell weui-cell_switch">
+      <view class="weui-cell__bd">自动刷新数据</view>
+      <view class="weui-cell__ft">
+        <switch checked="{{autoRefresh}}" bindchange="toggleAutoRefresh" color="#07c160"/>
+      </view>
+    </view>
+  </view>
+
+  <view class="weui-cells__title">通用</view>
+  <view class="weui-cells weui-cells_after-title">
+    <view class="weui-cell weui-cell_active">
+      <view class="weui-cell__bd">清除缓存</view>
+      <view class="weui-cell__ft">
+        <button class="weui-btn weui-btn_mini weui-btn_default" bindtap="clearCache">清除</button>
+      </view>
+    </view>
+    <view class="weui-cell weui-cell_access" bindtap="contactUs">
+      <view class="weui-cell__bd">反馈建议</view>
+      <view class="weui-cell__ft weui-cell__ft_in-access"></view>
+    </view>
+  </view>
+  
+  <view class="weui-cells__title">关于</view>
+  <view class="weui-cells weui-cells_after-title">
+    <view class="weui-cell weui-cell_active">
+      <view class="weui-cell__bd">版本</view>
+      <view class="weui-cell__ft">1.0.0</view>
+    </view>
+    <view class="weui-cell weui-cell_active">
+      <view class="weui-cell__bd">开发者</view>
+      <view class="weui-cell__ft">AI衣橱团队</view>
+    </view>
+    <view class="weui-cell weui-cell_link" bindtap="openPrivacyPolicy">
+      <view class="weui-cell__bd">隐私政策</view>
+    </view>
+    <view class="weui-cell weui-cell_link" bindtap="openUserAgreement">
+      <view class="weui-cell__bd">用户协议</view>
+    </view>
+  </view>
+
+  <view class="weui-footer weui-footer_fixed-bottom">
+    <view class="weui-footer__text">Copyright © 2025 AI衣橱</view>
+  </view>
+</view>

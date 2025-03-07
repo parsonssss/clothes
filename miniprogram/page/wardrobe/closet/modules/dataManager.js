@@ -77,7 +77,8 @@ function loadClothes(userOpenId, selectedCategory, currentPage, pageSize) {
                 color: item.color,
                 style: item.style,
                 warmthLevel: item.warmthLevel,
-                scenes: item.scenes
+                scenes: item.scenes,
+                price: item.price || '' // 添加价格字段，如果不存在则设为空字符串
               };
             });
             
@@ -125,6 +126,7 @@ function saveClothingToDatabase(fileID, originalImageUrl, analysisData, userOpen
       style: analysisData.style || '未知',
       warmthLevel: analysisData.warmth_level || 3,
       scenes: analysisData.scene_applicability || ['休闲'],
+      price: analysisData.price || '', // 添加价格字段，默认为空
       userOpenId: userOpenId, // 手动添加用户OpenID关联，确保账号与数据关联
       createTime: db.serverDate()
     };

@@ -93,10 +93,6 @@ exports.main = async (event, context) => {
 // 统一的状态更新函数
 async function updateStatus(fileID, updateData) {
   try {
-    cloud.init({
-      env: 'cloud1-3gi97kso9ab01185'
-    })
-    const db = cloud.database()
     return await db.collection('pending_clothes')
       .where({
         fileID: fileID

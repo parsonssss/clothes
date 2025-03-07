@@ -55,6 +55,9 @@ App({
       })
     }
     
+    // 初始化主题样式
+    this.initTheme();
+    
     console.log('App Launch', opts)
     if (data && data.path) {
       wx.navigateTo({
@@ -75,6 +78,14 @@ App({
   onShow(opts) {
     console.log('App Show', opts)
     // console.log(wx.getSystemInfoSync())
+    
+    // 检查并应用主题样式
+    const savedTheme = wx.getStorageSync('themeStyle');
+    if (savedTheme && savedTheme !== this.globalData.themeStyle) {
+      console.log('检测到主题变化，重新应用主题样式');
+      this.globalData.themeStyle = savedTheme;
+      this.initTheme();
+    }
   },
   onHide() {
     console.log('App Hide')
@@ -98,9 +109,11 @@ App({
   },
   globalData: {
     theme: wx.getSystemInfoSync().theme,
+    themeStyle: 'autumn', // 默认主题风格
     hasLogin: false,
     openid: null,
     iconTabbar: '/page/weui/example/images/icon_tabbar.png',
+    cloudInitialized: false, // 云环境初始化状态
   },
   // lazy loading openid
   getUserOpenId(callback) {
@@ -143,5 +156,34 @@ App({
       this.globalData.openid = res.result.openid
       return res.result.openid
     })
+  },
+  // 初始化主题样式
+  initTheme: function() {
+    // 获取保存的主题设置
+    const savedTheme = wx.getStorageSync('themeStyle') || 'autumn'; // 默认使用秋季主题
+    
+    console.log('初始化主题样式:', savedTheme);
+    
+    // 设置全局主题变量
+    this.globalData.themeStyle = savedTheme;
+    
+    // 应用主题样式
+    if (savedTheme === 'autumn') {
+      // 设置秋季主题TabBar
+      wx.setTabBarStyle({
+        backgroundColor: '#E8D1A7',
+        borderStyle: 'black',
+        color: '#442D1C',
+        selectedColor: '#74301C'
+      });
+    } else if (savedTheme === 'pinkBlue') {
+      // 设置粉蓝主题TabBar
+      wx.setTabBarStyle({
+        backgroundColor: '#F9C9D6',
+        borderStyle: 'black',
+        color: '#5EA0D0',
+        selectedColor: '#D47C99'
+      });
+    }
   }
 })

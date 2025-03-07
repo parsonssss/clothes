@@ -1,0 +1,40 @@
+<view class="page {{themeStyle === 'autumn' ? 'page-autumn' : 'page-pinkBlue'}}" data-weui-theme="{{theme}}" style="background-color: {{pageStyle.backgroundColor}}; background-image: {{pageStyle.backgroundImage}};">
+  <!-- 装饰元素 -->
+  <view class="decoration-element decoration-1" style="background-color: {{themeStyle === 'autumn' ? colors.olive_harvest : pinkBlueColors.blueMedium}};"></view>
+  <view class="decoration-element decoration-2" style="background-color: {{themeStyle === 'autumn' ? colors.spiced_wine : pinkBlueColors.pinkMedium}};"></view>
+  <view class="decoration-element decoration-3" style="background-color: {{themeStyle === 'autumn' ? colors.toasted_caramel : pinkBlueColors.blueLight}};"></view>
+
+
+  <view class="weui-cells weui-cells_after-title" style="background-color: {{pageStyle.cellBackgroundColor}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);' : ''}}">
+    <view class="weui-cell weui-cell_active">
+      <view class="weui-cell__bd" style="color: {{pageStyle.titleColor}};">外观风格</view>
+      <view class="weui-cell__ft theme-preview-container">
+        <view class="theme-preview {{themeStyle === 'autumn' ? 'theme-preview-active' : ''}}" 
+              bindtap="selectTheme" data-theme="autumn">
+          <view class="theme-preview-color" style="background-color: {{colors.golden_batter}}"></view>
+          <view class="theme-preview-color" style="background-color: {{colors.spiced_wine}}"></view>
+          <view class="theme-preview-color" style="background-color: {{colors.olive_harvest}}"></view>
+        </view>
+        <view class="theme-preview {{themeStyle === 'pinkBlue' ? 'theme-preview-active' : ''}}" 
+              bindtap="selectTheme" data-theme="pinkBlue">
+          <view class="theme-preview-color" style="background-color: {{pinkBlueColors.pinkLight}}"></view>
+          <view class="theme-preview-color" style="background-color: {{pinkBlueColors.pinkDark}}"></view>
+          <view class="theme-preview-color" style="background-color: {{pinkBlueColors.blueMedium}}"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 主题说明 -->
+  <view class="weui-cells weui-cells_after-title" style="background-color: {{pageStyle.cellBackgroundColor}}; {{themeStyle === 'pinkBlue' ? 'box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);' : ''}}">
+    <view class="weui-cell">
+      <view class="weui-cell__bd" style="color: {{pageStyle.titleColor}}; font-size: 28rpx;">
+        {{themeStyle === 'autumn' ? '秋季风格：温暖的金黄色调，搭配深沉的棕红色，营造出秋日的温馨氛围。' : '粉蓝风格：清新的粉色与蓝色搭配，呈现出明亮活泼的视觉效果。'}}
+      </view>
+    </view>
+  </view>
+
+  <view class="weui-footer weui-footer_fixed-bottom" style="color: {{pageStyle.footerColor}};">
+    <view class="weui-footer__text">Copyright © 2025 AI衣橱</view>
+  </view>
+</view>
