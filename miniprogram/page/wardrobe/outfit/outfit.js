@@ -141,24 +141,97 @@ Page({
         // 按类别分类搭配
         const outfits = res.data || [];
         
-        // 初始化各类别搭配数组
-        const dailyOutfits = outfits.filter(outfit => outfit.category === 'daily');
-        const workOutfits = outfits.filter(outfit => outfit.category === 'work');
-        const partyOutfits = outfits.filter(outfit => outfit.category === 'party');
-        const sportOutfits = outfits.filter(outfit => outfit.category === 'sport');
-        const seasonalOutfits = outfits.filter(outfit => outfit.category === 'seasonal');
+        // 如果没有搭配数据，使用模拟数据
+        if (outfits.length === 0) {
+          console.log('没有搭配数据，使用模拟数据');
+          that.useSimulatedData();
+          return;
+        }
         
-        // 更新数据
-        that.setData({
-          dailyOutfits,
-          workOutfits,
-          partyOutfits,
-          sportOutfits,
-          seasonalOutfits,
-          isLoading: false
+        // 收集所有需要获取临时URL的fileID
+        const fileIDs = [];
+        
+        // 收集搭配预览图的fileID
+        outfits.forEach(outfit => {
+          if (outfit.previewImage && outfit.previewImage.includes('cloud://')) {
+            fileIDs.push(outfit.previewImage);
+          }
+          
+          // 收集搭配中每个衣物图片的fileID
+          if (outfit.items && Array.isArray(outfit.items)) {
+            outfit.items.forEach(item => {
+              if (item.imageUrl && item.imageUrl.includes('cloud://')) {
+                fileIDs.push(item.imageUrl);
+              }
+            });
+          }
         });
         
-        console.log('搭配数据已分类完成');
+        // 如果有需要获取临时URL的fileID
+        if (fileIDs.length > 0) {
+          console.log('需要获取临时URL的文件数量:', fileIDs.length);
+          
+          // 获取临时URL
+          wx.cloud.getTempFileURL({
+            fileList: fileIDs,
+            success: result => {
+              console.log('获取临时URL成功:', result);
+              
+              // 创建fileID到临时URL的映射
+              const fileIDToURL = {};
+              result.fileList.forEach(file => {
+                if (file.fileID && file.tempFileURL) {
+                  fileIDToURL[file.fileID] = file.tempFileURL;
+                }
+              });
+              
+              // 更新搭配数据中的图片URL
+              outfits.forEach(outfit => {
+                // 更新搭配预览图URL
+                if (outfit.previewImage && outfit.previewImage.includes('cloud://')) {
+                  outfit.previewImage = fileIDToURL[outfit.previewImage] || outfit.previewImage;
+                }
+                
+                // 更新搭配中每个衣物的图片URL
+                if (outfit.items && Array.isArray(outfit.items)) {
+                  outfit.items.forEach(item => {
+                    if (item.imageUrl && item.imageUrl.includes('cloud://')) {
+                      item.imageUrl = fileIDToURL[item.imageUrl] || item.imageUrl;
+                    }
+                  });
+                }
+              });
+              
+              // 初始化各类别搭配数组
+              const dailyOutfits = outfits.filter(outfit => outfit.category === 'daily');
+              const workOutfits = outfits.filter(outfit => outfit.category === 'work');
+              const partyOutfits = outfits.filter(outfit => outfit.category === 'party');
+              const sportOutfits = outfits.filter(outfit => outfit.category === 'sport');
+              const seasonalOutfits = outfits.filter(outfit => outfit.category === 'seasonal');
+              
+              // 更新数据
+              that.setData({
+                dailyOutfits,
+                workOutfits,
+                partyOutfits,
+                sportOutfits,
+                seasonalOutfits,
+                isLoading: false
+              });
+              
+              console.log('搭配数据已分类完成，并更新了图片URL');
+            },
+            fail: err => {
+              console.error('获取临时URL失败:', err);
+              
+              // 即使获取临时URL失败，也尝试显示搭配数据
+              that.processCategorizedOutfits(outfits);
+            }
+          });
+        } else {
+          // 如果没有需要获取临时URL的fileID，直接处理搭配数据
+          that.processCategorizedOutfits(outfits);
+        }
       })
       .catch(err => {
         console.error('获取搭配失败:', err);
@@ -167,6 +240,28 @@ Page({
       .finally(() => {
         wx.hideLoading();
       });
+  },
+  
+  // 处理分类后的搭配数据
+  processCategorizedOutfits: function(outfits) {
+    // 初始化各类别搭配数组
+    const dailyOutfits = outfits.filter(outfit => outfit.category === 'daily');
+    const workOutfits = outfits.filter(outfit => outfit.category === 'work');
+    const partyOutfits = outfits.filter(outfit => outfit.category === 'party');
+    const sportOutfits = outfits.filter(outfit => outfit.category === 'sport');
+    const seasonalOutfits = outfits.filter(outfit => outfit.category === 'seasonal');
+    
+    // 更新数据
+    this.setData({
+      dailyOutfits,
+      workOutfits,
+      partyOutfits,
+      sportOutfits,
+      seasonalOutfits,
+      isLoading: false
+    });
+    
+    console.log('搭配数据已分类完成');
   },
   
   // 使用模拟数据（当无法获取真实数据时）
@@ -198,13 +293,23 @@ Page({
   
   // 生成模拟搭配数据
   generateSimulatedOutfits: function() {
-    // 模拟衣物图片
+    // 模拟衣物图片 - 使用更可靠的图片源
     const mockImages = [
-      'https://picsum.photos/200/300?random=1',
-      'https://picsum.photos/200/300?random=2',
-      'https://picsum.photos/200/300?random=3',
-      'https://picsum.photos/200/300?random=4',
-      'https://picsum.photos/200/300?random=5'
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYJCibdIkjPtymh5xicSMN2u5yZlmIbp3icicVicYqA1CnNgwjcEJYJJhZmw/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYdpRPwIjnicia3ZKBGhTIGAcbYgNwIoLXBDKkNXMmkGNgGzOvMJyJH0A/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYCDgTSCOJBUg5QgAIKpZBCBGcNH7yrM7NJnpLqMvWzPFTGDKqdZKSg/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYCDgTSCOJBUg5QgAIKpZBCBGcNH7yrM7NJnpLqMvWzPFTGDKqdZKSg/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYJCibdIkjPtymh5xicSMN2u5yZlmIbp3icicVicYqA1CnNgwjcEJYJJhZmw/0?wx_fmt=jpeg'
+    ];
+    
+    // 模拟搭配预览图
+    const mockPreviewImages = [
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYJCibdIkjPtymh5xicSMN2u5yZlmIbp3icicVicYqA1CnNgwjcEJYJJhZmw/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYdpRPwIjnicia3ZKBGhTIGAcbYgNwIoLXBDKkNXMmkGNgGzOvMJyJH0A/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYCDgTSCOJBUg5QgAIKpZBCBGcNH7yrM7NJnpLqMvWzPFTGDKqdZKSg/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYJCibdIkjPtymh5xicSMN2u5yZlmIbp3icicVicYqA1CnNgwjcEJYJJhZmw/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYdpRPwIjnicia3ZKBGhTIGAcbYgNwIoLXBDKkNXMmkGNgGzOvMJyJH0A/0?wx_fmt=jpeg',
+      'https://mmbiz.qpic.cn/mmbiz_jpg/UicQ7HgWiaUb3Zib1Zia9PmHLpKhZKiaZhsGYCDgTSCOJBUg5QgAIKpZBCBGcNH7yrM7NJnpLqMvWzPFTGDKqdZKSg/0?wx_fmt=jpeg'
     ];
     
     // 生成模拟搭配
@@ -213,7 +318,7 @@ Page({
         id: 'daily-1',
         name: '休闲日常搭配',
         category: 'daily',
-        previewImage: 'https://picsum.photos/400/600?random=10',
+        previewImage: mockPreviewImages[0],
         items: [
           { id: 'd1', name: '白色T恤', imageUrl: mockImages[0] },
           { id: 'd2', name: '牛仔裤', imageUrl: mockImages[1] },
@@ -225,7 +330,7 @@ Page({
         id: 'daily-2',
         name: '舒适居家搭配',
         category: 'daily',
-        previewImage: 'https://picsum.photos/400/600?random=11',
+        previewImage: mockPreviewImages[1],
         items: [
           { id: 'd4', name: '卫衣', imageUrl: mockImages[3] },
           { id: 'd5', name: '休闲裤', imageUrl: mockImages[4] },
@@ -237,7 +342,7 @@ Page({
         id: 'work-1',
         name: '商务正装',
         category: 'work',
-        previewImage: 'https://picsum.photos/400/600?random=12',
+        previewImage: mockPreviewImages[2],
         items: [
           { id: 'w1', name: '西装外套', imageUrl: mockImages[1] },
           { id: 'w2', name: '衬衫', imageUrl: mockImages[2] },
@@ -250,7 +355,7 @@ Page({
         id: 'party-1',
         name: '派对时尚',
         category: 'party',
-        previewImage: 'https://picsum.photos/400/600?random=13',
+        previewImage: mockPreviewImages[3],
         items: [
           { id: 'p1', name: '亮片上衣', imageUrl: mockImages[0] },
           { id: 'p2', name: '紧身裤', imageUrl: mockImages[1] },
@@ -262,7 +367,7 @@ Page({
         id: 'sport-1',
         name: '运动健身',
         category: 'sport',
-        previewImage: 'https://picsum.photos/400/600?random=14',
+        previewImage: mockPreviewImages[4],
         items: [
           { id: 's1', name: '运动T恤', imageUrl: mockImages[3] },
           { id: 's2', name: '运动短裤', imageUrl: mockImages[4] },
@@ -274,7 +379,7 @@ Page({
         id: 'seasonal-1',
         name: '春季出行',
         category: 'seasonal',
-        previewImage: 'https://picsum.photos/400/600?random=15',
+        previewImage: mockPreviewImages[5],
         items: [
           { id: 'se1', name: '轻薄外套', imageUrl: mockImages[1] },
           { id: 'se2', name: '长袖T恤', imageUrl: mockImages[2] },
@@ -284,13 +389,6 @@ Page({
         createTime: new Date('2023-03-06').getTime()
       }
     ];
-  },
-  
-  // 跳转到创建搭配页面
-  goToCreateOutfit: function() {
-    wx.navigateTo({
-      url: './outfit_create/outfit_create'
-    });
   },
   
   // 跳转到类别详情页面
@@ -304,20 +402,10 @@ Page({
     });
   },
   
-  // 查看搭配详情
-  viewOutfitDetail: function(e) {
-    const id = e.currentTarget.dataset.id;
-    console.log('查看搭配详情:', id);
-    
-    // 跳转到搭配详情页面
+  // 跳转到创建搭配页面
+  goToCreateOutfit: function() {
     wx.navigateTo({
-      url: `./outfit_detail/outfit_detail?id=${id}`
+      url: './outfit_create/outfit_create'
     });
-  },
-  
-  // 阻止事件冒泡
-  stopPropagation: function(e) {
-    // 阻止事件冒泡
-    return;
   }
 });

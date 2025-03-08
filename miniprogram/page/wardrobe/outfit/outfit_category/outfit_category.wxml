@@ -25,26 +25,33 @@
     
     <!-- 搭配列表 -->
     <scroll-view scroll-y="true" class="outfits-scroll">
-      <block wx:for="{{outfits}}" wx:key="id">
-        <view class="outfit-card" bindtap="viewOutfitDetail" data-id="{{item.id}}" style="background-color: {{index % 2 === 0 ? colors.toasted_caramel : colors.olive_harvest}};">
+      <block wx:for="{{outfits}}" wx:key="_id">
+        <view class="outfit-card" bindtap="viewOutfitDetail" data-id="{{item._id || item.id}}" style="background-color: {{index % 2 === 0 ? colors.toasted_caramel : colors.olive_harvest}};">
           <!-- 搭配信息 -->
           <view class="outfit-info">
             <view class="outfit-name" style="color: {{colors.golden_batter}};">{{item.name || '未命名搭配'}}</view>
             <view class="outfit-date" style="color: {{colors.golden_batter}};">{{item.createTime ? formatDate(item.createTime) : '未知日期'}}</view>
             
             <!-- 衣物列表 -->
-            <view class="outfit-items">
-              <block wx:for="{{item.items}}" wx:for-item="clothingItem" wx:key="id">
+            <view class="outfit-items" wx:if="{{item.items && item.items.length > 0}}">
+              <block wx:for="{{item.items}}" wx:for-item="clothingItem" wx:for-index="itemIndex" wx:key="id">
                 <view class="outfit-item">
                   <image 
                     src="{{clothingItem.imageUrl}}" 
                     mode="aspectFit" 
                     class="item-image"
                     style="border: 2rpx solid {{colors.golden_batter}};"
+                    binderror="handleImageError"
+                    data-type="item"
+                    data-index="{{index}}"
+                    data-item-index="{{itemIndex}}"
                   ></image>
-                  <view class="item-name" style="color: {{colors.golden_batter}};">{{clothingItem.name}}</view>
+                  <view class="item-name" style="color: {{colors.golden_batter}};">{{clothingItem.name || '未命名'}}</view>
                 </view>
               </block>
+            </view>
+            <view class="no-items" wx:else style="color: {{colors.golden_batter}};">
+              暂无衣物信息
             </view>
           </view>
           
@@ -55,6 +62,9 @@
               mode="aspectFill" 
               class="preview-image"
               style="border: 2rpx solid {{colors.golden_batter}};"
+              binderror="handleImageError"
+              data-type="preview"
+              data-index="{{index}}"
             ></image>
           </view>
         </view>

@@ -6,7 +6,7 @@
   </view>
 
   <!-- 主要内容区域 -->
-  <view class="main-content" wx:if="{{!isLoading}}">
+  <view class="main-content" wx:if="{{!isLoading && outfitData}}">
     <!-- 顶部区域 -->
     <view class="top-section">
       <view class="back-button" bindtap="goBack">
@@ -36,6 +36,8 @@
           mode="aspectFill" 
           class="preview-image"
           style="border: 2rpx solid {{colors.golden_batter}};"
+          binderror="handleImageError"
+          data-type="preview"
         ></image>
       </view>
       
@@ -43,7 +45,7 @@
       <view class="outfit-info">
         <view class="info-row">
           <view class="info-label" style="color: {{colors.golden_batter}};">创建时间：</view>
-          <view class="info-value" style="color: {{colors.golden_batter}};">{{outfitData.createTime ? formatDate(outfitData.createTime) : '未知'}}</view>
+          <view class="info-value" style="color: {{colors.golden_batter}};">{{outfitData.createTimeFormatted || '未知'}}</view>
         </view>
         
         <view class="info-row">
@@ -54,7 +56,7 @@
             <text wx:elif="{{outfitData.category === 'party'}}">派对穿搭</text>
             <text wx:elif="{{outfitData.category === 'sport'}}">运动穿搭</text>
             <text wx:elif="{{outfitData.category === 'seasonal'}}">季节穿搭</text>
-            <text wx:else>其他</text>
+            <text wx:else>{{outfitData.category || '其他'}}</text>
           </view>
         </view>
         
@@ -78,7 +80,7 @@
     </view>
     
     <!-- 搭配组成部分 -->
-    <view class="outfit-items-section">
+    <view class="outfit-items-section" wx:if="{{outfitData.items && outfitData.items.length > 0}}">
       <view class="section-title" style="color: {{colors.cowhide_cocoa}};">搭配组成</view>
       
       <view class="outfit-items-grid">
@@ -89,16 +91,19 @@
               mode="aspectFit" 
               class="item-image"
               style="border: 2rpx solid {{colors.golden_batter}};"
+              binderror="handleImageError"
+              data-type="item"
+              data-index="{{index}}"
             ></image>
             <view class="item-info">
-              <view class="item-name" style="color: {{colors.golden_batter}};">{{item.name}}</view>
+              <view class="item-name" style="color: {{colors.golden_batter}};">{{item.name || '未命名'}}</view>
               <view class="item-type" style="color: {{colors.golden_batter}};">
                 <text wx:if="{{item.type === 'top'}}">上衣</text>
                 <text wx:elif="{{item.type === 'bottom'}}">裤子</text>
                 <text wx:elif="{{item.type === 'outerwear'}}">外套</text>
                 <text wx:elif="{{item.type === 'shoes'}}">鞋子</text>
                 <text wx:elif="{{item.type === 'accessory'}}">配饰</text>
-                <text wx:else>{{item.type || '未分类'}}</text>
+                <text wx:else>{{item.type || item.category || '未分类'}}</text>
               </view>
             </view>
           </view>
@@ -112,18 +117,28 @@
       
       <scroll-view scroll-x="true" class="similar-outfits-scroll">
         <block wx:for="{{similarOutfits}}" wx:key="id">
-          <view class="similar-outfit-card" bindtap="viewSimilarOutfit" data-id="{{item.id}}" style="background-color: {{colors.spiced_wine}};">
+          <view class="similar-outfit-card" bindtap="viewSimilarOutfit" data-id="{{item.id || item._id}}" style="background-color: {{colors.spiced_wine}};">
             <image 
               src="{{item.previewImage}}" 
               mode="aspectFill" 
               class="similar-outfit-image"
               style="border: 2rpx solid {{colors.golden_batter}};"
+              binderror="handleImageError"
+              data-type="similar"
+              data-index="{{index}}"
             ></image>
             <view class="similar-outfit-name" style="color: {{colors.golden_batter}};">{{item.name || '未命名搭配'}}</view>
-            <view class="similar-outfit-date" style="color: {{colors.golden_batter}};">{{item.createTime ? formatDate(item.createTime) : '未知日期'}}</view>
+            <view class="similar-outfit-date" style="color: {{colors.golden_batter}};">{{item.createTimeFormatted || '未知日期'}}</view>
           </view>
         </block>
       </scroll-view>
+    </view>
+    
+    <!-- 无数据提示 -->
+    <view class="no-data-container" wx:if="{{!isLoading && !outfitData}}">
+      <view class="no-data-icon">🧥</view>
+      <view class="no-data-text" style="color: {{colors.cowhide_cocoa}};">未找到搭配数据</view>
+      <view class="no-data-subtext" style="color: {{colors.cowhide_cocoa}};">请返回重新选择</view>
     </view>
   </view>
 </view> 

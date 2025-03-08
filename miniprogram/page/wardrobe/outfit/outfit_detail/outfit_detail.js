@@ -1,3 +1,8 @@
+// 导入模块
+const outfitDetailManager = require('./modules/outfitDetailManager');
+const userManager = require('./modules/userManager');
+const imageManager = require('./modules/imageManager');
+
 Page({
   data: {
     // 定义颜色常量 - 秋季色彩方案
@@ -55,8 +60,8 @@ Page({
         outfitId: options.id
       });
       
-      // 获取用户OpenID
-      this.getUserOpenId();
+      // 获取用户OpenID并加载搭配详情
+      this.getUserOpenIdAndLoadOutfitDetail();
     } else {
       wx.showToast({
         title: '搭配ID不存在',
@@ -68,125 +73,129 @@ Page({
     }
   },
   
-  // 获取当前用户的OpenID
-  getUserOpenId: function() {
+  // 获取用户OpenID并加载搭配详情
+  getUserOpenIdAndLoadOutfitDetail: function() {
     const that = this;
+    
     wx.showLoading({
       title: '加载中...',
     });
     
-    // 尝试从本地缓存获取OpenID
-    const openid = wx.getStorageSync('openid');
-    if (openid) {
-      console.log('从本地缓存获取到OpenID:', openid);
-      that.setData({
-        userOpenId: openid
-      });
+    // 设置超时处理，确保不会一直显示加载中
+    const timeoutId = setTimeout(() => {
+      console.log('获取搭配详情超时');
+      wx.hideLoading();
       
-      // 获取搭配详情
-      that.getOutfitDetail();
-      return;
-    }
-    
-    // 如果本地没有，则调用云函数获取
-    wx.cloud.callFunction({
-      name: 'login',
-      data: {},
-      success: res => {
-        console.log('获取用户OpenID成功:', res.result);
-        const openid = res.result.openid;
-        
-        // 成功获取到openid
-        if (openid) {
-          // 存入本地缓存
-          wx.setStorageSync('openid', openid);
-          
-          that.setData({
-            userOpenId: openid
-          });
-          
-          // 获取搭配详情
-          that.getOutfitDetail();
-        } else {
-          // 获取失败，使用模拟数据
-          that.useSimulatedData();
-        }
-      },
-      fail: err => {
-        console.error('云函数调用失败:', err);
+      if (that.data.isLoading) {
+        // 如果仍在加载中，显示错误提示并使用模拟数据
+        wx.showToast({
+          title: '加载超时，使用示例数据',
+          icon: 'none',
+          duration: 2000
+        });
         that.useSimulatedData();
       }
-    });
-  },
-  
-  // 获取搭配详情
-  getOutfitDetail: function() {
-    const that = this;
-    const db = wx.cloud.database();
+    }, 15000); // 15秒超时
     
-    db.collection('outfits')
-      .doc(that.data.outfitId)
-      .get()
-      .then(res => {
-        console.log('获取搭配详情成功:', res.data);
-        
-        if (res.data) {
-          that.setData({
-            outfitData: res.data,
-            isLoading: false
-          });
-          
-          // 获取相似搭配推荐
-          that.getSimilarOutfits(res.data.category);
-        } else {
-          wx.showToast({
-            title: '搭配不存在',
-            icon: 'error'
-          });
-          setTimeout(() => {
-            wx.navigateBack();
-          }, 1500);
-        }
-      })
-      .catch(err => {
-        console.error('获取搭配详情失败:', err);
-        that.useSimulatedData();
-      });
-  },
-  
-  // 获取相似搭配推荐
-  getSimilarOutfits: function(category) {
-    const that = this;
-    const db = wx.cloud.database();
-    const _ = db.command;
-    
-    db.collection('outfits')
-      .where({
-        _openid: that.data.userOpenId,
-        category: category,
-        _id: _.neq(that.data.outfitId) // 排除当前搭配
-      })
-      .limit(3) // 最多获取3个相似搭配
-      .get()
-      .then(res => {
-        console.log('获取相似搭配成功:', res.data);
+    // 获取用户OpenID
+    userManager.getUserOpenId()
+      .then(openid => {
+        console.log('获取用户OpenID成功:', openid);
         
         that.setData({
-          similarOutfits: res.data || []
+          userOpenId: openid
+        });
+        
+        // 获取搭配详情
+        return outfitDetailManager.getOutfitDetail(that.data.outfitId);
+      })
+      .then(outfitData => {
+        console.log('获取搭配详情成功:', outfitData);
+        
+        // 清除超时定时器
+        clearTimeout(timeoutId);
+        
+        // 更新数据
+        that.setData({
+          outfitData: outfitData,
+          isLoading: false
+        });
+        
+        // 隐藏加载提示
+        wx.hideLoading();
+        
+        // 获取相似搭配推荐
+        return outfitDetailManager.getSimilarOutfits(
+          outfitData.category,
+          that.data.outfitId,
+          that.data.userOpenId
+        );
+      })
+      .then(similarOutfits => {
+        console.log('获取相似搭配成功:', similarOutfits);
+        
+        that.setData({
+          similarOutfits: similarOutfits
         });
       })
       .catch(err => {
-        console.error('获取相似搭配失败:', err);
+        // 清除超时定时器
+        clearTimeout(timeoutId);
+        
+        console.error('获取搭配详情失败:', err);
+        wx.hideLoading();
+        
+        // 判断错误类型，决定是否使用模拟数据
+        if (err && err.message) {
+          if (err.message.includes('数据不存在') || err.message.includes('搭配数据为空') || err.message.includes('not found')) {
+            // 如果是数据不存在的错误，不使用模拟数据
+            that.useSimulatedData(true);
+          } else {
+            // 其他错误，使用模拟数据
+            that.useSimulatedData();
+          }
+        } else {
+          // 未知错误，使用模拟数据
+          that.useSimulatedData();
+        }
       });
   },
   
   // 使用模拟数据（当无法获取真实数据时）
-  useSimulatedData: function() {
-    console.log('使用模拟数据');
+  useSimulatedData: function(useEmptyData = false) {
+    console.log('使用模拟数据，useEmptyData:', useEmptyData);
+    
+    if (useEmptyData) {
+      // 如果指定使用空数据，则不显示模拟数据
+      wx.showToast({
+        title: '没有搭配数据',
+        icon: 'none',
+        duration: 2000
+      });
+      
+      this.setData({
+        outfitData: null,
+        similarOutfits: [],
+        isLoading: false
+      });
+      
+      // 确保隐藏加载提示
+      wx.hideLoading();
+      
+      console.log('已设置为空数据');
+      return;
+    }
+    
+    // 提示用户正在使用模拟数据
+    wx.showToast({
+      title: '使用示例数据',
+      icon: 'none',
+      duration: 2000
+    });
     
     // 生成模拟搭配数据
-    const mockOutfit = this.generateMockOutfit();
-    const mockSimilarOutfits = this.generateMockSimilarOutfits();
+    const mockOutfit = outfitDetailManager.generateMockOutfit(useEmptyData);
+    const mockSimilarOutfits = outfitDetailManager.generateMockSimilarOutfits(useEmptyData);
     
     this.setData({
       outfitData: mockOutfit,
@@ -194,77 +203,55 @@ Page({
       isLoading: false
     });
     
+    // 确保隐藏加载提示
+    wx.hideLoading();
+    
     console.log('模拟数据加载完成');
   },
   
-  // 生成模拟搭配数据
-  generateMockOutfit: function() {
-    // 模拟衣物图片
-    const mockImages = [
-      'https://picsum.photos/200/300?random=1',
-      'https://picsum.photos/200/300?random=2',
-      'https://picsum.photos/200/300?random=3',
-      'https://picsum.photos/200/300?random=4',
-      'https://picsum.photos/200/300?random=5'
-    ];
+  // 处理图片加载错误
+  handleImageError: function(e) {
+    console.log('图片加载错误:', e);
     
-    // 根据不同类别生成不同的模拟数据
-    const categories = ['daily', 'work', 'party', 'sport', 'seasonal'];
-    const categoryNames = ['日常穿搭', '职业穿搭', '派对穿搭', '运动穿搭', '季节穿搭'];
+    const type = e.currentTarget.dataset.type;
+    const index = e.currentTarget.dataset.index;
+    const defaultImageUrl = imageManager.getDefaultImageUrl();
     
-    // 随机选择一个类别
-    const randomIndex = Math.floor(Math.random() * categories.length);
-    const category = categories[randomIndex];
-    const categoryName = categoryNames[randomIndex];
-    
-    return {
-      id: 'mock-outfit-1',
-      name: `模拟${categoryName}`,
-      category: category,
-      previewImage: 'https://picsum.photos/400/600?random=10',
-      description: `这是一套模拟的${categoryName}，适合各种场合穿着。`,
-      items: [
-        { id: 'item1', name: '上衣', type: 'top', imageUrl: mockImages[0] },
-        { id: 'item2', name: '裤子', type: 'bottom', imageUrl: mockImages[1] },
-        { id: 'item3', name: '外套', type: 'outerwear', imageUrl: mockImages[2] },
-        { id: 'item4', name: '鞋子', type: 'shoes', imageUrl: mockImages[3] }
-      ],
-      createTime: new Date().getTime(),
-      tags: ['舒适', '百搭', '时尚']
-    };
-  },
-  
-  // 生成模拟相似搭配数据
-  generateMockSimilarOutfits: function() {
-    // 模拟衣物图片
-    const mockImages = [
-      'https://picsum.photos/200/300?random=6',
-      'https://picsum.photos/200/300?random=7',
-      'https://picsum.photos/200/300?random=8',
-      'https://picsum.photos/200/300?random=9',
-      'https://picsum.photos/200/300?random=10'
-    ];
-    
-    return [
-      {
-        id: 'similar-1',
-        name: '相似搭配1',
-        previewImage: 'https://picsum.photos/400/600?random=11',
-        createTime: new Date().getTime() - 86400000 // 昨天
-      },
-      {
-        id: 'similar-2',
-        name: '相似搭配2',
-        previewImage: 'https://picsum.photos/400/600?random=12',
-        createTime: new Date().getTime() - 172800000 // 前天
+    if (type === 'preview') {
+      // 更新搭配预览图
+      const outfitData = this.data.outfitData;
+      if (outfitData) {
+        outfitData.previewImage = defaultImageUrl;
+        this.setData({
+          outfitData: outfitData
+        });
+        console.log('已更新搭配预览图');
       }
-    ];
+    } else if (type === 'item' && index !== undefined) {
+      // 更新衣物图片
+      const outfitData = this.data.outfitData;
+      if (outfitData && outfitData.items && outfitData.items[index]) {
+        console.log(`更新衣物项 ${index} 的图片`);
+        outfitData.items[index].imageUrl = defaultImageUrl;
+        this.setData({
+          outfitData: outfitData
+        });
+      }
+    } else if (type === 'similar' && index !== undefined) {
+      // 更新相似搭配图片
+      const similarOutfits = this.data.similarOutfits;
+      if (similarOutfits && similarOutfits[index]) {
+        similarOutfits[index].previewImage = defaultImageUrl;
+        this.setData({
+          similarOutfits: similarOutfits
+        });
+      }
+    }
   },
   
   // 格式化日期
   formatDate: function(timestamp) {
-    const date = new Date(timestamp);
-    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    return outfitDetailManager.formatDate(timestamp);
   },
   
   // 返回上一页
@@ -272,76 +259,125 @@ Page({
     wx.navigateBack();
   },
   
-  // 查看相似搭配详情
+  // 查看相似搭配
   viewSimilarOutfit: function(e) {
-    const outfitId = e.currentTarget.dataset.id;
+    const id = e.currentTarget.dataset.id;
+    console.log('查看相似搭配:', id);
     
-    wx.redirectTo({
-      url: `./outfit_detail?id=${outfitId}`
+    if (!id) {
+      console.error('搭配ID不存在');
+      return;
+    }
+    
+    // 跳转到搭配详情页面
+    wx.navigateTo({
+      url: `../outfit_detail/outfit_detail?id=${id}`
     });
   },
   
-  // 编辑当前搭配
+  // 编辑搭配
   editOutfit: function() {
     const outfitId = this.data.outfitId;
+    console.log('编辑搭配:', outfitId);
     
     wx.navigateTo({
-      url: `../outfit_create/outfit_create?id=${outfitId}&mode=edit`
+      url: `../outfit_edit/outfit_edit?id=${outfitId}`
     });
   },
   
-  // 删除当前搭配
+  // 删除搭配
   deleteOutfit: function() {
     const that = this;
+    const outfitId = this.data.outfitId;
     
     wx.showModal({
       title: '确认删除',
-      content: '确定要删除这套搭配吗？删除后无法恢复。',
-      confirmColor: '#E64340',
-      success: res => {
+      content: '确定要删除这个搭配吗？此操作不可恢复。',
+      success: function(res) {
         if (res.confirm) {
-          // 用户点击确定，执行删除操作
-          that.performDelete();
+          console.log('用户确认删除');
+          
+          wx.showLoading({
+            title: '删除中...',
+          });
+          
+          const db = wx.cloud.database();
+          
+          // 先获取搭配信息
+          db.collection('outfits')
+            .doc(outfitId)
+            .get()
+            .then(res => {
+              const outfit = res.data;
+              const imageFileID = outfit.imageFileID || outfit.previewImage;
+              
+              // 删除数据库记录
+              return db.collection('outfits')
+                .doc(outfitId)
+                .remove()
+                .then(() => {
+                  // 如果有图片文件，也删除图片
+                  if (imageFileID && imageFileID.includes('cloud://')) {
+                    return wx.cloud.deleteFile({
+                      fileList: [imageFileID]
+                    });
+                  }
+                  return { fileList: [] };
+                });
+            })
+            .then(() => {
+              wx.hideLoading();
+              
+              wx.showToast({
+                title: '删除成功',
+                icon: 'success'
+              });
+              
+              // 延迟返回上一页
+              setTimeout(() => {
+                wx.navigateBack();
+              }, 1500);
+            })
+            .catch(err => {
+              console.error('删除搭配失败:', err);
+              
+              wx.hideLoading();
+              
+              wx.showToast({
+                title: '删除失败',
+                icon: 'none'
+              });
+            });
         }
       }
     });
   },
   
-  // 执行删除操作
-  performDelete: function() {
-    const that = this;
-    const db = wx.cloud.database();
-    
-    wx.showLoading({
-      title: '删除中...',
+  // 分享搭配
+  shareOutfit: function() {
+    // 在小程序中，分享功能通常通过onShareAppMessage实现
+    wx.showToast({
+      title: '请点击右上角分享',
+      icon: 'none'
     });
+  },
+  
+  // 分享到朋友圈
+  shareToMoments: function() {
+    wx.showToast({
+      title: '暂不支持分享到朋友圈',
+      icon: 'none'
+    });
+  },
+  
+  // 用于分享的函数
+  onShareAppMessage: function() {
+    const outfitData = this.data.outfitData;
     
-    db.collection('outfits')
-      .doc(that.data.outfitId)
-      .remove()
-      .then(res => {
-        console.log('删除搭配成功:', res);
-        
-        wx.showToast({
-          title: '删除成功',
-          icon: 'success'
-        });
-        
-        // 返回上一页
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1500);
-      })
-      .catch(err => {
-        console.error('删除搭配失败:', err);
-        
-        wx.showToast({
-          title: '删除失败',
-          icon: 'error'
-        });
-      })
-      .finally(() => {
-        wx.hideLoading();
-      });
+    return {
+      title: outfitData ? `${outfitData.name || '我的搭配'} - 穿搭分享` : '穿搭分享',
+      path: `/page/wardrobe/outfit/outfit_detail/outfit_detail?id=${this.data.outfitId}`,
+      imageUrl: outfitData ? outfitData.previewImage : ''
+    };
   }
 }); 

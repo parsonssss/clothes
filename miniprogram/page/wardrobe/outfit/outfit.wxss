@@ -105,13 +105,11 @@ page {
 
 /* 搭配类别卡片 */
 .outfit-category-card {
-  width: 100%;
+  display: flex;
+  margin-bottom: 30rpx;
   border-radius: 24rpx;
   padding: 30rpx;
-  margin-bottom: 30rpx;
   box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -125,118 +123,42 @@ page {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding-right: 20rpx;
+  padding: 10rpx;
 }
 
 .category-title {
-  font-size: 32rpx;
+  font-size: 36rpx;
   font-weight: 600;
-  margin-bottom: 10rpx;
+  margin-bottom: 16rpx;
+  letter-spacing: 1rpx;
 }
 
 .category-description {
-  font-size: 24rpx;
+  font-size: 26rpx;
+  margin-bottom: 20rpx;
   opacity: 0.9;
-  margin-bottom: 16rpx;
+  line-height: 1.4;
 }
 
 .category-count {
-  font-size: 22rpx;
-  opacity: 0.8;
-  margin-bottom: 20rpx;
-}
-
-/* 搭配预览区域 */
-.outfit-preview-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 140rpx;
-}
-
-/* 衣物预览滚动区域 */
-.outfit-items-preview {
-  white-space: nowrap;
-  margin-bottom: 20rpx;
-  height: 120rpx;
-}
-
-.preview-item {
-  display: inline-block;
-  width: 100rpx;
-  height: 100rpx;
-  margin-right: 15rpx;
-  border-radius: 12rpx;
-  overflow: hidden;
-}
-
-.preview-item-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* 空搭配提示 */
-.empty-outfit-area {
-  height: 120rpx;
-  display: flex;
-  align-items: center;
-  font-size: 26rpx;
-  opacity: 0.8;
-  margin-bottom: 20rpx;
-}
-
-/* 查看更多按钮 */
-.view-more {
-  font-size: 24rpx;
-  display: flex;
-  align-items: center;
-  margin-top: auto;
-}
-
-.arrow {
-  margin-left: 8rpx;
-  font-weight: bold;
-  transition: transform 0.2s ease;
-}
-
-.outfit-category-card:active .arrow {
-  transform: translateX(5rpx);
+  font-size: 28rpx;
+  font-weight: 500;
+  letter-spacing: 1rpx;
 }
 
 /* 类别预览图容器 */
 .category-preview-container {
-  width: 200rpx;
-  height: 260rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
 }
 
-/* 类别预览图区域 */
 .category-preview {
-  width: 100%;
-  height: 100%;
-  border-radius: 16rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
+  display: none;
 }
 
 .category-preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: none;
 }
 
 .empty-preview {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24rpx;
-  text-align: center;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 16rpx;
+  display: none;
 }

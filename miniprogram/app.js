@@ -58,6 +58,9 @@ App({
     // 初始化主题样式
     this.initTheme();
     
+    // 清理过期的URL缓存
+    this.cleanExpiredURLCache();
+    
     console.log('App Launch', opts)
     if (data && data.path) {
       wx.navigateTo({
@@ -86,6 +89,9 @@ App({
       this.globalData.themeStyle = savedTheme;
       this.initTheme();
     }
+    
+    // 清理过期的URL缓存
+    this.cleanExpiredURLCache();
   },
   onHide() {
     console.log('App Hide')
@@ -114,6 +120,7 @@ App({
     openid: null,
     iconTabbar: '/page/weui/example/images/icon_tabbar.png',
     cloudInitialized: false, // 云环境初始化状态
+    urlCache: {}, // 图片临时URL缓存
   },
   // lazy loading openid
   getUserOpenId(callback) {
@@ -184,6 +191,30 @@ App({
         color: '#5EA0D0',
         selectedColor: '#D47C99'
       });
+    }
+  },
+  
+  // 清理过期的URL缓存
+  cleanExpiredURLCache: function() {
+    if (!this.globalData.urlCache) {
+      this.globalData.urlCache = {};
+      return;
+    }
+    
+    const now = Date.now();
+    let cleanCount = 0;
+    
+    // 遍历缓存，删除过期的URL（超过9分钟）
+    Object.keys(this.globalData.urlCache).forEach(fileID => {
+      const cacheItem = this.globalData.urlCache[fileID];
+      if (cacheItem && now - cacheItem.timestamp > 540000) { // 9分钟
+        delete this.globalData.urlCache[fileID];
+        cleanCount++;
+      }
+    });
+    
+    if (cleanCount > 0) {
+      console.log(`已清理 ${cleanCount} 个过期的临时URL缓存`);
     }
   }
 })

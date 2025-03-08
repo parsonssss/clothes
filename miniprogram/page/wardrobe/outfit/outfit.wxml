@@ -26,44 +26,6 @@
           <view class="category-title" style="color: {{colors.golden_batter}};">日常穿搭</view>
           <view class="category-description" style="color: {{colors.golden_batter}};">适合日常休闲场合的舒适搭配</view>
           <view class="category-count" style="color: {{colors.golden_batter}};">{{dailyOutfits.length || 0}}套搭配</view>
-          
-          <view class="outfit-preview-area">
-            <block wx:if="{{dailyOutfits.length > 0}}">
-              <scroll-view scroll-x="true" class="outfit-items-preview" catchtap="stopPropagation">
-                <block wx:for="{{dailyOutfits[0].items}}" wx:key="id">
-                  <view class="preview-item">
-                    <image 
-                      src="{{item.imageUrl}}" 
-                      mode="aspectFit" 
-                      class="preview-item-image"
-                      style="border: 2rpx solid {{colors.golden_batter}};"
-                    ></image>
-                  </view>
-                </block>
-              </scroll-view>
-              <view class="view-more" style="color: {{colors.golden_batter}};">
-                查看更多 <text class="arrow">→</text>
-              </view>
-            </block>
-            <view wx:else class="empty-outfit-area" style="color: {{colors.golden_batter}};">
-              <text>暂无搭配</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 搭配预览图 -->
-        <view class="category-preview-container">
-          <view class="category-preview" catchtap="viewOutfitDetail" data-id="{{dailyOutfits[0].id}}" wx:if="{{dailyOutfits.length > 0}}">
-            <image 
-              src="{{dailyOutfits[0].previewImage}}" 
-              mode="aspectFill" 
-              class="category-preview-image"
-              style="border: 2rpx solid {{colors.golden_batter}};"
-            ></image>
-          </view>
-          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
-            暂无搭配
-          </view>
         </view>
       </view>
       
@@ -73,44 +35,6 @@
           <view class="category-title" style="color: {{colors.golden_batter}};">职业穿搭</view>
           <view class="category-description" style="color: {{colors.golden_batter}};">适合工作场合的专业搭配</view>
           <view class="category-count" style="color: {{colors.golden_batter}};">{{workOutfits.length || 0}}套搭配</view>
-          
-          <view class="outfit-preview-area">
-            <block wx:if="{{workOutfits.length > 0}}">
-              <scroll-view scroll-x="true" class="outfit-items-preview" catchtap="stopPropagation">
-                <block wx:for="{{workOutfits[0].items}}" wx:key="id">
-                  <view class="preview-item">
-                    <image 
-                      src="{{item.imageUrl}}" 
-                      mode="aspectFit" 
-                      class="preview-item-image"
-                      style="border: 2rpx solid {{colors.golden_batter}};"
-                    ></image>
-                  </view>
-                </block>
-              </scroll-view>
-              <view class="view-more" style="color: {{colors.golden_batter}};">
-                查看更多 <text class="arrow">→</text>
-              </view>
-            </block>
-            <view wx:else class="empty-outfit-area" style="color: {{colors.golden_batter}};">
-              <text>暂无搭配</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 搭配预览图 -->
-        <view class="category-preview-container">
-          <view class="category-preview" catchtap="viewOutfitDetail" data-id="{{workOutfits[0].id}}" wx:if="{{workOutfits.length > 0}}">
-            <image 
-              src="{{workOutfits[0].previewImage}}" 
-              mode="aspectFill" 
-              class="category-preview-image"
-              style="border: 2rpx solid {{colors.golden_batter}};"
-            ></image>
-          </view>
-          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
-            暂无搭配
-          </view>
         </view>
       </view>
       
@@ -120,44 +44,6 @@
           <view class="category-title" style="color: {{colors.golden_batter}};">派对穿搭</view>
           <view class="category-description" style="color: {{colors.golden_batter}};">适合聚会场合的时尚搭配</view>
           <view class="category-count" style="color: {{colors.golden_batter}};">{{partyOutfits.length || 0}}套搭配</view>
-          
-          <view class="outfit-preview-area">
-            <block wx:if="{{partyOutfits.length > 0}}">
-              <scroll-view scroll-x="true" class="outfit-items-preview" catchtap="stopPropagation">
-                <block wx:for="{{partyOutfits[0].items}}" wx:key="id">
-                  <view class="preview-item">
-                    <image 
-                      src="{{item.imageUrl}}" 
-                      mode="aspectFit" 
-                      class="preview-item-image"
-                      style="border: 2rpx solid {{colors.golden_batter}};"
-                    ></image>
-                  </view>
-                </block>
-              </scroll-view>
-              <view class="view-more" style="color: {{colors.golden_batter}};">
-                查看更多 <text class="arrow">→</text>
-              </view>
-            </block>
-            <view wx:else class="empty-outfit-area" style="color: {{colors.golden_batter}};">
-              <text>暂无搭配</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 搭配预览图 -->
-        <view class="category-preview-container">
-          <view class="category-preview" catchtap="viewOutfitDetail" data-id="{{partyOutfits[0].id}}" wx:if="{{partyOutfits.length > 0}}">
-            <image 
-              src="{{partyOutfits[0].previewImage}}" 
-              mode="aspectFill" 
-              class="category-preview-image"
-              style="border: 2rpx solid {{colors.golden_batter}};"
-            ></image>
-          </view>
-          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
-            暂无搭配
-          </view>
         </view>
       </view>
       
@@ -167,44 +53,6 @@
           <view class="category-title" style="color: {{colors.golden_batter}};">运动穿搭</view>
           <view class="category-description" style="color: {{colors.golden_batter}};">适合运动场合的功能性搭配</view>
           <view class="category-count" style="color: {{colors.golden_batter}};">{{sportOutfits.length || 0}}套搭配</view>
-          
-          <view class="outfit-preview-area">
-            <block wx:if="{{sportOutfits.length > 0}}">
-              <scroll-view scroll-x="true" class="outfit-items-preview" catchtap="stopPropagation">
-                <block wx:for="{{sportOutfits[0].items}}" wx:key="id">
-                  <view class="preview-item">
-                    <image 
-                      src="{{item.imageUrl}}" 
-                      mode="aspectFit" 
-                      class="preview-item-image"
-                      style="border: 2rpx solid {{colors.golden_batter}};"
-                    ></image>
-                  </view>
-                </block>
-              </scroll-view>
-              <view class="view-more" style="color: {{colors.golden_batter}};">
-                查看更多 <text class="arrow">→</text>
-              </view>
-            </block>
-            <view wx:else class="empty-outfit-area" style="color: {{colors.golden_batter}};">
-              <text>暂无搭配</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 搭配预览图 -->
-        <view class="category-preview-container">
-          <view class="category-preview" catchtap="viewOutfitDetail" data-id="{{sportOutfits[0].id}}" wx:if="{{sportOutfits.length > 0}}">
-            <image 
-              src="{{sportOutfits[0].previewImage}}" 
-              mode="aspectFill" 
-              class="category-preview-image"
-              style="border: 2rpx solid {{colors.golden_batter}};"
-            ></image>
-          </view>
-          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
-            暂无搭配
-          </view>
         </view>
       </view>
       
@@ -214,44 +62,6 @@
           <view class="category-title" style="color: {{colors.golden_batter}};">季节穿搭</view>
           <view class="category-description" style="color: {{colors.golden_batter}};">适合当前季节的应季搭配</view>
           <view class="category-count" style="color: {{colors.golden_batter}};">{{seasonalOutfits.length || 0}}套搭配</view>
-          
-          <view class="outfit-preview-area">
-            <block wx:if="{{seasonalOutfits.length > 0}}">
-              <scroll-view scroll-x="true" class="outfit-items-preview" catchtap="stopPropagation">
-                <block wx:for="{{seasonalOutfits[0].items}}" wx:key="id">
-                  <view class="preview-item">
-                    <image 
-                      src="{{item.imageUrl}}" 
-                      mode="aspectFit" 
-                      class="preview-item-image"
-                      style="border: 2rpx solid {{colors.golden_batter}};"
-                    ></image>
-                  </view>
-                </block>
-              </scroll-view>
-              <view class="view-more" style="color: {{colors.golden_batter}};">
-                查看更多 <text class="arrow">→</text>
-              </view>
-            </block>
-            <view wx:else class="empty-outfit-area" style="color: {{colors.golden_batter}};">
-              <text>暂无搭配</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 搭配预览图 -->
-        <view class="category-preview-container">
-          <view class="category-preview" catchtap="viewOutfitDetail" data-id="{{seasonalOutfits[0].id}}" wx:if="{{seasonalOutfits.length > 0}}">
-            <image 
-              src="{{seasonalOutfits[0].previewImage}}" 
-              mode="aspectFill" 
-              class="category-preview-image"
-              style="border: 2rpx solid {{colors.golden_batter}};"
-            ></image>
-          </view>
-          <view wx:else class="empty-preview" style="color: {{colors.golden_batter}};">
-            暂无搭配
-          </view>
         </view>
       </view>
     </scroll-view>
